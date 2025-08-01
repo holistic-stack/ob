@@ -377,14 +377,14 @@
 
 import type { Engine } from '@babylonjs/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
 import type {
   BabylonEngineConfig,
   BabylonEngineState,
   EngineDisposeResult,
   EngineInitResult,
-} from '../../services/babylon-engine-service';
-import { BabylonEngineService, EngineErrorCode } from '../../services/babylon-engine-service';
+} from '@/features/babylon-renderer';
+import { BabylonEngineService, EngineErrorCode } from '@/features/babylon-renderer';
+import { createLogger } from '@/shared';
 import type {
   EngineError,
   EnginePerformanceMetrics,

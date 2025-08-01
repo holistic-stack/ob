@@ -5,8 +5,8 @@
  * patterns following functional programming principles.
  */
 
-import { createLogger } from '../../services/logger.service';
-import type { Pipe } from '../../types/functional.types';
+import type { Pipe } from '@/shared';
+import { createLogger } from '@/shared';
 
 const logger = createLogger('FunctionalUtils');
 

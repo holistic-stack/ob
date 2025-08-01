@@ -9,8 +9,7 @@ import { NullEngine, Scene } from '@babylonjs/core';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useBabylonInspector } from '../../hooks/use-babylon-inspector';
-import { InspectorTab } from '../../services/babylon-inspector-service';
+import { InspectorTab, useBabylonInspector } from '@/features/babylon-renderer';
 import { BabylonInspector, type BabylonInspectorProps } from './babylon-inspector';
 
 // Mock ResizeObserver for tests

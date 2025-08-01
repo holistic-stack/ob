@@ -21,8 +21,8 @@
  */
 
 import * as BABYLON from '@babylonjs/core';
-import type { Result } from '../../../../../shared/types/result.types';
-import { error, success } from '../../../../../shared/utils/functional/result';
+import type { Result } from '@/shared';
+import { error, success } from '@/shared';
 import type { Geometry2DData } from '../../../types/2d-geometry-data';
 import type { BaseGeometryData, Geometry3DData } from '../../../types/geometry-data';
 

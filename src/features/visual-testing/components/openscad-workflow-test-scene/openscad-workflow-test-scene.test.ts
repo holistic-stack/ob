@@ -15,8 +15,8 @@
 import type { AbstractMesh, Scene as BabylonScene } from '@babylonjs/core';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, type MockedFunction, test, vi } from 'vitest';
-import { OpenSCADRenderingPipelineService } from '../../../openscad-geometry-builder/services/pipeline/openscad-rendering-pipeline';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser';
+import { OpenSCADRenderingPipelineService } from '@/features/openscad-geometry-builder';
+import { OpenscadParser } from '@/features/openscad-parser';
 import {
   type OpenSCADWorkflowTestSceneProps,
   ProcessingStatus,

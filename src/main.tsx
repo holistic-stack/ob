@@ -19,8 +19,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+import { createLogger } from '@/shared';
 import App from './App.tsx';
-import { createLogger } from './shared/services/logger.service';
 
 /**
  * @constant logger

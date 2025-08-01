@@ -6,17 +6,16 @@
  */
 
 import type { AbstractMesh, Scene, StandardMaterial } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
-
-import type { ASTNode, SourceLocation } from '../../../openscad-parser/ast/ast-types';
-import {
-  type BabylonJSError,
+import type {
+  BabylonJSError,
   BabylonJSNode,
-  BabylonJSNodeType,
-  type NodeGenerationResult,
-  type NodeValidationResult,
-} from '../../types/babylon-ast.types';
+  NodeGenerationResult,
+  NodeValidationResult,
+} from '@/features/babylon-renderer/types';
+import { BabylonJSNodeType } from '@/features/babylon-renderer/types';
+
+import type { ASTNode, SourceLocation } from '@/features/openscad-parser';
+import { createLogger, tryCatch, tryCatchAsync } from '@/shared';
 
 const logger = createLogger('ModifierBabylonNode');
 

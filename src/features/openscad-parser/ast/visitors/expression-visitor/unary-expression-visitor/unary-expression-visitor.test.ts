@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
-import { ErrorHandler } from '../../../../error-handling/index.js';
-import { OpenscadParser } from '../../../../openscad-parser';
+import { ErrorHandler, OpenscadParser } from '@/features/openscad-parser';
 import { ExpressionVisitor } from '../../expression-visitor.js';
 import { UnaryExpressionVisitor } from './unary-expression-visitor.js';
 

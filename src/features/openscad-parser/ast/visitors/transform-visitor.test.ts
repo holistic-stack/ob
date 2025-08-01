@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, test } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
+import { extractArguments } from '@/features/openscad-parser';
 import { ErrorHandler, OpenscadParser } from '../../index.js';
 import type * as ast from '../ast-types.js';
-import { extractArguments } from '../extractors/argument-extractor.js';
 import { TransformVisitor } from './transform-visitor.js';
 
 describe('TransformVisitor', () => {

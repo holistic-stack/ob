@@ -49,7 +49,8 @@ describe('Performance Debounce Configuration', () => {
     it('should have immutable configurations', () => {
       expect(() => {
         // @ts-expect-error - Testing immutability
-        HIGH_PERFORMANCE_DEBOUNCE_CONFIG.renderDelayMs = 100;
+        // noinspection JSConstantReassignment
+          HIGH_PERFORMANCE_DEBOUNCE_CONFIG.renderDelayMs = 100;
       }).toThrow();
     });
   });
@@ -85,19 +86,22 @@ describe('Performance Debounce Configuration', () => {
     });
 
     afterEach(() => {
-      global.window = originalWindow;
+      // noinspection JSConstantReassignment
+        global.window = originalWindow;
     });
 
     it('should return balanced config when window is not available', () => {
       // @ts-expect-error - Testing undefined window
-      global.window = undefined;
+      // noinspection JSConstantReassignment
+        global.window = undefined;
 
       const config = getOptimalPerformanceConfig();
       expect(config).toEqual(BALANCED_PERFORMANCE_DEBOUNCE_CONFIG);
     });
 
     it('should return ultra config for high-refresh displays', () => {
-      global.window = {
+      // noinspection JSConstantReassignment
+        global.window = {
         ...originalWindow,
         screen: {
           ...originalWindow?.screen,
@@ -110,7 +114,8 @@ describe('Performance Debounce Configuration', () => {
     });
 
     it('should return high config for high-end devices', () => {
-      global.window = {
+      // noinspection JSConstantReassignment
+        global.window = {
         ...originalWindow,
         navigator: {
           ...originalWindow?.navigator,
@@ -128,7 +133,8 @@ describe('Performance Debounce Configuration', () => {
     });
 
     it('should return low-end config for low-end devices', () => {
-      global.window = {
+      // noinspection JSConstantReassignment
+        global.window = {
         ...originalWindow,
         navigator: {
           ...originalWindow?.navigator,
@@ -142,7 +148,8 @@ describe('Performance Debounce Configuration', () => {
     });
 
     it('should return balanced config for mid-range devices', () => {
-      global.window = {
+      // noinspection JSConstantReassignment
+        global.window = {
         ...originalWindow,
         navigator: {
           ...originalWindow?.navigator,
@@ -200,7 +207,8 @@ describe('Performance Debounce Configuration', () => {
 
       expect(() => {
         // @ts-expect-error - Testing immutability
-        config.renderDelayMs = 100;
+        // noinspection JSConstantReassignment
+          config.renderDelayMs = 100;
       }).toThrow();
     });
   });

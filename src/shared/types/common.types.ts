@@ -6,16 +6,16 @@ import type React from 'react';
  * functional programming patterns and immutable data structures.
  */
 
-import type { Brand, ComponentId } from './result.types';
+import type { Brand, ComponentId } from '@/shared';
 
 /**
  * Application-wide configuration types
  */
 export interface AppConfig {
   readonly debounceMs: number;
-  readonly enableAutoSave: boolean;
-  readonly enableRealTimeParsing: boolean;
-  readonly enableRealTimeRendering: boolean;
+  enableAutoSave: boolean;
+  enableRealTimeParsing: boolean;
+  enableRealTimeRendering: boolean;
   readonly theme: 'light' | 'dark' | 'auto';
   readonly performance: PerformanceConfig;
   readonly debounceConfig?: DebounceConfig;
@@ -64,11 +64,11 @@ export interface EditorSelection {
 }
 
 export interface EditorState {
-  readonly code: string;
-  readonly cursorPosition: EditorPosition;
-  readonly selection: EditorSelection | null;
-  readonly isDirty: boolean;
-  readonly lastSaved: Date | null;
+  code: string;
+  cursorPosition: EditorPosition;
+  selection: EditorSelection | null;
+  isDirty: boolean;
+  lastSaved: Date | null;
 }
 
 /**

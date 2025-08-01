@@ -9,7 +9,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ASTNode } from '../../openscad-parser/core/ast-types';
+import type { ASTNode } from '@/features/openscad-parser';
 import {
   ASTAnalyzer,
   ASTNodeProcessor,

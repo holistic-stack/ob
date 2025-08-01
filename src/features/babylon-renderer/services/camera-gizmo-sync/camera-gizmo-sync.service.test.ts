@@ -12,8 +12,8 @@
 
 import * as BABYLON from '@babylonjs/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createAppStore } from '../../../store/app-store';
-import { AxisDirection } from '../../types/orientation-gizmo.types';
+import { AxisDirection } from '@/features/babylon-renderer/types';
+import { createAppStore } from '@/features/store';
 import { OrientationGizmoService } from '../orientation-gizmo-service/orientation-gizmo.service';
 import type { CameraGizmoSyncConfig } from './camera-gizmo-sync.service';
 import { CameraGizmoSyncService } from './camera-gizmo-sync.service';

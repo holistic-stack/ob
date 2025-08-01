@@ -7,8 +7,8 @@
 
 import * as BABYLON from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { GenericMeshData } from '../../types/generic-mesh-data.types';
-import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
+import type { GenericMeshData } from '@/features/babylon-renderer';
+import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '@/features/babylon-renderer';
 import {
   convertBabylonMeshToGeneric,
   convertGenericMeshToBabylon,

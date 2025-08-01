@@ -5,13 +5,13 @@
 
 import { Engine, Scene } from '@babylonjs/core';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { isError, isSuccess } from '../../../../shared/utils/functional/result';
 import type {
   ASTNode,
   AssignStatementNode,
   CubeNode,
   SphereNode,
-} from '../../../openscad-parser/core/ast-types';
+} from '@/features/openscad-parser';
+import { isError, isSuccess } from '@/shared';
 import { OpenSCADRenderingPipelineService } from './openscad-rendering-pipeline';
 
 // Mock BabylonJS for testing

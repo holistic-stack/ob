@@ -33,15 +33,14 @@
  * @since 2025-07-29
  */
 
-import type { Result } from '../../../../../../shared/types/result.types';
-import { isError } from '../../../../../../shared/types/result.types';
-import { error, success } from '../../../../../../shared/utils/functional/result';
+import type { PolygonParameters } from '@/features/openscad-geometry-builder';
+import type { Result } from '@/shared';
+import { error, isError, success } from '@/shared';
 import type {
   Geometry2DGenerationError,
   Polygon2DGeometryData,
 } from '../../../../types/2d-geometry-data';
 import type { Vector2 } from '../../../../types/geometry-data';
-import type { PolygonParameters } from '../../../../types/primitive-parameters';
 
 /**
  * Polygon generation result type

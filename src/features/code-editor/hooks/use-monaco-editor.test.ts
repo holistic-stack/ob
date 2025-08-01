@@ -7,7 +7,7 @@
 
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createAppStore } from '../../store/app-store';
+import { createAppStore } from '@/features/store';
 import { useMonacoEditor } from './use-monaco-editor';
 
 // Mock Monaco Editor

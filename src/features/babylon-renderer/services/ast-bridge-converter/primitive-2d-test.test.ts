@@ -7,9 +7,9 @@
 
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { CircleNode, SquareNode } from '../../../openscad-parser/ast/ast-types';
+import type { CircleNode, SquareNode } from '@/features/openscad-parser';
+import type { OpenSCADGlobalsState } from '@/features/store/slices/openscad-globals-slice';
 import { createSourceLocation } from '../../../openscad-parser/services/test-utils';
-import type { OpenSCADGlobalsState } from '../../../store/slices/openscad-globals-slice/openscad-globals-slice.types';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 
 describe('PrimitiveBabylonNode - 2D Primitives', () => {

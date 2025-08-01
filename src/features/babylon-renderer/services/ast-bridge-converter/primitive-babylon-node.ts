@@ -29,14 +29,13 @@ import {
   VertexData,
 } from '@babylonjs/core';
 import earcut from 'earcut';
-import {
-  calculateFragments,
-  OPENSCAD_FALLBACK,
-  OPENSCAD_GLOBALS,
-} from '../../../../shared/constants/openscad-globals/openscad-globals.constants';
-import { createLogger } from '../../../../shared/services/logger.service';
-import { tryCatch } from '../../../../shared/utils/functional/result';
-
+import type {
+  BabylonJSError,
+  BabylonJSNode,
+  NodeGenerationResult,
+  NodeValidationResult,
+} from '@/features/babylon-renderer/types';
+import { BabylonJSNodeType } from '@/features/babylon-renderer/types';
 import type {
   ASTNode,
   CircleNode,
@@ -47,15 +46,14 @@ import type {
   SourceLocation,
   SphereNode,
   SquareNode,
-} from '../../../openscad-parser/ast/ast-types';
-import type { OpenSCADGlobalsState } from '../../../store/slices/openscad-globals-slice/openscad-globals-slice.types';
+} from '@/features/openscad-parser';
+import type { OpenSCADGlobalsState } from '@/features/store/slices/openscad-globals-slice';
+import { createLogger, tryCatch } from '@/shared';
 import {
-  type BabylonJSError,
-  BabylonJSNode,
-  BabylonJSNodeType,
-  type NodeGenerationResult,
-  type NodeValidationResult,
-} from '../../types/babylon-ast.types';
+  calculateFragments,
+  OPENSCAD_FALLBACK,
+  OPENSCAD_GLOBALS,
+} from '@/shared/constants/openscad-globals/openscad-globals.constants.ts';
 
 const logger = createLogger('PrimitiveBabylonNode');
 

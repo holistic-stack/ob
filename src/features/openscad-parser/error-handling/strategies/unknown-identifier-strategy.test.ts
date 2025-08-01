@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { UnknownIdentifierStrategy } from '@/features/openscad-parser';
 import { ErrorCode, ParserError, Severity } from '../types/error-types.js';
-import { UnknownIdentifierStrategy } from './unknown-identifier-strategy.js';
 
 describe('UnknownIdentifierStrategy', () => {
   let strategy: UnknownIdentifierStrategy;

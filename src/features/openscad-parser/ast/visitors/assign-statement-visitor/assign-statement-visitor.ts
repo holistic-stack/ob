@@ -47,13 +47,13 @@
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
-import type { ErrorHandler } from '../../../error-handling/index.js';
-import type * as ast from '../../ast-types.js';
+import type { ErrorHandler } from '@/features/openscad-parser';
 import {
   type ExtractedNamedArgument,
   type ExtractedParameter,
   extractArguments,
-} from '../../extractors/argument-extractor.js';
+} from '@/features/openscad-parser';
+import type * as ast from '../../ast-types.js';
 import { getLocation } from '../../utils/location-utils.js';
 import { BaseASTVisitor } from '../base-ast-visitor.js';
 

@@ -6,13 +6,13 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import type {
   DifferenceNode,
   IntersectionNode,
+  OpenscadParser,
   UnionNode,
-} from '../../../openscad-parser/ast/ast-types';
-import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
+} from '@/features/openscad-parser';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import { CSGBabylonNode } from './csg-babylon-node';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 

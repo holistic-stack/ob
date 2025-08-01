@@ -25,10 +25,9 @@
  */
 
 import type { AbstractMesh, Scene as BabylonScene } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
+import { BabylonMeshBuilderService } from '@/features/openscad-geometry-builder';
+import { createLogger, error, success } from '@/shared';
 import type { Result } from '../../../../shared/types/result';
-import { error, success } from '../../../../shared/utils/functional/result';
-import { BabylonMeshBuilderService } from '../geometry-bridge/babylon-mesh-builder/babylon-mesh-builder';
 import type {
   Geometry2DData,
   Geometry3DData,

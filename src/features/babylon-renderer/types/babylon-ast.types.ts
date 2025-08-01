@@ -332,8 +332,8 @@
  */
 
 import type { AbstractMesh, Scene, Vector3 } from '@babylonjs/core';
-import type { Result } from '../../../shared/types/result.types';
-import type { SourceLocation } from '../../openscad-parser/ast/ast-types';
+import type { SourceLocation } from '@/features/openscad-parser';
+import type { Result } from '@/shared';
 
 /**
  * BabylonJS-Extended AST Node Types

@@ -13,13 +13,8 @@
  * to ensure a consistent and reliable parsing process, mitigating issues related to parser state corruption.
  */
 
-import { createLogger } from '../../../shared/services/logger.service.js';
-import type {
-  AsyncOperationResult,
-  OperationError,
-} from '../../../shared/types/operations.types.js';
-import { isSuccess, type Result } from '../../../shared/types/result.types.js';
-import { operationUtils } from '../../../shared/types/utils.js';
+import type { AsyncOperationResult, OperationError } from '@/shared';
+import { createLogger, isSuccess, operationUtils, type Result } from '@/shared';
 import type { ASTNode } from '../core/ast-types.js';
 import { getInitializedParser, initializeParser } from './parser-initialization.service.js';
 

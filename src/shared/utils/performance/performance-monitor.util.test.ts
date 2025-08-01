@@ -183,7 +183,8 @@ describe('MemoryMonitor', () => {
       // Mock a performance object without memory property
       const originalPerformance = global.performance;
       // @ts-expect-error - Testing performance without memory
-      global.performance = { now: performance.now };
+      // noinspection JSConstantReassignment
+        global.performance = { now: performance.now };
 
       monitor = new MemoryMonitor();
       const usage = monitor.getCurrentUsageMB();
@@ -194,7 +195,8 @@ describe('MemoryMonitor', () => {
       expect(pressure.recommendedAction).toContain('not available');
 
       // Restore original performance
-      global.performance = originalPerformance;
+      // noinspection JSConstantReassignment
+        global.performance = originalPerformance;
     });
   });
 });

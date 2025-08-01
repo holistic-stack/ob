@@ -25,7 +25,7 @@
  */
 
 import type { Page } from '@playwright/test';
-import { createLogger } from '../../../../shared/services/logger.service';
+import { createLogger } from '@/shared';
 
 const logger = createLogger('CanvasReadyUtils');
 

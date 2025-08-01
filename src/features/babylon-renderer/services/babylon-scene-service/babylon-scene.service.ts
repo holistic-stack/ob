@@ -498,9 +498,9 @@ import {
   HemisphericLight,
   Vector3,
 } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
-import { CameraControlService } from '../camera-control/camera-control.service';
+import { CameraControlService } from '@/features/babylon-renderer';
+import type { Result } from '@/shared';
+import { createLogger } from '@/shared';
 
 const logger = createLogger('BabylonSceneService');
 

@@ -24,9 +24,15 @@
  * @since 2025-07-31
  */
 
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result';
-import { error, success } from '../../../../shared/utils/functional/result';
+import {
+  CircleGeneratorService,
+  CubeGeneratorService,
+  CylinderGeneratorService,
+  FragmentCalculatorService,
+  PolygonGeneratorService,
+  SphereGeneratorService,
+  SquareGeneratorService,
+} from '@/features/openscad-geometry-builder';
 import type {
   ASTNode,
   CircleNode,
@@ -35,15 +41,10 @@ import type {
   PolygonNode,
   SphereNode,
   SquareNode,
-} from '../../../openscad-parser/core/ast-types';
-import { FragmentCalculatorService } from '../fragment-calculator/fragment-calculator';
+} from '@/features/openscad-parser';
+import { createLogger, error, success } from '@/shared';
+import type { Result } from '../../../../shared/types/result';
 import type { GeometryData } from '../geometry-data/geometry-data-types';
-import { CircleGeneratorService } from '../primitive-generators/2d-primitives/circle-generator/circle-generator';
-import { PolygonGeneratorService } from '../primitive-generators/2d-primitives/polygon-generator/polygon-generator';
-import { SquareGeneratorService } from '../primitive-generators/2d-primitives/square-generator/square-generator';
-import { CubeGeneratorService } from '../primitive-generators/3d-primitives/cube-generator/cube-generator';
-import { CylinderGeneratorService } from '../primitive-generators/3d-primitives/cylinder-generator/cylinder-generator';
-import { SphereGeneratorService } from '../primitive-generators/3d-primitives/sphere-generator/sphere-generator';
 
 const logger = createLogger('ASTToGeometryConverterService');
 
@@ -51,10 +52,10 @@ const logger = createLogger('ASTToGeometryConverterService');
  * Global variables extracted from OpenSCAD AST
  */
 export interface GlobalVariables {
-  readonly $fn?: number;
-  readonly $fa: number;
-  readonly $fs: number;
-  readonly $t: number;
+  $fn?: number;
+  $fa: number;
+  $fs: number;
+  $t: number;
 }
 
 /**

@@ -7,8 +7,8 @@
 
 import type { Mesh, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { CSGOperationConfig } from '../../types/babylon-csg.types';
-import { CSGOperationType, DEFAULT_CSG_CONFIG } from '../../types/babylon-csg.types';
+import type { CSGOperationConfig } from '@/features/babylon-renderer';
+import { CSGOperationType, DEFAULT_CSG_CONFIG } from '@/features/babylon-renderer';
 import { BabylonCSG2Service } from './babylon-csg2-service';
 
 // Mock BabylonJS components for testing

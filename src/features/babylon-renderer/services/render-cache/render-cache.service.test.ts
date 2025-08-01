@@ -9,8 +9,8 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { isError, isSuccess } from '../../../../shared/utils/functional/result';
-import type { ASTNode } from '../../../openscad-parser/core/ast-types';
+import type { ASTNode } from '@/features/openscad-parser';
+import { isError, isSuccess } from '@/shared';
 import { RenderCacheService } from './render-cache.service';
 
 // Mock BabylonJS AbstractMesh for testing

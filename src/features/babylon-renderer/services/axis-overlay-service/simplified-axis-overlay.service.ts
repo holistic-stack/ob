@@ -25,7 +25,7 @@ import { AxisValidationUtils, type ValidationOptions } from './axis-validation/a
  * Simplified configuration for axis overlay
  */
 export interface SimplifiedAxisConfig {
-  readonly visible?: boolean;
+  visible?: boolean;
   readonly pixelWidth?: number;
   readonly length?: number;
   readonly opacity?: number;

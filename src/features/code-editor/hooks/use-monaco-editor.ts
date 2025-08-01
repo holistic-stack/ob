@@ -238,17 +238,15 @@
 
 import type * as monaco from 'monaco-editor';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createLogger } from '../../../shared/services/logger.service.js';
-import { debounce } from '../../../shared/utils/functional/pipe.js';
-import { tryCatch } from '../../../shared/utils/functional/result.js';
-import type { AppStore } from '../../store/app-store.js';
-import { useAppStore } from '../../store/app-store.js';
+import type { AppStore } from '@/features/store';
 import {
   selectConfigDebounceMs,
   selectEditorCode,
   selectEditorCursorPosition,
   selectEditorSelection,
-} from '../../store/selectors/index.js';
+  useAppStore,
+} from '@/features/store';
+import { createLogger, debounce, tryCatch } from '@/shared';
 import type {
   EditorPerformanceMetrics,
   EditorStateManager,

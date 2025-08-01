@@ -86,21 +86,19 @@
  * ```
  */
 
+import type { ASTNode } from '@/features/openscad-parser';
 // TODO: Replace with BabylonJS types
 import type {
   AppConfig,
+  AsyncOperationResult,
+  AsyncResult,
   DebounceConfig,
   EditorPosition,
   EditorSelection,
   EditorState,
-} from '../../../shared/types/common.types';
-import type {
-  AsyncOperationResult,
   OperationError,
   OperationMetadata,
-} from '../../../shared/types/operations.types.js';
-import type { AsyncResult } from '../../../shared/types/result.types.js';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+} from '@/shared';
 import type {
   BabylonRenderingActions,
   BabylonRenderingState,
@@ -237,12 +235,12 @@ export type { BabylonRenderingState };
  * ```
  */
 export interface ParsingState {
-  readonly ast: ReadonlyArray<ASTNode>;
-  readonly errors: ReadonlyArray<string>;
-  readonly warnings: ReadonlyArray<string>;
-  readonly isLoading: boolean;
-  readonly lastParsed: Date | null;
-  readonly lastParsedCode: string | null; // Track last parsed code to avoid redundant parsing
+  ast: ReadonlyArray<ASTNode>;
+  errors: ReadonlyArray<string>;
+  warnings: ReadonlyArray<string>;
+  isLoading: boolean;
+  lastParsed: Date | null;
+  lastParsedCode: string | null; // Track last parsed code to avoid redundant parsing
   readonly parseTime: number; // parsing time in milliseconds
 }
 
@@ -417,7 +415,7 @@ export interface AppState {
   readonly parsing: ParsingState;
   readonly babylonRendering: BabylonRenderingState;
   readonly openscadGlobals: OpenSCADGlobalsState;
-  readonly config: AppConfig;
+  config: AppConfig;
 }
 
 // =================================================================

@@ -7,8 +7,8 @@
 import type { AbstractMesh } from '@babylonjs/core';
 import { CreateBox, type Engine, NullEngine, Scene } from '@babylonjs/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { selectSelectedMesh, selectTransformationGizmoMode } from '@/features/store';
 import { createAppStore } from '../app-store';
-import { selectSelectedMesh, selectTransformationGizmoMode } from '../selectors/store.selectors';
 
 // Mock ResizeObserver for headless testing
 global.ResizeObserver = vi.fn().mockImplementation(() => ({

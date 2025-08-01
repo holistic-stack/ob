@@ -7,7 +7,7 @@
 
 import type React from 'react';
 import { Component } from 'react';
-import { createLogger } from '../../services/logger.service';
+import { createLogger } from '@/shared';
 
 const logger = createLogger('ErrorBoundary');
 

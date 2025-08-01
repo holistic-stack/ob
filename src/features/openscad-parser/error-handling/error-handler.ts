@@ -45,8 +45,8 @@
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
+import { RecoveryStrategyRegistry } from '@/features/openscad-parser';
 import { Logger, type LoggerOptions } from './logger.js';
-import { RecoveryStrategyRegistry } from './recovery-strategy-registry.js';
 import {
   ReferenceError as CustomReferenceError,
   SyntaxError as CustomSyntaxError,

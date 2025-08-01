@@ -5,8 +5,8 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { SimpleErrorHandler } from '@/features/openscad-parser';
 import type { ASTNode } from '../../ast/ast-types';
-import { SimpleErrorHandler } from '../../error-handling/simple-error-handler';
 import { OpenscadParser } from '../../openscad-parser';
 import { ModuleRegistry } from '../module-registry/module-registry';
 import { ModuleResolver } from './module-resolver';

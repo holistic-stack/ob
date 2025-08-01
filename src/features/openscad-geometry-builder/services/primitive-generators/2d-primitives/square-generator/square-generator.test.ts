@@ -17,8 +17,8 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { isError, isSuccess } from '../../../../../../shared/types/result.types';
-import type { SquareParameters } from '../../../../types/primitive-parameters';
+import type { SquareParameters } from '@/features/openscad-geometry-builder';
+import { isError, isSuccess } from '@/shared';
 import { SquareGeneratorService } from './square-generator';
 
 describe('SquareGeneratorService', () => {

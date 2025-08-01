@@ -8,6 +8,13 @@ docs\openscad-babylon-architecture.md
 docs\bulletproof-react-structure.md
 tasks\refactory-architecture.md 
 
+.trae/documents/api-reference.md
+.trae/documents/architecture-overview.md
+.trae/documents/coding-patterns.md
+.trae/documents/development-workflow.md
+.trae/documents/feature-guide.md
+.trae/rules/project_rules.md
+
 ## Coding Best Practices 
 IMPORTANT ALWAYS run `pnpm type-check` and `pnpm biome:fix` after each incremental change to AVOID CREATE NEW compilation errors and Biome violations;
  

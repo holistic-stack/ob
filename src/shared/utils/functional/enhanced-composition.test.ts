@@ -16,7 +16,7 @@ import {
   retryWithLogging,
   safePipe,
   throttleWithLogging,
-} from './enhanced-composition';
+} from '@/shared';
 
 describe('Enhanced Functional Composition', () => {
   describe('pipeWithLogging', () => {

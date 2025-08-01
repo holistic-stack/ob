@@ -6,7 +6,7 @@
  */
 
 import type { Mesh } from '@babylonjs/core';
-import type { Result } from '../../../shared/types/result.types';
+import type { Result } from '@/shared';
 
 /**
  * CSG2 operation types

@@ -6,7 +6,7 @@
  */
 
 import type { Engine, EngineOptions } from '@babylonjs/core';
-import type { Result } from '../../../shared/types/result.types';
+import type { Result } from '@/shared';
 
 /**
  * BabylonJS engine configuration

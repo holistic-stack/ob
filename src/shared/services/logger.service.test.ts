@@ -6,7 +6,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
-import { createLogger, logger } from './logger.service';
+import { createLogger, logger } from '@/shared';
 
 describe('Logger Service', () => {
   let consoleSpy: MockInstance;

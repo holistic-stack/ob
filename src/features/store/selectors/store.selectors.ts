@@ -383,10 +383,14 @@
 
 import type { Mesh } from '@babylonjs/core';
 import { createSelector } from 'reselect';
+import type {
+  AppState,
+  BabylonRenderingState,
+  ParsingState,
+  RenderingError,
+} from '@/features/store';
 // TODO: Replace with BabylonJS mesh types
-import type { AppConfig, EditorState } from '../../../shared/types/common.types';
-import type { BabylonRenderingState } from '../slices/babylon-rendering-slice';
-import type { AppState, ParsingState, RenderingError } from '../types/store.types';
+import type { AppConfig, EditorState } from '@/shared';
 
 /**
  * Editor selectors

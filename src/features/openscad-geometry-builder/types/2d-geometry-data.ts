@@ -26,8 +26,8 @@
  * @since 2025-07-29
  */
 
-import type { Result } from '../../../shared/types/result.types';
-import { error, success } from '../../../shared/utils/functional/result';
+import type { Result } from '@/shared';
+import { error, success } from '@/shared';
 import type { Vector2 } from './geometry-data';
 
 /**

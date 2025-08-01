@@ -30,10 +30,10 @@
  */
 
 import type { Scene } from '@babylonjs/core';
-import type { Result } from '../../../shared/types/result.types';
-import { error, success } from '../../../shared/utils/functional/result';
-import { MemoryMonitor, PerformanceTimer } from '../../../shared/utils/performance';
-import type { ASTNode } from '../../openscad-parser/core/ast-types';
+import type { ASTNode } from '@/features/openscad-parser';
+import type { Result } from '@/shared';
+import { error, success } from '@/shared';
+import { MemoryMonitor, PerformanceTimer } from '@/shared/utils/performance';
 import { ASTNodeProcessor, ASTProcessingPipeline } from '../ast-processing';
 import { ConditionalProcessor, ModuleProcessingPipeline } from '../module-system';
 

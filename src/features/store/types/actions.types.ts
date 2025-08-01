@@ -5,19 +5,17 @@
  * following functional programming patterns and type safety.
  */
 
+import type { ASTNode } from '@/features/openscad-parser';
 // TODO: Replace with BabylonJS types
-import type { CoreNode } from '../../../shared/types/ast.types.js';
 import type {
   AppConfig,
+  AsyncOperationResult,
   CameraConfig,
+  CoreNode,
   EditorPosition,
   EditorSelection,
-} from '../../../shared/types/common.types';
-import type {
-  AsyncOperationResult,
   OperationError,
-} from '../../../shared/types/operations.types.js';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+} from '@/shared';
 
 /**
  * Editor action payload types

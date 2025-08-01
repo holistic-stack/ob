@@ -8,7 +8,7 @@
  * @since 2025-07-29
  */
 
-import { OPENSCAD_GLOBALS } from '../../../shared/constants/openscad-globals/openscad-globals.constants';
+import { OPENSCAD_GLOBALS } from '@/shared/constants/openscad-globals/openscad-globals.constants.ts';
 import type { Vector3 } from '../types/geometry-data';
 
 /**

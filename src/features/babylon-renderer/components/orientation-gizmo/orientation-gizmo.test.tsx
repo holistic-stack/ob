@@ -13,9 +13,9 @@
 import * as BABYLON from '@babylonjs/core';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { appStoreInstance } from '../../../store/app-store';
-import type { GizmoConfig, GizmoError } from '../../types/orientation-gizmo.types';
-import { AxisDirection, GizmoErrorCode } from '../../types/orientation-gizmo.types';
+import type { GizmoConfig, GizmoError } from '@/features/babylon-renderer/types';
+import { AxisDirection, GizmoErrorCode } from '@/features/babylon-renderer/types';
+import { appStoreInstance } from '@/features/store';
 import type { OrientationGizmoProps } from './orientation-gizmo';
 import { OrientationGizmo } from './orientation-gizmo';
 

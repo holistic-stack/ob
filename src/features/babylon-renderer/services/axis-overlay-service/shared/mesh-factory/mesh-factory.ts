@@ -5,7 +5,7 @@
  */
 
 import { type LinesMesh, MeshBuilder, type Scene, type Vector3 } from '@babylonjs/core';
-import type { Result } from '../../../../../../shared/types/result.types';
+import type { Result } from '@/shared';
 
 /**
  * Configuration for creating line meshes

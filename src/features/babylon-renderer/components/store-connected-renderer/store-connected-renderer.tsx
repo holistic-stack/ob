@@ -162,10 +162,8 @@ import {
 } from '@babylonjs/core';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { OPTIMIZED_DEBOUNCE_CONFIG } from '../../../../shared/config/debounce-config.js';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { ASTNode } from '../../../openscad-parser/core/ast-types';
-import { useAppStore } from '../../../store/app-store';
+import { CameraStoreSyncService } from '@/features/babylon-renderer';
+import type { ASTNode } from '@/features/openscad-parser';
 import {
   selectGizmoIsVisible,
   selectParsingAST,
@@ -174,9 +172,11 @@ import {
   selectRenderingMeshes,
   selectSelectedMesh,
   selectTransformationGizmoMode,
-} from '../../../store/selectors';
+  useAppStore,
+} from '@/features/store';
+import { createLogger } from '@/shared';
+import { OPTIMIZED_DEBOUNCE_CONFIG } from '@/shared/config/debounce-config.ts';
 import type { BabylonSceneService } from '../../services/babylon-scene-service';
-import { CameraStoreSyncService } from '../../services/camera-store-sync/camera-store-sync.service.js';
 import type { BabylonSceneProps } from '../babylon-scene';
 import { BabylonScene } from '../babylon-scene';
 import { CameraControls } from '../camera-controls';

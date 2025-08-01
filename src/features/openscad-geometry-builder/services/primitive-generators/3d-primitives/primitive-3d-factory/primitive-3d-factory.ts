@@ -45,8 +45,14 @@
  * @since 2025-07-29
  */
 
-import type { Result } from '../../../../../../shared/types/result.types';
-import { error } from '../../../../../../shared/utils/functional/result';
+import type {
+  CubeParameters,
+  CylinderParameters,
+  PolyhedronParameters,
+  SphereParameters,
+} from '@/features/openscad-geometry-builder';
+import type { Result } from '@/shared';
+import { error } from '@/shared';
 import type {
   CubeGeometryData,
   CylinderGeometryData,
@@ -54,12 +60,6 @@ import type {
   PolyhedronGeometryData,
   SphereGeometryData,
 } from '../../../../types/geometry-data';
-import type {
-  CubeParameters,
-  CylinderParameters,
-  PolyhedronParameters,
-  SphereParameters,
-} from '../../../../types/primitive-parameters';
 import type { FragmentCalculatorService } from '../../../fragment-calculator';
 import { CubeGeneratorService } from '../cube-generator';
 import { CylinderGeneratorService } from '../cylinder-generator';

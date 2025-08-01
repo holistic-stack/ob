@@ -19,7 +19,7 @@
  */
 
 import type { Engine, Scene } from '@babylonjs/core';
-import type { Result } from '../../../../shared/types/result.types';
+import type { Result } from '@/shared';
 
 /**
  * Error codes for buffer clearing operations

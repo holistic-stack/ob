@@ -251,8 +251,7 @@
 import MonacoEditor from '@monaco-editor/react';
 import type * as monaco from 'monaco-editor';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { createLogger } from '../../../shared/services/logger.service.js';
-import { tryCatch } from '../../../shared/utils/functional/result.js';
+import { createLogger, tryCatch } from '@/shared';
 import type {
   EditorChangeEvent,
   EditorCursorEvent,

@@ -7,10 +7,14 @@
 
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type {
+  CubeNode,
+  CylinderNode,
+  OpenscadParser,
+  SphereNode,
+} from '@/features/openscad-parser';
+import type { OpenSCADGlobalsState } from '@/features/store/slices/openscad-globals-slice';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
-import type { CubeNode, CylinderNode, SphereNode } from '../../../openscad-parser/ast/ast-types';
-import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
-import type { OpenSCADGlobalsState } from '../../../store/slices/openscad-globals-slice/openscad-globals-slice.types';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 
 describe('PrimitiveBabylonNode', () => {

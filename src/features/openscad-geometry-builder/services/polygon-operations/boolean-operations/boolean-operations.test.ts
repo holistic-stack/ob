@@ -19,7 +19,7 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { isError, isSuccess } from '../../../../../shared/types/result.types';
+import { isError, isSuccess } from '@/shared';
 import type {
   Circle2DGeometryData,
   Polygon2DGeometryData,

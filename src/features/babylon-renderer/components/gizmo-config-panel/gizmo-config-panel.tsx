@@ -46,15 +46,15 @@
 
 import type React from 'react';
 import { useCallback, useState } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
-import { useAppStore } from '../../../store/app-store';
+import type { GizmoConfig, GizmoPosition } from '@/features/babylon-renderer/types';
+import { DEFAULT_GIZMO_CONFIG } from '@/features/babylon-renderer/types';
 import {
   selectGizmoConfig,
   selectGizmoIsVisible,
   selectGizmoPosition,
-} from '../../../store/selectors/store.selectors';
-import type { GizmoConfig, GizmoPosition } from '../../types/orientation-gizmo.types';
-import { DEFAULT_GIZMO_CONFIG } from '../../types/orientation-gizmo.types';
+  useAppStore,
+} from '@/features/store';
+import { createLogger } from '@/shared';
 
 const logger = createLogger('GizmoConfigPanel');
 

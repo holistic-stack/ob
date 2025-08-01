@@ -1,7 +1,7 @@
 import type { Node as TSNode } from 'web-tree-sitter';
-import type { ErrorHandler } from '../../../../error-handling/index.js';
+import type { ErrorHandler } from '@/features/openscad-parser';
+import { getLocation } from '@/features/openscad-parser';
 import type * as ast from '../../../ast-types.js';
-import { getLocation } from '../../../utils/location-utils.js';
 import { BaseASTVisitor } from '../../base-ast-visitor.js'; // Assuming this is the correct path
 import type { ExpressionVisitor } from '../../expression-visitor.js'; // Parent visitor
 

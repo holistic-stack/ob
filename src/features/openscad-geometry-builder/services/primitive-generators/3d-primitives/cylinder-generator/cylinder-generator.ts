@@ -35,15 +35,14 @@
  * @since 2025-07-29
  */
 
-import type { Result } from '../../../../../../shared/types/result.types';
-import { isError } from '../../../../../../shared/types/result.types';
-import { error, success } from '../../../../../../shared/utils/functional/result';
+import type { CylinderParameters } from '@/features/openscad-geometry-builder';
+import type { Result } from '@/shared';
+import { error, isError, success } from '@/shared';
 import type {
   CylinderGeometryData,
   GeometryGenerationError,
   Vector3,
 } from '../../../../types/geometry-data';
-import type { CylinderParameters } from '../../../../types/primitive-parameters';
 import {
   calculateFragmentsWithErrorHandling,
   createGeometryData,

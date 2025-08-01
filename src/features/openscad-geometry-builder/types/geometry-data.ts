@@ -25,16 +25,16 @@
  * @since 2025-07-29
  */
 
-import type { Result } from '../../../shared/types/result.types';
-import { error, success } from '../../../shared/utils/functional/result';
+import type { Result } from '@/shared';
+import { error, success } from '@/shared';
 
 /**
  * 3D Vector representation matching OpenSCAD coordinate system (Z-up, right-handed)
  */
 export interface Vector3 {
-  readonly x: number;
-  readonly y: number;
-  readonly z: number;
+  x: number;
+  y: number;
+  z: number;
 }
 
 /**

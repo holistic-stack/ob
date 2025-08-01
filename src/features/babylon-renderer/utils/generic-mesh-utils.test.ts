@@ -7,8 +7,8 @@
 
 import { BoundingBox, Matrix, Vector3 } from '@babylonjs/core';
 import { describe, expect, it } from 'vitest';
-import type { GenericGeometry, GenericMeshData } from '../types/generic-mesh-data.types';
-import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../types/generic-mesh-data.types';
+import type { GenericGeometry, GenericMeshData } from '@/features/babylon-renderer';
+import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '@/features/babylon-renderer';
 import {
   applyModifierToMaterial,
   calculateSurfaceArea,

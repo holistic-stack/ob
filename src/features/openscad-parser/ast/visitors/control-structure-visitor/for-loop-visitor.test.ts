@@ -6,11 +6,10 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
-import { ErrorHandler } from '../../../error-handling/index.js';
+import { ControlStructureVisitor, ErrorHandler } from '@/features/openscad-parser';
 import { OpenscadParser } from '../../../openscad-parser';
 import type * as ast from '../../ast-types.js';
 import { printNodeStructure } from '../../utils/debug-utils.js';
-import { ControlStructureVisitor } from '../control-structure-visitor.js';
 
 describe('ForLoopVisitor', () => {
   let parser: OpenscadParser;

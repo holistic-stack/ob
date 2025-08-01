@@ -179,8 +179,7 @@
 
 import type * as monaco from 'monaco-editor';
 import type * as React from 'react';
-import type { EditorPosition } from '../../../shared/types/common.types';
-import type { AsyncResult, Result } from '../../../shared/types/result.types';
+import type { AsyncResult, EditorPosition, Result } from '@/shared';
 
 /**
  * @interface MonacoEditorConfig

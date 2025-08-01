@@ -7,13 +7,8 @@
 
 import * as BABYLON from '@babylonjs/core';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createLogger } from '../../../shared/services/logger.service';
-import type {
-  ASTNode,
-  RotateNode,
-  ScaleNode,
-  TranslateNode,
-} from '../../openscad-parser/ast/ast-types';
+import type { ASTNode, RotateNode, ScaleNode, TranslateNode } from '@/features/openscad-parser';
+import { createLogger } from '@/shared';
 import { getParserInitializationService } from '../../openscad-parser/services/parser-initialization.service';
 
 const logger = createLogger('OpenSCADPipelineTest');

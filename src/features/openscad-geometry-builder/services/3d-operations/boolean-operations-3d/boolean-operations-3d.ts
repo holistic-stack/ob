@@ -29,17 +29,16 @@
  */
 
 import * as BABYLON from '@babylonjs/core';
-import { createLogger } from '../../../../../shared/services/logger.service';
-import type { Result } from '../../../../../shared/types/result.types';
-import { error, success } from '../../../../../shared/utils/functional/result';
-import { BabylonCSG2Service } from '../../../../babylon-renderer/services/babylon-csg2-service';
+import { BabylonCSG2Service } from '@/features/babylon-renderer';
+import { BabylonMeshBuilderService } from '@/features/openscad-geometry-builder';
+import type { Result } from '@/shared';
+import { createLogger, error, success } from '@/shared';
 import type {
   BaseGeometryData,
   Geometry3DData,
   GeometryGenerationError,
   Vector3,
 } from '../../../types/geometry-data';
-import { BabylonMeshBuilderService } from '../../geometry-bridge/babylon-mesh-builder';
 import { VertexDeduplicationService } from '../vertex-operations/vertex-deduplication';
 
 const logger = createLogger('BooleanOperations3DService');

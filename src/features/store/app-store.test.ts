@@ -8,13 +8,9 @@
 // TODO: Replace with BabylonJS types
 import type { Mesh } from '@babylonjs/core';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type {
-  CameraConfig,
-  EditorPosition,
-  EditorSelection,
-} from '../../shared/types/common.types';
-import { operationUtils } from '../../shared/types/utils.js';
-import type { ASTNode } from '../openscad-parser/core/ast-types.js';
+import type { ASTNode } from '@/features/openscad-parser';
+import type { CameraConfig, EditorPosition, EditorSelection } from '@/shared';
+import { operationUtils } from '@/shared';
 import { createAppStore } from './app-store';
 
 let store: ReturnType<typeof createAppStore>;

@@ -13,15 +13,14 @@ import {
   Vector3,
   VertexData,
 } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch } from '../../../../shared/utils/functional/result';
 import type {
   GenericGeometry,
   GenericMeshData,
   GenericMeshMetadata,
-} from '../../types/generic-mesh-data.types';
-import { MATERIAL_PRESETS } from '../../types/generic-mesh-data.types';
+} from '@/features/babylon-renderer';
+import { MATERIAL_PRESETS } from '@/features/babylon-renderer';
+import type { Result } from '@/shared';
+import { createLogger, tryCatch } from '@/shared';
 
 const logger = createLogger('CSG2MeshConverter');
 

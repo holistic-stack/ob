@@ -23,15 +23,15 @@
 
 import type { Camera, Scene } from '@babylonjs/core';
 import { useCallback, useEffect, useRef } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
-import { useAppStore } from '../../../store/app-store';
-import { createAxisOverlayService } from '../../services/axis-overlay-service';
 import type {
   AxisOverlayConfig,
   AxisOverlayError,
   IAxisOverlayService,
-} from '../../types/axis-overlay.types';
+} from '@/features/babylon-renderer';
+import { createAxisOverlayService } from '@/features/babylon-renderer';
+import { useAppStore } from '@/features/store';
+import type { Result } from '@/shared';
+import { createLogger } from '@/shared';
 import { DEFAULT_AXIS_OVERLAY_CONFIG } from '../../types/axis-overlay.types';
 
 const logger = createLogger('useAxisOverlay');

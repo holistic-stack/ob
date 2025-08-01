@@ -10,8 +10,8 @@ import { CreateBox, type Engine, NullEngine, Scene } from '@babylonjs/core';
 import { cleanup, render, waitFor } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { appStoreInstance, useAppStore } from '../../../store/app-store';
-import type { GizmoMode } from '../../services/transformation-gizmo-service';
+import type { GizmoMode } from '@/features/babylon-renderer';
+import { appStoreInstance, useAppStore } from '@/features/store';
 import { TransformationGizmo } from './transformation-gizmo';
 
 // Mock ResizeObserver for headless testing

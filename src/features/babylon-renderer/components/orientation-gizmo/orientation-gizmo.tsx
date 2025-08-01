@@ -62,24 +62,24 @@ import type { ArcRotateCamera } from '@babylonjs/core';
 import { Vector3 } from '@babylonjs/core';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
-import { useAppStore } from '../../../store/app-store';
-import {
-  selectGizmoConfig,
-  selectGizmoError,
-  selectGizmoIsVisible,
-  selectGizmoPosition,
-  selectGizmoSelectedAxis,
-} from '../../../store/selectors/store.selectors';
-import { OrientationGizmoService } from '../../services/orientation-gizmo-service/orientation-gizmo.service';
 import type {
   AxisDirection,
   GizmoConfig,
   GizmoError,
   GizmoInteractionEvent,
   GizmoPosition,
-} from '../../types/orientation-gizmo.types';
-import { GizmoErrorCode } from '../../types/orientation-gizmo.types';
+} from '@/features/babylon-renderer/types';
+import { GizmoErrorCode } from '@/features/babylon-renderer/types';
+import {
+  selectGizmoConfig,
+  selectGizmoError,
+  selectGizmoIsVisible,
+  selectGizmoPosition,
+  selectGizmoSelectedAxis,
+  useAppStore,
+} from '@/features/store';
+import { createLogger } from '@/shared';
+import { OrientationGizmoService } from '../../services/orientation-gizmo-service/orientation-gizmo.service';
 
 const logger = createLogger('OrientationGizmo');
 

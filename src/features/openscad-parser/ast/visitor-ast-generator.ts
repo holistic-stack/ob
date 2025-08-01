@@ -54,21 +54,22 @@
  */
 
 import type { Language, Tree } from 'web-tree-sitter';
+import {
+  AssertStatementVisitor,
+  CompositeVisitor,
+  ControlStructureVisitor,
+  FunctionVisitor,
+  PrimitiveVisitor,
+  TransformVisitor,
+} from '@/features/openscad-parser';
 import type { ErrorHandler } from '../error-handling/index.js';
 import type * as ast from './ast-types.js';
-import { AssertStatementVisitor } from './visitors/assert-statement-visitor/assert-statement-visitor.js';
 import { AssignStatementVisitor } from './visitors/assign-statement-visitor/assign-statement-visitor.js';
 import type { ASTVisitor } from './visitors/ast-visitor.js';
-import { CompositeVisitor } from './visitors/composite-visitor.js';
-import { ControlStructureVisitor } from './visitors/control-structure-visitor.js';
 import { CSGVisitor } from './visitors/csg-visitor.js';
 import { EchoStatementVisitor } from './visitors/echo-statement-visitor/echo-statement-visitor.js';
 import { ExpressionVisitor } from './visitors/expression-visitor.js';
-import { FunctionVisitor } from './visitors/function-visitor.js';
 import { ModuleVisitor } from './visitors/module-visitor.js';
-import { PrimitiveVisitor } from './visitors/primitive-visitor.js';
-
-import { TransformVisitor } from './visitors/transform-visitor.js';
 import { VariableVisitor } from './visitors/variable-visitor.js';
 
 /**

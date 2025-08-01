@@ -7,10 +7,13 @@
 
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type {
+  LinearExtrudeNode,
+  OpenscadParser,
+  RotateExtrudeNode,
+} from '@/features/openscad-parser';
 import { OPENSCAD_DEFAULTS } from '@/features/store/slices/openscad-globals-slice/index.js';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
-import type { LinearExtrudeNode, RotateExtrudeNode } from '../../../openscad-parser/ast/ast-types';
-import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import { ExtrusionBabylonNode } from './extrusion-babylon-node';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 

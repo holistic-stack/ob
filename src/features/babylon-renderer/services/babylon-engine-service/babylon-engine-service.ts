@@ -6,9 +6,9 @@
  */
 
 import { Engine, NullEngine, WebGPUEngine } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
+import { DEFAULT_ENGINE_CONFIG, EngineErrorCode } from '@/features/babylon-renderer';
+import type { Result } from '@/shared';
+import { createLogger, tryCatch, tryCatchAsync } from '@/shared';
 import type {
   BabylonEngineConfig,
   BabylonEngineState,
@@ -18,7 +18,6 @@ import type {
   EngineInitResult,
   EnginePerformanceMetrics,
 } from '../../types/babylon-engine.types';
-import { DEFAULT_ENGINE_CONFIG, EngineErrorCode } from '../../types/babylon-engine.types';
 
 /**
  * Check if running in test environment

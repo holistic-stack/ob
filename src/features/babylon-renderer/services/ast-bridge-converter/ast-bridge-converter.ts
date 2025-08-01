@@ -498,17 +498,15 @@
  */
 
 import type { Scene } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
-
-import type { ASTNode } from '../../../openscad-parser/ast/ast-types';
-import type { OpenSCADGlobalsState } from '../../../store/slices/openscad-globals-slice/openscad-globals-slice.types';
 import type {
   BabylonJSError,
   BabylonJSNode,
   BridgeConversionResult,
-} from '../../types/babylon-ast.types';
+} from '@/features/babylon-renderer';
+import type { ASTNode } from '@/features/openscad-parser';
+import type { OpenSCADGlobalsState } from '@/features/store/slices/openscad-globals-slice';
+import type { Result } from '@/shared';
+import { createLogger, tryCatch, tryCatchAsync } from '@/shared';
 
 const logger = createLogger('ASTBridgeConverter');
 

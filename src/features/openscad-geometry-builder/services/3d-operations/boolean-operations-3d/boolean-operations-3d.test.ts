@@ -9,7 +9,7 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { isError, isSuccess } from '../../../../../shared/utils/functional/result';
+import { isError, isSuccess } from '@/shared';
 import type {
   CubeGeometryData,
   Geometry3DData,

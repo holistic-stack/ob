@@ -15,8 +15,8 @@
 import { NullEngine, Scene } from '@babylonjs/core';
 // Mock logger to avoid console output during tests
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ASTBridgeConverter } from '../../features/babylon-renderer/services/ast-bridge-converter';
-import { OpenscadParser } from '../../features/openscad-parser';
+import { ASTBridgeConverter } from '@/features/babylon-renderer';
+import { OpenscadParser } from '@/features/openscad-parser';
 
 vi.mock('../../shared/services/logger.service', () => ({
   createLogger: vi.fn(() => ({
@@ -28,7 +28,7 @@ vi.mock('../../shared/services/logger.service', () => ({
   })),
 }));
 
-import { createLogger } from '../../shared/services/logger.service';
+import { createLogger } from '@/shared';
 
 const logger = createLogger('PerformanceBenchmarks');
 

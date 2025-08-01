@@ -15,7 +15,7 @@
 
 import type React from 'react';
 import { useCallback, useState } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
+import { createLogger } from '@/shared';
 import type { BabylonSceneService } from '../../services/babylon-scene-service';
 
 const logger = createLogger('CameraControls');

@@ -6,10 +6,6 @@
  */
 
 import { BoundingBox, type Matrix, Vector3 } from '@babylonjs/core';
-import { createLogger } from '../../../shared/services/logger.service';
-import type { Result } from '../../../shared/types/result.types';
-import { isError, tryCatch } from '../../../shared/utils/functional/result';
-import type { SourceLocation } from '../../openscad-parser/ast/ast-types';
 import type {
   GenericGeometry,
   GenericMaterialConfig,
@@ -18,8 +14,11 @@ import type {
   GenericMeshMetadata,
   MaterialConfigBuilder,
   MeshMetadataBuilder,
-} from '../types/generic-mesh-data.types';
-import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '../types/generic-mesh-data.types';
+} from '@/features/babylon-renderer';
+import { DEFAULT_MESH_METADATA, MATERIAL_PRESETS } from '@/features/babylon-renderer';
+import type { SourceLocation } from '@/features/openscad-parser';
+import type { Result } from '@/shared';
+import { createLogger, isError, tryCatch } from '@/shared';
 
 const logger = createLogger('GenericMeshUtils');
 

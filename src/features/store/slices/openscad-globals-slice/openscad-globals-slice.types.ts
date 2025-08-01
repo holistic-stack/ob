@@ -34,7 +34,8 @@
  * ```
  */
 
-import type { Result } from '../../../../shared/types/result.types.js';
+import type { ASTNode } from '@/features/openscad-parser/ast/ast-types.js';
+import type { Result } from '@/shared';
 
 /**
  * @interface Vector3

@@ -10,8 +10,16 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { appStoreInstance } from '../../../store/app-store';
+import type { GizmoConfig, GizmoError } from '@/features/babylon-renderer/types';
 import {
+  AxisDirection,
+  DEFAULT_GIZMO_CONFIG,
+  GizmoErrorCode,
+  GizmoPosition,
+} from '@/features/babylon-renderer/types';
+import type { AppStore } from '@/features/store';
+import {
+  appStoreInstance,
   selectGizmoConfig,
   selectGizmoError,
   selectGizmoInteractionState,
@@ -23,15 +31,7 @@ import {
   selectGizmoSelectedAxis,
   selectGizmoState,
   selectGizmoStats,
-} from '../../../store/selectors/store.selectors';
-import type { AppStore } from '../../../store/types/store.types';
-import type { GizmoConfig, GizmoError } from '../../types/orientation-gizmo.types';
-import {
-  AxisDirection,
-  DEFAULT_GIZMO_CONFIG,
-  GizmoErrorCode,
-  GizmoPosition,
-} from '../../types/orientation-gizmo.types';
+} from '@/features/store';
 
 describe.skip('OrientationGizmo Store Integration', () => {
   let store: AppStore;

@@ -68,9 +68,9 @@
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
+import { extractArguments } from '@/features/openscad-parser';
 import type { ErrorHandler } from '../../error-handling/index.js'; // Added ErrorHandler import
 import type * as ast from '../ast-types.js';
-import { extractArguments } from '../extractors/argument-extractor.js';
 import {
   extractNumberParameter,
   extractVectorParameter,

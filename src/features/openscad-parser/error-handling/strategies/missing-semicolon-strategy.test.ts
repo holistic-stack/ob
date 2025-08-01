@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { MissingSemicolonStrategy } from '@/features/openscad-parser';
 import { ErrorCode, ParserError, Severity } from '../types/error-types.js';
-import { MissingSemicolonStrategy } from './missing-semicolon-strategy.js';
 
 describe('MissingSemicolonStrategy', () => {
   let strategy: MissingSemicolonStrategy;

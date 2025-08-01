@@ -13,7 +13,7 @@ import type {
   ASTNode,
   ModuleDefinitionNode,
   ModuleInstantiationNode,
-} from '../../openscad-parser/core/ast-types';
+} from '@/features/openscad-parser';
 import {
   ConditionalProcessor,
   createVariableScope,

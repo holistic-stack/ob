@@ -136,7 +136,7 @@ import { findUpSync } from 'find-up';
 import resolve from 'resolve';
 import { afterEach } from 'vitest';
 
-import { createLogger } from './shared/services/logger.service.js';
+import { createLogger } from '@/shared';
 import './vitest-helpers/openscad-parser-test-utils.ts';
 
 /**

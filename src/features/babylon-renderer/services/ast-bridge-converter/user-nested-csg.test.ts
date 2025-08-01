@@ -6,7 +6,7 @@
 
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser';
+import { OpenscadParser } from '@/features/openscad-parser';
 import { ASTBridgeConverter } from './ast-bridge-converter';
 
 describe('User Nested CSG Test', () => {

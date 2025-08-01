@@ -22,12 +22,12 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { isError, isSuccess } from '../../../../../../shared/types/result.types';
 import type {
   CircleParameters,
   PolygonParameters,
   SquareParameters,
-} from '../../../../types/primitive-parameters';
+} from '@/features/openscad-geometry-builder';
+import { isError, isSuccess } from '@/shared';
 import { FragmentCalculatorService } from '../../../fragment-calculator';
 import { Primitive2DFactory } from './primitive-2d-factory';
 

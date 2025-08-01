@@ -268,12 +268,8 @@
  * ```
  */
 
-import type {
-  AsyncOperationResult,
-  OperationError,
-  OperationMetadata,
-} from '../../../shared/types/operations.types.js';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+import type { ASTNode } from '@/features/openscad-parser';
+import type { AsyncOperationResult, OperationError, OperationMetadata } from '@/shared';
 
 /**
  * Parsing state for OpenSCAD AST processing

@@ -7,7 +7,6 @@
 
 import type { Scene } from '@babylonjs/core';
 import { useCallback, useDeferredValue, useEffect, useRef, useState, useTransition } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
 import type {
   InspectorConfig,
   InspectorError,
@@ -15,12 +14,13 @@ import type {
   InspectorShowResult,
   InspectorState,
   InspectorTabSwitchResult,
-} from '../../services/babylon-inspector-service';
+} from '@/features/babylon-renderer';
 import {
   BabylonInspectorService,
   InspectorErrorCode,
   InspectorTab,
-} from '../../services/babylon-inspector-service';
+} from '@/features/babylon-renderer';
+import { createLogger } from '@/shared';
 
 const logger = createLogger('useBabylonInspector');
 

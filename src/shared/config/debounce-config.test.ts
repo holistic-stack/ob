@@ -28,6 +28,7 @@ describe('Debounce Configuration', () => {
     it('should be immutable', () => {
       expect(() => {
         // @ts-expect-error - Testing immutability
+        // noinspection JSConstantReassignment
         OPTIMIZED_DEBOUNCE_CONFIG.parseDelayMs = 500;
       }).toThrow();
     });
@@ -126,6 +127,7 @@ describe('Debounce Configuration', () => {
 
       expect(() => {
         // @ts-expect-error - Testing immutability
+        // noinspection JSConstantReassignment
         config.parseDelayMs = 500;
       }).toThrow();
     });

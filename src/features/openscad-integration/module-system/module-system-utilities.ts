@@ -28,14 +28,14 @@
  * @since 2025-07-30
  */
 
-import type { Result } from '../../../shared/types/result.types';
-import { error, success } from '../../../shared/utils/functional/result';
-import { MemoryMonitor, PerformanceTimer } from '../../../shared/utils/performance';
 import type {
   ASTNode,
   ModuleDefinitionNode,
   ModuleInstantiationNode,
-} from '../../openscad-parser/core/ast-types';
+} from '@/features/openscad-parser';
+import type { Result } from '@/shared';
+import { error, success } from '@/shared';
+import { MemoryMonitor, PerformanceTimer } from '@/shared/utils/performance';
 
 /**
  * Processed module definition with metadata

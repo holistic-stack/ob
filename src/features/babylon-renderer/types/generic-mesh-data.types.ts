@@ -488,7 +488,7 @@
  */
 
 import type { BoundingBox, Matrix } from '@babylonjs/core';
-import type { SourceLocation } from '../../openscad-parser/ast/ast-types';
+import type { SourceLocation } from '@/features/openscad-parser';
 
 /**
  * Generic geometry data structure (renderer-agnostic)

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { UnclosedBracketStrategy } from '@/features/openscad-parser';
 import { ErrorCode, ParserError, Severity } from '../types/error-types.js';
-import { UnclosedBracketStrategy } from './unclosed-bracket-strategy.js';
 
 describe('UnclosedBracketStrategy', () => {
   let strategy: UnclosedBracketStrategy;

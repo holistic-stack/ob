@@ -36,7 +36,7 @@
  */
 
 import type { ArcRotateCamera } from '@babylonjs/core';
-import type { CameraConfig } from '../../../../shared/types/common.types.js';
+import type { CameraConfig } from '@/shared';
 
 /**
  * Configuration for camera store synchronization service

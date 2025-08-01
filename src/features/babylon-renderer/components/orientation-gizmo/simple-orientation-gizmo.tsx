@@ -22,7 +22,7 @@ import type { ArcRotateCamera } from '@babylonjs/core';
 import { Animation, Matrix, QuadraticEase, Vector3 } from '@babylonjs/core';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
+import { createLogger } from '@/shared';
 
 const logger = createLogger('SimpleOrientationGizmo');
 

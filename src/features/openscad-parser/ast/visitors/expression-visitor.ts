@@ -64,15 +64,14 @@
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
+import { ErrorCode } from '@/features/openscad-parser';
+import { RangeExpressionVisitor } from '@/features/openscad-parser/ast/visitors/expression-visitor';
 import type { ErrorHandler } from '../../error-handling/index.js';
-import { ErrorCode } from '../../error-handling/types/error-types.js';
 import type * as ast from '../ast-types.js';
 import { getLocation } from '../utils/location-utils.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
 import { BaseASTVisitor } from './base-ast-visitor.js';
 import { FunctionCallVisitor } from './expression-visitor/function-call-visitor.js';
-
-import { RangeExpressionVisitor } from './expression-visitor/range-expression-visitor/range-expression-visitor.js';
 
 // List of reserved keywords that cannot be used as standalone expressions.
 // Note: 'true', 'false', 'undef' are handled by visitLiteral.

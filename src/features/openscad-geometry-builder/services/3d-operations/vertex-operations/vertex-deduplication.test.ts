@@ -8,7 +8,7 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { isError, isSuccess } from '../../../../../shared/utils/functional/result';
+import { isError, isSuccess } from '@/shared';
 import type { Vector3 } from '../../../types/geometry-data';
 import { VertexDeduplicationService } from './vertex-deduplication';
 

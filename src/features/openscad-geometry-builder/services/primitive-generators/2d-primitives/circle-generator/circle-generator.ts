@@ -27,15 +27,14 @@
  * @since 2025-07-29
  */
 
-import type { Result } from '../../../../../../shared/types/result.types';
-import { isError } from '../../../../../../shared/types/result.types';
-import { error, success } from '../../../../../../shared/utils/functional/result';
+import type { CircleParameters } from '@/features/openscad-geometry-builder';
+import type { Result } from '@/shared';
+import { error, isError, success } from '@/shared';
 import type {
   Circle2DGeometryData,
   Geometry2DGenerationError,
 } from '../../../../types/2d-geometry-data';
 import type { Vector2 } from '../../../../types/geometry-data';
-import type { CircleParameters } from '../../../../types/primitive-parameters';
 import { resolveRadiusFromParameters } from '../../../../utils/geometry-helpers';
 import { cosDegrees, sinDegrees } from '../../../../utils/math-helpers';
 import { validateFragmentCount, validateRadius } from '../../../../utils/validation-helpers';

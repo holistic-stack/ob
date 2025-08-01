@@ -5,7 +5,7 @@
 
 import { Engine, Scene } from '@babylonjs/core';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { isError, isSuccess } from '../../../../shared/utils/functional/result';
+import { isError, isSuccess } from '@/shared';
 import type {
   Circle2DGeometryData,
   SphereGeometryData,

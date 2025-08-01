@@ -11,8 +11,8 @@
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { appStoreInstance } from '../../../store/app-store';
-import { DEFAULT_GIZMO_CONFIG, GizmoPosition } from '../../types/orientation-gizmo.types';
+import { DEFAULT_GIZMO_CONFIG, GizmoPosition } from '@/features/babylon-renderer/types';
+import { appStoreInstance } from '@/features/store';
 import type { GizmoConfigPanelProps } from './gizmo-config-panel';
 import { GizmoConfigPanel } from './gizmo-config-panel';
 

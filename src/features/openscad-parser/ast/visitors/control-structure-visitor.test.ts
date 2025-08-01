@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Node as TSNode } from 'web-tree-sitter';
+import { ControlStructureVisitor } from '@/features/openscad-parser';
 import { EnhancedOpenscadParser, ErrorHandler } from '../../index.js';
 import type * as ast from '../ast-types.js';
 import * as extractorModule from '../extractors/index.js';
 import { getLocation } from '../utils/location-utils.js';
-import { ControlStructureVisitor } from './control-structure-visitor.js';
 
 describe('ControlStructureVisitor', () => {
   let visitor: ControlStructureVisitor;

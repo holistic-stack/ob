@@ -18,7 +18,7 @@ import {
   type Option,
   type Result,
   type ValidationResult,
-} from './result.types';
+} from '@/shared';
 
 describe('Result Types', () => {
   describe('Result<T,E> type', () => {

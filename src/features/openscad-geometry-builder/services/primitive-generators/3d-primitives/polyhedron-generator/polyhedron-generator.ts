@@ -34,14 +34,14 @@
  * @since 2025-07-29
  */
 
-import type { Result } from '../../../../../../shared/types/result.types';
-import { error, success } from '../../../../../../shared/utils/functional/result';
+import type { PolyhedronParameters } from '@/features/openscad-geometry-builder';
+import type { Result } from '@/shared';
+import { error, success } from '@/shared';
 import type {
   GeometryGenerationError,
   PolyhedronGeometryData,
   Vector3,
 } from '../../../../types/geometry-data';
-import type { PolyhedronParameters } from '../../../../types/primitive-parameters';
 import { createGeometryData, createGeometryMetadata } from '../../../../utils/geometry-helpers';
 import {
   validateFaceIndices,

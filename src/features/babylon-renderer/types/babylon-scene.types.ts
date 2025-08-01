@@ -6,7 +6,7 @@
  */
 
 import type { Camera, Engine, Light, Mesh, Scene } from '@babylonjs/core';
-import type { Result } from '../../../shared/types/result.types';
+import type { Result } from '@/shared';
 import type { BabylonSceneService } from '../services/babylon-scene-service';
 
 /**

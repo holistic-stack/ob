@@ -27,7 +27,7 @@ interface MaterialWithTextures extends Material {
   specularTexture?: BaseTexture;
 }
 
-import type { Result } from '../../../../shared/types/result.types';
+import type { Result } from '@/shared';
 
 /**
  * Error codes for mesh disposal operations

@@ -19,7 +19,7 @@
 import type { Engine, Mesh, Scene } from '@babylonjs/core';
 import { Color3, Vector3 } from '@babylonjs/core';
 import { useCallback, useRef, useState } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
+import { createLogger } from '@/shared';
 import {
   type BabylonSceneService,
   type BabylonSceneState,

@@ -331,16 +331,9 @@
  */
 
 import type { StateCreator } from 'zustand';
-import { createLogger } from '../../../shared/services/logger.service.js';
-import type {
-  DebounceConfig,
-  EditorPosition,
-  EditorSelection,
-} from '../../../shared/types/common.types.js';
-import type { AsyncResult } from '../../../shared/types/result.types.js';
-import { debounce } from '../../../shared/utils/functional/pipe.js';
-import { tryCatchAsync } from '../../../shared/utils/functional/result.js';
-import type { AppStore, EditorSlice } from '../types/store.types.js';
+import type { AppStore, EditorSlice } from '@/features/store';
+import type { AsyncResult, DebounceConfig, EditorPosition, EditorSelection } from '@/shared';
+import { createLogger, debounce, tryCatchAsync } from '@/shared';
 
 const logger = createLogger('EditorSlice');
 

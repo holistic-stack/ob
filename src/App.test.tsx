@@ -8,14 +8,11 @@
 import { render, screen } from '@testing-library/react';
 // TODO: Replace with BabylonJS types
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { InspectorTab } from '@/features/babylon-renderer';
+import { createGizmoId, GizmoPosition } from '@/features/babylon-renderer/types';
+import type { ASTNode } from '@/features/openscad-parser';
+import { appStoreInstance, DEFAULT_CAMERA } from '@/features/store';
 import App from './App';
-import { InspectorTab } from './features/babylon-renderer/services/babylon-inspector-service/babylon-inspector-service';
-import {
-  createGizmoId,
-  GizmoPosition,
-} from './features/babylon-renderer/types/orientation-gizmo.types';
-import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
-import { appStoreInstance, DEFAULT_CAMERA } from './features/store/app-store';
 
 // Mock the store-connected components to avoid complex rendering
 vi.mock('./features/code-editor/components/store-connected-editor/store-connected-editor', () => ({

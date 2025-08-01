@@ -64,7 +64,7 @@
  * ```
  */
 
-import type { DebounceConfig } from '../types/common.types.js';
+import type { DebounceConfig } from '@/shared';
 
 /**
  * Optimized debouncing configuration based on performance analysis.

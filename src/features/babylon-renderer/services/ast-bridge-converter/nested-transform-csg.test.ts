@@ -6,8 +6,8 @@
 
 import { NullEngine, Scene } from '@babylonjs/core';
 import { beforeEach, describe, expect, it } from 'vitest';
+import type { OpenscadParser } from '@/features/openscad-parser';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
-import type { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import { ASTBridgeConverter } from './ast-bridge-converter.js';
 
 describe('Nested Transform CSG Test', () => {

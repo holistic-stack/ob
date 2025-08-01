@@ -7,9 +7,9 @@
 
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { OpenscadParser } from '@/features/openscad-parser';
 import { OPENSCAD_DEFAULTS } from '@/features/store/slices/openscad-globals-slice/index.js';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
-import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
 import { ModifierBabylonNode, type ModifierType } from './modifier-babylon-node';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 

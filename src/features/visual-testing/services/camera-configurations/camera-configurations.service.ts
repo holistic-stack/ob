@@ -15,9 +15,8 @@
  */
 
 import { ArcRotateCamera, type Scene, Vector3 } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services';
-import type { Result } from '../../../../shared/types';
-import { tryCatch } from '../../../../shared/utils/functional';
+import type { Result } from '@/shared';
+import { createLogger, tryCatch } from '@/shared';
 import type { CameraAngle, VisualTestCameraConfig } from '../../types/visual-testing.types';
 
 const logger = createLogger('CameraConfigurationService');

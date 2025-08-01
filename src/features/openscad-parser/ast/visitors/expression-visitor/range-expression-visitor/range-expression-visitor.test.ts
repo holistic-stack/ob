@@ -21,8 +21,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ErrorHandler } from '../../../../error-handling/index.js';
-import { OpenscadParser } from '../../../../openscad-parser';
+import { ErrorHandler, OpenscadParser } from '@/features/openscad-parser';
 import type * as ast from '../../../ast-types.js';
 import { ExpressionVisitor } from '../../expression-visitor.js';
 import { RangeExpressionVisitor } from './range-expression-visitor.js';

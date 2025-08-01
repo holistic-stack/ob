@@ -17,8 +17,8 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { isError, isSuccess } from '../../../../../../shared/types/result.types';
-import type { CircleParameters } from '../../../../types/primitive-parameters';
+import type { CircleParameters } from '@/features/openscad-geometry-builder';
+import { isError, isSuccess } from '@/shared';
 import { CircleGeneratorService } from './circle-generator';
 
 describe('CircleGeneratorService', () => {

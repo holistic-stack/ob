@@ -5,8 +5,8 @@
  */
 
 import type { LinesMesh, Mesh, Scene, StandardMaterial } from '@babylonjs/core';
-import { createLogger } from '../../../../../shared/services/logger.service';
-import type { Result } from '../../../../../shared/types/result.types';
+import type { Result } from '@/shared';
+import { createLogger } from '@/shared';
 import { AxisColorUtils } from '../axis-colors/axis-colors';
 import { AxisResultUtils } from '../axis-errors/axis-errors';
 import { AxisValidationUtils } from '../axis-validation/axis-validation';

@@ -17,7 +17,7 @@
  */
 
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
+import { createLogger } from '@/shared';
 
 const logger = createLogger('BabylonErrorBoundary');
 

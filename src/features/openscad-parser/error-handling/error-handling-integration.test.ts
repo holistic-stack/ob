@@ -4,9 +4,9 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
+import { RecoveryStrategyRegistry } from '@/features/openscad-parser';
 import { ErrorHandler } from './error-handler.js';
 import { Logger } from './logger.js';
-import { RecoveryStrategyRegistry } from './recovery-strategy-registry.js';
 import { ErrorCode, ParserError, Severity } from './types/error-types.js';
 
 describe('Error Handling Integration', () => {

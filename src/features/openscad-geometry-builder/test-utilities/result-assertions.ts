@@ -9,8 +9,8 @@
  */
 
 import { expect } from 'vitest';
-import type { Result } from '../../../shared/types/result.types';
-import { isError, isSuccess } from '../../../shared/types/result.types';
+import type { Result } from '@/shared';
+import { isError, isSuccess } from '@/shared';
 import type { GeometryGenerationError } from '../types/geometry-data';
 
 /**

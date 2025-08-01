@@ -7,9 +7,9 @@
 
 import type { Scene } from '@babylonjs/core';
 import { Suspense, useCallback, useEffect, useState } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
-import { useBabylonInspector } from '../../hooks/use-babylon-inspector';
-import type { InspectorTab } from '../../services/babylon-inspector-service';
+import type { InspectorTab } from '@/features/babylon-renderer';
+import { useBabylonInspector } from '@/features/babylon-renderer';
+import { createLogger } from '@/shared';
 
 const logger = createLogger('BabylonInspector');
 

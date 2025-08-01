@@ -5,7 +5,7 @@
  */
 
 import { Color3, type Scene, StandardMaterial } from '@babylonjs/core';
-import type { Result } from '../../../../../../shared/types/result.types';
+import type { Result } from '@/shared';
 
 /**
  * Configuration for creating axis materials

@@ -33,9 +33,8 @@
  */
 
 import type { AbstractMesh, BaseTexture } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
-import { error, success } from '../../../../shared/utils/functional/result';
+import type { Result } from '@/shared';
+import { createLogger, error, success } from '@/shared';
 
 const logger = createLogger('MemoryPoolService');
 

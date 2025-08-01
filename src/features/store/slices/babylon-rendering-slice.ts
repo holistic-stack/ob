@@ -467,10 +467,36 @@ import type { AbstractMesh, ArcRotateCamera, Engine, Scene } from '@babylonjs/co
 import { Vector3 } from '@babylonjs/core';
 import type { WritableDraft } from 'immer';
 import type { StateCreator } from 'zustand';
-import { createLogger } from '../../../shared/services/logger.service';
-import type { CameraConfig } from '../../../shared/types/common.types';
-import type { Result } from '../../../shared/types/result.types';
-import { tryCatchAsync } from '../../../shared/utils/functional/result';
+import type {
+  AxisOverlayConfig,
+  AxisOverlayError,
+  AxisOverlayState,
+  GizmoMode,
+} from '@/features/babylon-renderer';
+import {
+  ASTBridgeConverter,
+  BabylonCSG2Service,
+  BabylonEngineService,
+  BabylonInspectorService,
+  BabylonMaterialService,
+  InspectorTab,
+} from '@/features/babylon-renderer';
+import type {
+  AxisDirection,
+  GizmoConfig,
+  GizmoError,
+  GizmoState,
+} from '@/features/babylon-renderer/types';
+import {
+  createGizmoId,
+  DEFAULT_GIZMO_CONFIG,
+  GizmoPosition,
+} from '@/features/babylon-renderer/types';
+import type { ASTNode } from '@/features/openscad-parser';
+import type { AppStore } from '@/features/store';
+import { DEFAULT_CAMERA } from '@/features/store';
+import type { CameraConfig, Result } from '@/shared';
+import { createLogger, tryCatchAsync } from '@/shared';
 import type {
   BabylonEngineState,
   CSG2State,
@@ -478,41 +504,11 @@ import type {
   MaterialState,
 } from '../../babylon-renderer/services';
 import {
-  BabylonCSG2Service,
-  BabylonEngineService,
-  BabylonInspectorService,
-  BabylonMaterialService,
-  InspectorTab,
-} from '../../babylon-renderer/services';
-import { ASTBridgeConverter } from '../../babylon-renderer/services/ast-bridge-converter';
-import type { GizmoMode } from '../../babylon-renderer/services/transformation-gizmo-service';
-import type {
-  AxisOverlayConfig,
-  AxisOverlayError,
-  AxisOverlayState,
-} from '../../babylon-renderer/types/axis-overlay.types';
-import {
   createAxisOverlayId,
   DEFAULT_AXIS_OVERLAY_CONFIG,
 } from '../../babylon-renderer/types/axis-overlay.types';
-
-import type {
-  AxisDirection,
-  GizmoConfig,
-  GizmoError,
-  GizmoState,
-} from '../../babylon-renderer/types/orientation-gizmo.types';
-import {
-  createGizmoId,
-  DEFAULT_GIZMO_CONFIG,
-  GizmoPosition,
-} from '../../babylon-renderer/types/orientation-gizmo.types';
-
 import { disposeMeshesComprehensively } from '../../babylon-renderer/utils/mesh-disposal/mesh-disposal';
 import { forceSceneRefresh } from '../../babylon-renderer/utils/scene-refresh/scene-refresh';
-import type { ASTNode } from '../../openscad-parser/core/ast-types';
-import { DEFAULT_CAMERA } from '../constants/store.constants';
-import type { AppStore } from '../types/store.types';
 
 const logger = createLogger('BabylonRenderingSlice');
 

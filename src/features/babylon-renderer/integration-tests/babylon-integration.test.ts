@@ -7,8 +7,8 @@
 
 import * as BABYLON from '@babylonjs/core';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createLogger } from '../../../shared/services/logger.service';
-import { BabylonEngineService } from '../services/babylon-engine-service';
+import { BabylonEngineService } from '@/features/babylon-renderer';
+import { createLogger } from '@/shared';
 
 const logger = createLogger('BabylonIntegrationTest');
 

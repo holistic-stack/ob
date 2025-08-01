@@ -13,7 +13,7 @@
  */
 
 import * as TreeSitter from 'web-tree-sitter';
-import type { Result } from '../../shared/types/result.types.js';
+import type { Result } from '@/shared';
 import type { ASTNode, SourceLocation } from './ast/ast-types.js';
 import { VisitorASTGenerator } from './ast/index.js';
 

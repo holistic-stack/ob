@@ -6,7 +6,7 @@
  * parser, renderer, and other AST-consuming modules.
  */
 
-import type { Brand } from './result.types.js';
+import type { Brand } from '@/shared';
 
 /**
  * Branded types for AST node identification

@@ -13,15 +13,15 @@
 import * as BABYLON from '@babylonjs/core';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { appStoreInstance } from '../../../store/app-store';
-import type { AppStore } from '../../../store/types/store.types';
-import { CameraGizmoSyncService } from '../../services/camera-gizmo-sync/camera-gizmo-sync.service';
-import { OrientationGizmoService } from '../../services/orientation-gizmo-service/orientation-gizmo.service';
 import {
   AxisDirection,
   DEFAULT_GIZMO_CONFIG,
   GizmoPosition,
-} from '../../types/orientation-gizmo.types';
+} from '@/features/babylon-renderer/types';
+import type { AppStore } from '@/features/store';
+import { appStoreInstance } from '@/features/store';
+import { CameraGizmoSyncService } from '../../services/camera-gizmo-sync/camera-gizmo-sync.service';
+import { OrientationGizmoService } from '../../services/orientation-gizmo-service/orientation-gizmo.service';
 import { OrientationGizmo } from './orientation-gizmo';
 
 // Mock ResizeObserver for headless testing

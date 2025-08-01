@@ -197,10 +197,7 @@ import debounce from 'lodash.debounce';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { TYPING_DEBOUNCE_MS } from '../../../shared/config/debounce-config.js';
-import { createLogger } from '../../../shared/services/logger.service.js';
-import type { AppStore } from '../../store/app-store.js';
-import { useAppStore } from '../../store/app-store.js';
+import type { AppStore } from '@/features/store';
 import {
   selectConfigEnableRealTimeParsing,
   selectEditorCode,
@@ -208,7 +205,10 @@ import {
   selectEditorSelection,
   selectParsingErrors,
   selectParsingWarnings,
-} from '../../store/selectors/index.js';
+  useAppStore,
+} from '@/features/store';
+import { createLogger } from '@/shared';
+import { TYPING_DEBOUNCE_MS } from '@/shared/config/debounce-config.ts';
 import type {
   EditorChangeEvent,
   EditorCursorEvent,

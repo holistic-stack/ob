@@ -22,14 +22,14 @@ import {
   Vector3,
 } from '@babylonjs/core';
 import { AdvancedDynamicTexture, type TextBlock } from '@babylonjs/gui';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
 import type {
   AxisOverlayConfig,
   AxisOverlayError,
   AxisOverlayState,
   IAxisOverlayService,
-} from '../../types/axis-overlay.types';
+} from '@/features/babylon-renderer';
+import type { Result } from '@/shared';
+import { createLogger } from '@/shared';
 import {
   calculateDynamicTickInterval,
   createAxisOverlayId,

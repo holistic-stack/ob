@@ -38,7 +38,7 @@
  * ```
  */
 
-import type { Result } from '../../../../shared/types/index.js';
+import type { Result } from '@/shared';
 import type { ModuleDefinitionNode } from '../../ast/ast-types.js';
 
 /**

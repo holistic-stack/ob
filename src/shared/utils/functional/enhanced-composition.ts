@@ -5,8 +5,8 @@
  * and provide enhanced composition patterns for bulletproof-react architecture.
  */
 
-import { createLogger } from '../../services/logger.service';
-import type { Result } from '../../types/result.types';
+import type { Result } from '@/shared';
+import { createLogger } from '@/shared';
 import { error, success, tryCatch } from './result';
 
 const logger = createLogger('FunctionalComposition');

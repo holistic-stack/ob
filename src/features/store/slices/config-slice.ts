@@ -500,8 +500,8 @@
  */
 
 import type { StateCreator } from 'zustand';
-import type { AppConfig } from '../../../shared/types/common.types.js';
-import type { AppStore, ConfigSlice } from '../types/store.types.js';
+import type { AppStore, ConfigSlice } from '@/features/store';
+import type { AppConfig } from '@/shared';
 
 interface ConfigSliceConfig {
   DEFAULT_CONFIG: AppConfig;

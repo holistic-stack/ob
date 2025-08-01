@@ -6,7 +6,7 @@
  * and eliminate duplication between different modules.
  */
 
-import type { AsyncResult, Brand, Result } from './result.types.js';
+import type { AsyncResult, Brand, Result } from '@/shared';
 
 /**
  * Branded types for operation identification

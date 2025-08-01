@@ -8,9 +8,8 @@
  * @since 2025-07-29
  */
 
-import type { Result } from '../../../../shared/types/result.types';
-import { isError } from '../../../../shared/types/result.types';
-import { error, success } from '../../../../shared/utils/functional/result';
+import type { Result } from '@/shared';
+import { error, isError, success } from '@/shared';
 import type { FragmentCalculatorService } from '../../services/fragment-calculator';
 import type { GeometryGenerationError, Vector3 } from '../../types/geometry-data';
 import { Vector3Utils } from '../math-helpers';

@@ -43,8 +43,15 @@
  */
 
 import type { StateCreator } from 'zustand';
-import type { Result } from '../../../../shared/types/result.types.js';
-import type { AppStore } from '../../types/store.types.js';
+import type {
+  ASTNode,
+  AssignmentNode,
+  AssignStatementNode,
+  ExpressionNode,
+  LiteralNode,
+} from '@/features/openscad-parser/ast/ast-types.js';
+import type { Result } from '@/shared';
+import type { AppStore } from '@/features/store';
 
 /**
  * @function createSuccess
@@ -65,41 +72,31 @@ const createError = <E>(error: E): Result<never, E> => ({ success: false, error 
  * @returns Result with variable name and value, or error
  */
 function extractGlobalVariableFromAssignment(
-  node: Record<string, unknown>
+  node: ASTNode
 ): Result<{ variable: string; value: unknown }, string> {
   try {
     // Handle assign_statement nodes (OpenSCAD parser format)
-    if (node.type === 'assign_statement' && node.assignments) {
-      for (const assignment of node.assignments) {
-        if (assignment.variable?.name?.startsWith('$')) {
-          const variableName = assignment.variable.name;
-          const value = extractValueFromExpression(assignment.value);
-          return createSuccess({ variable: variableName, value });
-        }
+    if (node.type === 'assign_statement' && 'variable' in node && 'value' in node) {
+      const assignNode = node as AssignStatementNode;
+      if (typeof assignNode.variable === 'string' && assignNode.variable.startsWith('$')) {
+        const variableName = assignNode.variable;
+        const value = extractValueFromExpression(assignNode.value);
+        return createSuccess({ variable: variableName, value });
       }
     }
 
-    // Handle assignment_statement nodes (alternative format)
-    if (node.type === 'assignment_statement' && node.assignments) {
-      for (const assignment of node.assignments) {
-        if (assignment.variable?.name?.startsWith('$')) {
-          const variableName = assignment.variable.name;
-          const value = extractValueFromExpression(assignment.value);
-          return createSuccess({ variable: variableName, value });
-        }
+    // Handle assignment nodes in let expressions
+    if (node.type === 'assignment' && 'variable' in node && 'value' in node) {
+      const assignNode = node as AssignmentNode;
+      if (
+        assignNode.variable &&
+        assignNode.variable.expressionType === 'identifier' &&
+        assignNode.variable.name.startsWith('$')
+      ) {
+        const variableName = assignNode.variable.name;
+        const value = extractValueFromExpression(assignNode.value);
+        return createSuccess({ variable: variableName, value });
       }
-    }
-
-    // Handle direct assignment nodes
-    if (
-      node.type === 'assignment' &&
-      node.variable &&
-      node.variable.name &&
-      node.variable.name.startsWith('$')
-    ) {
-      const variableName = node.variable.name;
-      const value = extractValueFromExpression(node.value);
-      return createSuccess({ variable: variableName, value });
     }
 
     return { success: false, error: 'Not a global variable assignment' };
@@ -114,27 +111,37 @@ function extractGlobalVariableFromAssignment(
  * @param expression - Expression AST node
  * @returns Numeric value
  */
-function extractValueFromExpression(expression: Record<string, unknown>): number {
+function extractValueFromExpression(expression: ASTNode): number {
   if (!expression) return 0;
 
-  if (expression.type === 'expression' && expression.expressionType === 'literal') {
-    return typeof expression.value === 'number'
-      ? expression.value
-      : parseFloat(expression.value) || 0;
+  // Type guard for LiteralNode
+  const literalNode = expression as LiteralNode;
+  if (
+    literalNode.expressionType === 'literal' &&
+    'value' in literalNode &&
+    literalNode.value !== undefined
+  ) {
+    return typeof literalNode.value === 'number'
+      ? literalNode.value
+      : parseFloat(literalNode.value as string) || 0;
   }
 
-  if (expression.type === 'literal') {
-    return typeof expression.value === 'number'
-      ? expression.value
-      : parseFloat(expression.value) || 0;
+  // Type guard for ExpressionNode with value property
+  const exprNode = expression as ExpressionNode;
+  if (exprNode.expressionType && 'value' in exprNode && exprNode.value !== undefined) {
+    return typeof exprNode.value === 'number'
+      ? exprNode.value
+      : parseFloat(exprNode.value as string) || 0;
   }
 
-  if (typeof expression.value === 'number') {
-    return expression.value;
-  }
-
-  if (typeof expression.value === 'string') {
-    return parseFloat(expression.value) || 0;
+  // Type guard for nodes with value property
+  if ('value' in expression && expression.value !== undefined) {
+    if (typeof expression.value === 'number') {
+      return expression.value;
+    }
+    if (typeof expression.value === 'string') {
+      return parseFloat(expression.value) || 0;
+    }
   }
 
   return 0;
@@ -154,66 +161,51 @@ function validateGlobalVariable(
   switch (variable) {
     case '$fn':
       if (value !== undefined && (typeof value !== 'number' || value < 0)) {
-        return {
-          success: false,
-          error: {
-            variable: '$fn' as keyof OpenSCADGlobalsState,
-            value,
-            message: '$fn must be undefined or a non-negative number',
-            expectedRange: 'undefined or >= 0',
-          },
-        };
+        return createError({
+          variable: '$fn' as keyof OpenSCADGlobalsState,
+          value,
+          message: '$fn must be undefined or a non-negative number',
+          expectedRange: 'undefined or >= 0',
+        });
       }
       break;
     case '$fa':
       if (typeof value !== 'number' || value <= 0 || value > 180) {
-        return {
-          success: false,
-          error: {
-            variable: '$fa' as keyof OpenSCADGlobalsState,
-            value,
-            message: '$fa must be a number between 0 and 180 degrees',
-            expectedRange: '0 < $fa <= 180',
-          },
-        };
+        return createError({
+          variable: '$fa' as keyof OpenSCADGlobalsState,
+          value,
+          message: '$fa must be a number between 0 and 180 degrees',
+          expectedRange: '0 < $fa <= 180',
+        });
       }
       break;
     case '$fs':
       if (typeof value !== 'number' || value <= 0) {
-        return {
-          success: false,
-          error: {
-            variable: '$fs' as keyof OpenSCADGlobalsState,
-            value,
-            message: '$fs must be a positive number',
-            expectedRange: '$fs > 0',
-          },
-        };
+        return createError({
+          variable: '$fs' as keyof OpenSCADGlobalsState,
+          value,
+          message: '$fs must be a positive number',
+          expectedRange: '$fs > 0',
+        });
       }
       break;
     case '$t':
       if (typeof value !== 'number' || value < 0 || value > 1) {
-        return {
-          success: false,
-          error: {
-            variable: '$t' as keyof OpenSCADGlobalsState,
-            value,
-            message: '$t must be a number between 0 and 1',
-            expectedRange: '0 <= $t <= 1',
-          },
-        };
+        return createError({
+          variable: '$t' as keyof OpenSCADGlobalsState,
+          value,
+          message: '$t must be a number between 0 and 1',
+          expectedRange: '0 <= $t <= 1',
+        });
       }
       break;
     default:
       // Unknown global variable - ignore for now
-      return {
-        success: false,
-        error: {
-          variable: variable as keyof OpenSCADGlobalsState,
-          value,
-          message: `Unknown global variable: ${variable}`,
-        },
-      };
+      return createError({
+        variable: variable as keyof OpenSCADGlobalsState,
+        value,
+        message: `Unknown global variable: ${variable}`,
+      } as OpenSCADGlobalsValidationError);
   }
 
   return createSuccess(undefined);
@@ -655,7 +647,7 @@ export const createOpenSCADGlobalsSlice = (
    * Extract and apply global variables from OpenSCAD AST nodes.
    * Processes assignment nodes for special variables like $fs, $fa, $fn, etc.
    */
-  extractGlobalsFromAST: (ast: ReadonlyArray<Record<string, unknown>>) => {
+  extractGlobalsFromAST: (ast: ReadonlyArray<ASTNode>) => {
     set((state) => {
       const extractedGlobals: Record<string, unknown> = {};
       const errors: OpenSCADGlobalsValidationError[] = [];

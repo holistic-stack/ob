@@ -9,7 +9,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { isError, isSuccess } from '../../../../shared/utils/functional/result';
+import { isError, isSuccess } from '@/shared';
 import { MemoryManagerService } from './memory-manager.service';
 import { MemoryPoolService } from './memory-pool.service';
 

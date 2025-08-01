@@ -6,8 +6,8 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_ENGINE_CONFIG } from '@/features/babylon-renderer';
 import type { BabylonEngineConfig, EngineInitOptions } from '../../types/babylon-engine.types';
-import { DEFAULT_ENGINE_CONFIG } from '../../types/babylon-engine.types';
 import { BabylonEngineService } from './babylon-engine-service';
 
 // Mock canvas for testing

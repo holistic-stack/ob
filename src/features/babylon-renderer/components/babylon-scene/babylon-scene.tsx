@@ -21,9 +21,8 @@ import {
 } from '@babylonjs/core';
 import type React from 'react';
 import { useEffect, useMemo, useRef } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
-import { useAxisOverlay } from '../../hooks/use-axis-overlay';
-import { useBabylonInspector } from '../../hooks/use-babylon-inspector';
+import { useAxisOverlay, useBabylonInspector } from '@/features/babylon-renderer';
+import { createLogger } from '@/shared';
 import type {
   SceneCameraConfig as ServiceCameraConfig,
   SceneLightingConfig as ServiceLightingConfig,

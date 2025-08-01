@@ -10,8 +10,8 @@
  */
 
 import type React from 'react';
-import { useAppStore } from '../../../store/app-store';
-import type { AxisOverlayConfig } from '../../types/axis-overlay.types';
+import type { AxisOverlayConfig } from '@/features/babylon-renderer';
+import { useAppStore } from '@/features/store';
 
 /**
  * SketchUp-Style Axis Overlay Controls Component

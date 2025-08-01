@@ -7,17 +7,17 @@
 
 import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { OPENSCAD_DEFAULTS } from '@/features/store/slices/openscad-globals-slice/index.js';
-import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
+import { TransformationBabylonNode } from '@/features/babylon-renderer';
 import type {
   ColorNode,
+  OpenscadParser,
   RotateNode,
   ScaleNode,
   TranslateNode,
-} from '../../../openscad-parser/ast/ast-types';
-import type { OpenscadParser } from '../../../openscad-parser/openscad-parser';
+} from '@/features/openscad-parser';
+import { OPENSCAD_DEFAULTS } from '@/features/store/slices/openscad-globals-slice/index.js';
+import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
-import { TransformationBabylonNode } from './transformation-babylon-node';
 
 describe('TransformationBabylonNode', () => {
   let parser: OpenscadParser;

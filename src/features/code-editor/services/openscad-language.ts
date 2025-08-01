@@ -28,8 +28,7 @@
  */
 
 import * as monaco from 'monaco-editor';
-import { createLogger } from '../../../shared/services/logger.service.js';
-import { tryCatch } from '../../../shared/utils/functional/result.js';
+import { createLogger, tryCatch } from '@/shared';
 import type { OpenSCADLanguageConfig } from '../types/editor.types.js';
 
 const logger = createLogger('OpenSCADLanguage');

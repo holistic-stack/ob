@@ -14,7 +14,6 @@
 
 import { type Engine, NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import { isError, isSuccess } from '../../../../shared/utils/functional/result';
 import type {
   ASTNode,
   AssignStatementNode,
@@ -24,7 +23,8 @@ import type {
   PolygonNode,
   SphereNode,
   SquareNode,
-} from '../../../openscad-parser/core/ast-types';
+} from '@/features/openscad-parser';
+import { isError, isSuccess } from '@/shared';
 import { OpenSCADRenderingPipelineService } from './openscad-rendering-pipeline';
 
 // INTEGRATION TEST: Use real BabylonJS engine for authentic testing

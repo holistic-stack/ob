@@ -8,9 +8,8 @@
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
-import type { ErrorHandler } from '../../../error-handling/error-handler.js';
-import { Logger } from '../../../error-handling/logger.js';
-import { Severity } from '../../../error-handling/types/error-types.js';
+import type { ErrorHandler } from '@/features/openscad-parser';
+import { Logger, Severity } from '@/features/openscad-parser';
 import type * as ast from '../../ast-types.js';
 import type { EchoStatementNode, ExpressionNode } from '../../ast-types.js';
 import { getLocation } from '../../utils/location-utils.js';

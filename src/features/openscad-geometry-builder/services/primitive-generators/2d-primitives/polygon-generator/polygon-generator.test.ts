@@ -20,8 +20,8 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { isError, isSuccess } from '../../../../../../shared/types/result.types';
-import type { PolygonParameters } from '../../../../types/primitive-parameters';
+import type { PolygonParameters } from '@/features/openscad-geometry-builder';
+import { isError, isSuccess } from '@/shared';
 import { PolygonGeneratorService } from './polygon-generator';
 
 describe('PolygonGeneratorService', () => {

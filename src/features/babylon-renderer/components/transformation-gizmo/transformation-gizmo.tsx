@@ -24,14 +24,14 @@
 import type { AbstractMesh, Scene } from '@babylonjs/core';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
 import type {
   GizmoMode,
   TransformationEvent,
   TransformationGizmoConfig,
   TransformationGizmoError,
-} from '../../services/transformation-gizmo-service';
-import { TransformationGizmoService } from '../../services/transformation-gizmo-service';
+} from '@/features/babylon-renderer';
+import { TransformationGizmoService } from '@/features/babylon-renderer';
+import { createLogger } from '@/shared';
 
 const logger = createLogger('TransformationGizmo');
 

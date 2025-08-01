@@ -7,10 +7,6 @@
 
 import type { CSG2, Mesh, Scene } from '@babylonjs/core';
 import { CSG2 as CSG2Class, InitializeCSG2Async, IsCSG2Ready } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
-
 import {
   type CSGDifferenceResult,
   type CSGError,
@@ -23,7 +19,9 @@ import {
   type CSGPerformanceMetrics,
   type CSGUnionResult,
   DEFAULT_CSG_CONFIG,
-} from '../../types/babylon-csg.types';
+} from '@/features/babylon-renderer';
+import type { Result } from '@/shared';
+import { createLogger, tryCatch, tryCatchAsync } from '@/shared';
 
 const logger = createLogger('BabylonCSG2Service');
 

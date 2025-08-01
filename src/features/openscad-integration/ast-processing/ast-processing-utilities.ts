@@ -29,10 +29,10 @@
  * @since 2025-07-30
  */
 
-import type { Result } from '../../../shared/types/result.types';
-import { error, success } from '../../../shared/utils/functional/result';
-import { MemoryMonitor, PerformanceTimer } from '../../../shared/utils/performance';
-import type { ASTNode } from '../../openscad-parser/core/ast-types';
+import type { ASTNode } from '@/features/openscad-parser';
+import type { Result } from '@/shared';
+import { error, success } from '@/shared';
+import { MemoryMonitor, PerformanceTimer } from '@/shared/utils/performance';
 
 /**
  * Processed AST node with metadata

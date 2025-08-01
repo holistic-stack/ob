@@ -5,9 +5,8 @@
  * Following functional programming patterns with Result<T,E> error handling.
  */
 
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
-import { tryCatchAsync } from '../../../../shared/utils/functional/result';
+import type { Result } from '@/shared';
+import { createLogger, tryCatchAsync } from '@/shared';
 
 // Extend GPUAdapter interface to include experimental methods
 interface ExtendedGPUAdapter extends GPUAdapter {

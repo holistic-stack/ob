@@ -19,11 +19,9 @@
 import type { AbstractMesh, Scene as BabylonScene } from '@babylonjs/core';
 import { Color3, Color4, StandardMaterial } from '@babylonjs/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createLogger } from '../../../../shared/services/logger.service';
-import { isError } from '../../../../shared/types/result.types';
-import { OpenSCADRenderingPipelineService } from '../../../openscad-geometry-builder/services/pipeline/openscad-rendering-pipeline';
-
-import { OpenscadParser } from '../../../openscad-parser/openscad-parser';
+import { OpenSCADRenderingPipelineService } from '@/features/openscad-geometry-builder';
+import { OpenscadParser } from '@/features/openscad-parser';
+import { createLogger, isError } from '@/shared';
 
 const logger = createLogger('OpenSCADWorkflowTestScene');
 

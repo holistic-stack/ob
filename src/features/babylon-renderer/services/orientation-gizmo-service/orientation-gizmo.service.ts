@@ -46,7 +46,6 @@
  */
 
 import { Animation, type ArcRotateCamera, Matrix, QuadraticEase, Vector3 } from '@babylonjs/core';
-import type { Result } from '../../../../shared/types/result.types';
 import type {
   AxisDirection,
   GizmoAxis,
@@ -59,13 +58,14 @@ import type {
   GizmoState,
   GizmoUpdateResult_Type,
   IGizmoService,
-} from '../../types/orientation-gizmo.types';
+} from '@/features/babylon-renderer/types';
 import {
   createGizmoId,
   DEFAULT_GIZMO_CONFIG,
   GizmoErrorCode,
   GizmoPosition,
-} from '../../types/orientation-gizmo.types';
+} from '@/features/babylon-renderer/types';
+import type { Result } from '@/shared';
 
 /**
  * Core orientation gizmo service implementation

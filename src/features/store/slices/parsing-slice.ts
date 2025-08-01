@@ -438,19 +438,13 @@
 
 import type { WritableDraft } from 'immer';
 import type { StateCreator } from 'zustand';
-import { createLogger } from '../../../shared/services/logger.service.js';
-import type {
-  AsyncOperationResult,
-  OperationError,
-  OperationMetadata,
-} from '../../../shared/types/operations.types.js';
-import { isSuccess } from '../../../shared/types/result.types.js';
-import { operationUtils } from '../../../shared/types/utils.js';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
+import type { ASTNode } from '@/features/openscad-parser';
+import type { AppStore } from '@/features/store';
+import type { AsyncOperationResult, OperationError, OperationMetadata } from '@/shared';
+import { createLogger, isSuccess, operationUtils } from '@/shared';
 import { ModuleRegistry } from '../../openscad-parser/services/module-registry/module-registry.js';
 import { ModuleResolver } from '../../openscad-parser/services/module-resolver/module-resolver.js';
 import { unifiedParseOpenSCAD } from '../../openscad-parser/services/parsing.service.js';
-import type { AppStore } from '../types/store.types.js';
 import type { ParseOptions, ParsingActions } from './parsing-slice.types.js';
 
 const logger = createLogger('ParsingSlice');

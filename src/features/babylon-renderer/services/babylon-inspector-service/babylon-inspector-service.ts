@@ -6,9 +6,8 @@
  */
 
 import type { Scene } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
+import type { Result } from '@/shared';
+import { createLogger, tryCatch, tryCatchAsync } from '@/shared';
 
 const logger = createLogger('BabylonInspectorService');
 

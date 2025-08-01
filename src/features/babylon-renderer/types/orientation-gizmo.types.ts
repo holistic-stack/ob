@@ -47,7 +47,7 @@
  */
 
 import type { ArcRotateCamera, Vector3 } from '@babylonjs/core';
-import type { Brand, Result } from '../../../shared/types/result.types';
+import type { Brand, Result } from '@/shared';
 
 /**
  * Branded type for gizmo instance identification

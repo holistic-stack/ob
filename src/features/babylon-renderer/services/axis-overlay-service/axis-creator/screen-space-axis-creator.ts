@@ -12,8 +12,8 @@ import {
   StandardMaterial,
   Vector3,
 } from '@babylonjs/core';
-import { createLogger } from '../../../../../shared/services/logger.service';
-import type { Result } from '../../../../../shared/types/result.types';
+import type { Result } from '@/shared';
+import { createLogger } from '@/shared';
 
 const logger = createLogger('ScreenSpaceAxisCreator');
 

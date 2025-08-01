@@ -25,15 +25,14 @@
  */
 
 import type { AbstractMesh, Scene as BabylonScene } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result';
-import { error, success } from '../../../../shared/utils/functional/result';
-import type { ASTNode, AssignStatementNode } from '../../../openscad-parser/core/ast-types';
 import {
   ASTToGeometryConverterService,
+  GeometryToMeshConverterService,
   type GlobalVariables,
-} from '../ast-converter/ast-to-geometry-converter';
-import { GeometryToMeshConverterService } from '../mesh-converter/geometry-to-mesh-converter';
+} from '@/features/openscad-geometry-builder';
+import type { ASTNode, AssignStatementNode } from '@/features/openscad-parser';
+import { createLogger, error, success } from '@/shared';
+import type { Result } from '../../../../shared/types/result';
 
 const logger = createLogger('OpenSCADRenderingPipelineService');
 

@@ -56,10 +56,10 @@
 
 import type { Animatable, ArcRotateCamera, Scene } from '@babylonjs/core';
 import { Animation, EasingFunction, QuadraticEase, Vector3 } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
-import type { AppStore } from '../../../store/app-store';
-import type { AxisDirection } from '../../types/orientation-gizmo.types';
+import type { AxisDirection } from '@/features/babylon-renderer/types';
+import type { AppStore } from '@/features/store';
+import type { Result } from '@/shared';
+import { createLogger } from '@/shared';
 import type { OrientationGizmoService } from '../orientation-gizmo-service/orientation-gizmo.service';
 
 const logger = createLogger('CameraGizmoSync');

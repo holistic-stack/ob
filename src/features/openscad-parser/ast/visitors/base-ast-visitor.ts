@@ -20,9 +20,9 @@
  */
 
 import type { Node as TSNode } from 'web-tree-sitter';
-import type { ErrorHandler } from '../../error-handling/error-handler.js';
+import type { ErrorHandler } from '@/features/openscad-parser';
+import { type ExtractedParameter, extractArguments } from '@/features/openscad-parser';
 import type * as ast from '../ast-types.js';
-import { type ExtractedParameter, extractArguments } from '../extractors/argument-extractor.js';
 import { getLocation } from '../utils/location-utils.js';
 import { findDescendantOfType } from '../utils/node-utils.js';
 import type { ASTVisitor } from './ast-visitor.js';

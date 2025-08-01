@@ -16,19 +16,15 @@ import type {
   NodeId,
   NodeMetadata,
   NodeType,
-  ParentNode,
-} from './ast.types.js';
-
-import type {
   OperationError,
   OperationId,
   OperationMetadata,
   OperationMetrics,
   OperationResult,
   OperationType,
-} from './operations.types.js';
-
-import type { Result } from './result.types.js';
+  ParentNode,
+  Result,
+} from '@/shared';
 
 /**
  * AST Node Utilities

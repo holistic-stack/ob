@@ -11,7 +11,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_TRANSFORMATION_GIZMO_CONFIG,
   TransformationGizmoService,
-} from './transformation-gizmo.service';
+} from '@/features/babylon-renderer';
 
 // Mock ResizeObserver for headless testing
 global.ResizeObserver = vi.fn().mockImplementation(() => ({

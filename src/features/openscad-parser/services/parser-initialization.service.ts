@@ -11,8 +11,8 @@
  * 4. Offering initialization status checking
  */
 
-import { createLogger } from '../../../shared/services/logger.service.js';
-import type { Result } from '../../../shared/types/result.types.js';
+import type { Result } from '@/shared';
+import { createLogger } from '@/shared';
 import { OpenscadParser } from '../openscad-parser.js';
 
 const logger = createLogger('ParserInitializationService');

@@ -8,17 +8,15 @@
 
 import type { AbstractMesh, Scene } from '@babylonjs/core';
 import { MeshBuilder, StandardMaterial } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
-import { tryCatch } from '../../../../shared/utils/functional/result';
-
-import type { ASTNode, SourceLocation } from '../../../openscad-parser/core/ast-types.js';
 import {
   type BabylonJSError,
   BabylonJSNode,
   BabylonJSNodeType,
   type NodeGenerationResult,
   type NodeValidationResult,
-} from '../../types/babylon-ast.types';
+} from '@/features/babylon-renderer';
+import type { ASTNode, SourceLocation } from '@/features/openscad-parser';
+import { createLogger, tryCatch } from '@/shared';
 
 const logger = createLogger('PlaceholderBabylonNode');
 

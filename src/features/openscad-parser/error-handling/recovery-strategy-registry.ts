@@ -47,10 +47,12 @@
  * This allows the parser to continue processing the code even if it contains minor syntax errors.
  */
 
-import { MissingSemicolonStrategy } from './strategies/missing-semicolon-strategy.js';
-import type { RecoveryStrategy } from './strategies/recovery-strategy.js';
-import { UnclosedBracketStrategy } from './strategies/unclosed-bracket-strategy.js';
-import { UnknownIdentifierStrategy } from './strategies/unknown-identifier-strategy.js';
+import type { RecoveryStrategy } from '@/features/openscad-parser';
+import {
+  MissingSemicolonStrategy,
+  UnclosedBracketStrategy,
+  UnknownIdentifierStrategy,
+} from '@/features/openscad-parser';
 import type { ParserError } from './types/error-types.js';
 // Note: TypeMismatchStrategy requires TypeChecker dependency, not included by default
 

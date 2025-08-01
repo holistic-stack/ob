@@ -4,7 +4,7 @@
  * between slices and the main app store.
  */
 
-import type { CameraConfig } from '../../../shared/types/common.types';
+import type { CameraConfig } from '@/shared';
 
 /**
  * Default camera configuration for BabylonJS 3D rendering.

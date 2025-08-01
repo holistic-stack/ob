@@ -6,12 +6,11 @@
 
 import { NullEngine, Scene } from '@babylonjs/core';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { TransformationBabylonNode } from '@/features/babylon-renderer';
+import type { CubeNode, OpenscadParser, TranslateNode } from '@/features/openscad-parser';
 import { OPENSCAD_DEFAULTS } from '@/features/store/slices/openscad-globals-slice/index.js';
 import { createTestParser } from '@/vitest-helpers/openscad-parser-test-utils';
-import type { CubeNode, TranslateNode } from '../../../openscad-parser/ast/ast-types.js';
-import type { OpenscadParser } from '../../../openscad-parser/openscad-parser.js';
 import { PrimitiveBabylonNode } from './primitive-babylon-node.js';
-import { TransformationBabylonNode } from './transformation-babylon-node.js';
 
 describe('OpenSCAD Translate Example', () => {
   let engine: NullEngine;

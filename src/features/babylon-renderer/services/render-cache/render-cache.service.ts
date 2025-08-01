@@ -28,16 +28,15 @@
  */
 
 import type { AbstractMesh } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
-import type { Result } from '../../../../shared/types/result.types';
+import type { ASTNode } from '@/features/openscad-parser';
+import type { Result } from '@/shared';
+import { createLogger, error, success } from '@/shared';
 import {
   CacheEntryManager,
   CacheKeyGenerator,
   CacheLimitsEnforcer,
   CacheStatisticsCalculator,
-} from '../../../../shared/utils/caching';
-import { error, success } from '../../../../shared/utils/functional/result';
-import type { ASTNode } from '../../../openscad-parser/core/ast-types';
+} from '@/shared/utils/caching';
 
 const logger = createLogger('RenderCacheService');
 

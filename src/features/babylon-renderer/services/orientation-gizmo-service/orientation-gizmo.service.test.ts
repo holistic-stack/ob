@@ -12,13 +12,13 @@
 
 import * as BABYLON from '@babylonjs/core';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { GizmoConfig, GizmoInitOptions } from '../../types/orientation-gizmo.types';
+import type { GizmoConfig, GizmoInitOptions } from '@/features/babylon-renderer/types';
 import {
   AxisDirection,
   DEFAULT_GIZMO_CONFIG,
   GizmoErrorCode,
   GizmoPosition,
-} from '../../types/orientation-gizmo.types';
+} from '@/features/babylon-renderer/types';
 import { OrientationGizmoService } from './orientation-gizmo.service';
 
 // Mock canvas and 2D context for headless testing

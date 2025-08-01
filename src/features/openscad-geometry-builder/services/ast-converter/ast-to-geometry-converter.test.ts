@@ -4,7 +4,6 @@
  */
 
 import { beforeEach, describe, expect, test } from 'vitest';
-import { isError, isSuccess } from '../../../../shared/utils/functional/result';
 import type {
   CircleNode,
   CubeNode,
@@ -12,7 +11,8 @@ import type {
   PolygonNode,
   SphereNode,
   SquareNode,
-} from '../../../openscad-parser/core/ast-types';
+} from '@/features/openscad-parser';
+import { isError, isSuccess } from '@/shared';
 import { ASTToGeometryConverterService, type GlobalVariables } from './ast-to-geometry-converter';
 
 describe('ASTToGeometryConverterService', () => {

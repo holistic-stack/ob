@@ -6,7 +6,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createLogger } from '../../shared/services/logger.service.js';
+import { createLogger } from '@/shared';
 import { getParserInitializationService } from '../openscad-parser/services/parser-initialization.service.js';
 import { createAppStore } from './app-store.js';
 

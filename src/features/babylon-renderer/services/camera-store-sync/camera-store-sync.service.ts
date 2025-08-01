@@ -46,10 +46,8 @@
  */
 
 import type { ArcRotateCamera, Observer } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service.js';
-import type { CameraConfig } from '../../../../shared/types/common.types.js';
-import type { Result } from '../../../../shared/types/result.types.js';
-import { debounce } from '../../../../shared/utils/functional/pipe.js';
+import type { CameraConfig, Result } from '@/shared';
+import { createLogger, debounce } from '@/shared';
 import {
   type CameraStoreSyncConfig,
   type CameraStoreSyncError,

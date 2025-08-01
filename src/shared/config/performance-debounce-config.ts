@@ -19,7 +19,7 @@
  * @since 2025-07-30
  */
 
-import type { DebounceConfig } from '../types/common.types';
+import type { DebounceConfig } from '@/shared';
 
 /**
  * High-performance debouncing configuration for <10ms frame times

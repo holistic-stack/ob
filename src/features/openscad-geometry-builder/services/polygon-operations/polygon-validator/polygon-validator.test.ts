@@ -22,7 +22,7 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { isError, isSuccess } from '../../../../../shared/types/result.types';
+import { isError, isSuccess } from '@/shared';
 import type { Vector2 } from '../../../types/geometry-data';
 import { PolygonValidator } from './polygon-validator';
 

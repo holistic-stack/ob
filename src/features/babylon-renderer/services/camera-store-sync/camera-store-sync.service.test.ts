@@ -6,7 +6,7 @@
 
 import * as BABYLON from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createAppStore } from '../../../store/app-store.js';
+import { createAppStore } from '@/features/store';
 import { CameraStoreSyncService } from './camera-store-sync.service.js';
 import type { CameraStoreSyncConfig } from './camera-store-sync.types.js';
 

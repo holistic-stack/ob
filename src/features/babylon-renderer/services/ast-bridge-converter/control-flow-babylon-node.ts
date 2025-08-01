@@ -6,8 +6,13 @@
  */
 
 import type { AbstractMesh, Scene } from '@babylonjs/core';
-import { createLogger } from '../../../../shared/services/logger.service';
-import { tryCatch, tryCatchAsync } from '../../../../shared/utils/functional/result';
+import type {
+  BabylonJSError,
+  BabylonJSNode,
+  NodeGenerationResult,
+  NodeValidationResult,
+} from '@/features/babylon-renderer/types';
+import { BabylonJSNodeType } from '@/features/babylon-renderer/types';
 
 import type {
   ASTNode,
@@ -16,14 +21,8 @@ import type {
   IfNode,
   LetNode,
   SourceLocation,
-} from '../../../openscad-parser/ast/ast-types';
-import {
-  type BabylonJSError,
-  BabylonJSNode,
-  BabylonJSNodeType,
-  type NodeGenerationResult,
-  type NodeValidationResult,
-} from '../../types/babylon-ast.types';
+} from '@/features/openscad-parser';
+import { createLogger, tryCatch, tryCatchAsync } from '@/shared';
 
 const logger = createLogger('ControlFlowBabylonNode');
 

@@ -29,11 +29,10 @@
  * @since 2025-07-29
  */
 
-import type { Result } from '../../../../../../shared/types/result.types';
-import { isError } from '../../../../../../shared/types/result.types';
-import { error, success } from '../../../../../../shared/utils/functional/result';
+import type { SphereParameters } from '@/features/openscad-geometry-builder';
+import type { Result } from '@/shared';
+import { error, isError, success } from '@/shared';
 import type { GeometryGenerationError, SphereGeometryData } from '../../../../types/geometry-data';
-import type { SphereParameters } from '../../../../types/primitive-parameters';
 import {
   calculateFragmentsWithErrorHandling,
   createGeometryData,

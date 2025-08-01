@@ -7,9 +7,8 @@
 
 import type { Mesh } from '@babylonjs/core';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { ASTNode } from '../../openscad-parser/core/ast-types.js';
-import type { OpenSCADGlobalsState } from '../slices/openscad-globals-slice/openscad-globals-slice.types';
-import type { AppState, BabylonRenderingState } from '../types/store.types';
+import type { ASTNode } from '@/features/openscad-parser';
+import type { AppState, BabylonRenderingState } from '@/features/store';
 import {
   selectAllErrors,
   selectApplicationStatus,
@@ -32,7 +31,8 @@ import {
   selectRenderingMeshCount,
   selectRenderingStats,
   selectTotalErrors,
-} from './store.selectors';
+} from '@/features/store';
+import type { OpenSCADGlobalsState } from '@/features/store/slices/openscad-globals-slice';
 
 describe('Store Selectors', () => {
   let mockState: AppState;

@@ -306,10 +306,10 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { OPTIMIZED_DEBOUNCE_CONFIG } from '../../shared/config/debounce-config.js';
-import { createLogger } from '../../shared/services/logger.service.js';
-import type { AppConfig } from '../../shared/types/common.types.js';
-import type { ASTNode } from '../openscad-parser/ast/ast-types.js';
+import type { ASTNode } from '@/features/openscad-parser';
+import type { AppConfig } from '@/shared';
+import { createLogger } from '@/shared';
+import { OPTIMIZED_DEBOUNCE_CONFIG } from '@/shared/config/debounce-config.ts';
 import { DEFAULT_CAMERA, DEFAULT_OPENSCAD_CODE } from './constants/store.constants.js';
 import {
   type BabylonRenderingState,

@@ -24,19 +24,19 @@
 
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { AxisOverlayControls } from './features/babylon-renderer/components/axis-overlay-controls';
-import { StoreConnectedRenderer } from './features/babylon-renderer/components/store-connected-renderer';
-import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
-import type { ASTNode } from './features/openscad-parser/core/ast-types.js';
-import { useAppStore } from './features/store/app-store';
+import { StoreConnectedRenderer } from '@/features/babylon-renderer';
+import type { ASTNode } from '@/features/openscad-parser';
 import {
   selectParsingAST,
   selectRenderingErrors,
   selectRenderingIsRendering,
   selectRenderingMeshes,
-} from './features/store/selectors';
-import { ErrorBoundary } from './shared/components/error-boundary';
-import { createLogger } from './shared/services/logger.service';
+  useAppStore,
+} from '@/features/store';
+import { createLogger } from '@/shared';
+import { ErrorBoundary } from '@/shared/components';
+import { AxisOverlayControls } from './features/babylon-renderer/components/axis-overlay-controls';
+import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
 
 const logger = createLogger('App');
 
