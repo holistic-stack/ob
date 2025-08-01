@@ -312,3 +312,162 @@ export function isAxisFailure<T>(
 ): result is { success: false; error: AxisError } {
   return !result.success;
 }
+
+/**
+ * Factory for creating axis errors
+ * Follows SRP by providing only error creation functionality
+ */
+export const AxisErrorFactory = {
+  /**
+   * Create axis creation error
+   */
+  createCreationError: createAxisCreationError,
+
+  /**
+   * Create axis configuration error
+   */
+  createConfigurationError: createAxisConfigurationError,
+
+  /**
+   * Create axis render error
+   */
+  createRenderError: createAxisRenderError,
+
+  /**
+   * Create axis validation error
+   */
+  createValidationError: createAxisValidationError,
+
+  /**
+   * Create axis shader error
+   */
+  createShaderError: createAxisShaderError,
+
+  /**
+   * Create error from unknown
+   */
+  createFromUnknown: createAxisErrorFromUnknown,
+
+  /**
+   * Create error from unknown (alias for compatibility)
+   */
+  fromUnknownError: createAxisErrorFromUnknown,
+} as const;
+
+/**
+ * Utility functions for working with AxisResult types
+ * Follows SRP by providing only result-related utility functions
+ */
+export const AxisResultUtils = {
+  /**
+   * Create successful result
+   */
+  success: createAxisSuccess,
+
+  /**
+   * Create failed result
+   */
+  failure: createAxisFailure,
+
+  /**
+   * Create failed result from unknown error
+   */
+  failureFromUnknown: createAxisFailureFromUnknown,
+
+  /**
+   * Check if result is successful
+   */
+  isSuccess: isAxisSuccess,
+
+  /**
+   * Check if result is failure
+   */
+  isFailure: isAxisFailure,
+
+  /**
+   * Map successful result to new type
+   */
+  map: <T, U>(result: AxisResult<T>, fn: (data: T) => U): AxisResult<U> => {
+    return result.success ? createAxisSuccess(fn(result.data)) : result;
+  },
+
+  /**
+   * Chain results together
+   */
+  chain: <T, U>(result: AxisResult<T>, fn: (data: T) => AxisResult<U>): AxisResult<U> => {
+    return result.success ? fn(result.data) : result;
+  },
+
+  /**
+   * Get data from result or throw error
+   */
+  unwrap: <T>(result: AxisResult<T>): T => {
+    if (result.success) {
+      return result.data;
+    }
+    throw new Error(result.error.message);
+  },
+
+  /**
+   * Get data from result or return default
+   */
+  unwrapOr: <T>(result: AxisResult<T>, defaultValue: T): T => {
+    return result.success ? result.data : defaultValue;
+  },
+} as const;
+
+/**
+ * Utility functions for working with axis errors
+ * Follows SRP by providing only error utility functions
+ */
+export const AxisErrorUtils = {
+  /**
+   * Check if error is axis error
+   */
+  isAxisError,
+
+  /**
+   * Check if error is specific type
+   */
+  isAxisErrorOfType,
+
+  /**
+   * Format error for logging
+   */
+  formatAxisError,
+
+  /**
+   * Extract error context
+   */
+  extractAxisErrorContext,
+
+  /**
+   * Get user-friendly message
+   */
+  getAxisErrorUserFriendlyMessage,
+
+  /**
+   * Create error from unknown
+   */
+  createFromUnknown: createAxisErrorFromUnknown,
+
+  /**
+   * Create error from unknown (alias)
+   */
+  fromUnknownError: createAxisErrorFromUnknown,
+
+  /**
+   * Format error for logging (alias)
+   */
+  formatError: formatAxisError,
+
+  /**
+   * Extract error context (alias)
+   */
+  extractContext: extractAxisErrorContext,
+
+  /**
+   * Get user-friendly message (alias)
+   */
+  getUserFriendlyMessage: getAxisErrorUserFriendlyMessage,
+} as const;

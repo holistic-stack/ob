@@ -4,7 +4,7 @@
  * Centralizes configuration types to eliminate duplication across axis creators
  */
 
-import { type Color3, Vector3 } from '@babylonjs/core';
+import { Color3, Vector3 } from '@babylonjs/core';
 import type { AxisColorScheme } from '../../axis-colors/axis-colors';
 
 /**
@@ -238,3 +238,118 @@ export function createCoordinateAxesConfig(baseConfig: CoordinateAxesConfig): Co
     ...baseConfig,
   };
 }
+
+/**
+ * Utility functions for axis configuration operations
+ * Follows SRP by providing only configuration-related utility functions
+ */
+export const AxisConfigUtils = {
+  /**
+   * Create line axis configuration
+   */
+  createLineConfig: createLineAxisConfig,
+
+  /**
+   * Create cylinder axis configuration
+   */
+  createCylinderConfig: createCylinderAxisConfig,
+
+  /**
+   * Create coordinate axes configuration
+   */
+  createCoordinateAxesConfig,
+
+  /**
+   * Validate axis configuration
+   */
+  isValidConfig: isValidAxisConfig,
+
+  /**
+   * Get default configuration for axis type
+   */
+  getDefaultConfig: (type: 'line' | 'cylinder'): AxisConfig => {
+    return type === 'line'
+      ? createLineAxisConfig({
+          name: AXIS_NAMES.X,
+          color: new Color3(1, 0, 0),
+          length: 100,
+        })
+      : createCylinderAxisConfig({
+          name: AXIS_NAMES.X,
+          color: new Color3(1, 0, 0),
+          length: 100,
+          diameter: 0.1,
+        });
+  },
+
+  /**
+   * Merge configurations with defaults
+   */
+  mergeWithDefaults: (config: Partial<CoordinateAxesConfig>): CoordinateAxesConfig => {
+    return createCoordinateAxesConfig(config as CoordinateAxesConfig);
+  },
+
+  /**
+   * Extract axis-specific config from coordinate config
+   */
+  extractAxisConfig: (coordConfig: CoordinateAxesConfig, axis: AxisName): AxisConfig => {
+    const baseConfig = {
+      name: axis,
+      origin: coordConfig.origin ?? Vector3.Zero(),
+      direction: AXIS_DIRECTIONS[axis],
+      color: new Color3(1, 0, 0), // Default red color, should be overridden by color scheme
+      length: coordConfig.length ?? DEFAULT_AXIS_CONFIG.LENGTH,
+      opacity: coordConfig.opacity ?? DEFAULT_AXIS_CONFIG.OPACITY,
+    };
+
+    if (coordConfig.type === 'line') {
+      return {
+        ...baseConfig,
+        type: 'line',
+        pixelWidth: coordConfig.pixelWidth ?? DEFAULT_AXIS_CONFIG.PIXEL_WIDTH,
+        isDotted: false,
+        dashSize: coordConfig.dashSize ?? DEFAULT_AXIS_CONFIG.DASH_SIZE,
+        gapSize: coordConfig.gapSize ?? DEFAULT_AXIS_CONFIG.GAP_SIZE,
+      };
+    } else {
+      return {
+        ...baseConfig,
+        type: 'cylinder',
+        diameter: coordConfig.diameter ?? DEFAULT_AXIS_CONFIG.DIAMETER,
+        tessellation: coordConfig.tessellation ?? DEFAULT_AXIS_CONFIG.TESSELLATION,
+      };
+    }
+  },
+
+  /**
+   * Validate coordinate axes configuration
+   */
+  isValidCoordinateConfig: (config: CoordinateAxesConfig): boolean => {
+    // Validate common properties
+    if (config.length !== undefined && (config.length <= 0 || !Number.isFinite(config.length))) {
+      return false;
+    }
+    if (config.opacity !== undefined && (config.opacity < 0 || config.opacity > 1)) {
+      return false;
+    }
+
+    // Type-specific validation
+    if (config.type === 'line') {
+      if (config.pixelWidth !== undefined && config.pixelWidth <= 0) {
+        return false;
+      }
+    } else if (config.type === 'cylinder') {
+      if (
+        config.diameter !== undefined &&
+        (config.diameter <= 0 || !Number.isFinite(config.diameter))
+      ) {
+        return false;
+      }
+      if (config.tessellation !== undefined && config.tessellation < 3) {
+        return false;
+      }
+    }
+
+    return true;
+  },
+} as const;
