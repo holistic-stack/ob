@@ -10,6 +10,6 @@
 export * from './2d-geometry-data';
 // Core Types
 export * from './geometry-data';
-export * from './import-parameters';
+// Note: import-parameters is exported by import-primitives service to avoid conflicts
 export * from './primitive-parameters';
 export * from './text-parameters';

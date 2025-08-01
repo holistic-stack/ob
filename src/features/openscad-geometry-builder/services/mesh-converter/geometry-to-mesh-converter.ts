@@ -27,12 +27,12 @@
 import type { AbstractMesh, Scene as BabylonScene } from '@babylonjs/core';
 import { BabylonMeshBuilderService } from '@/features/openscad-geometry-builder';
 import { createLogger, error, success } from '@/shared';
-import type { Result } from '../../../../shared/types/result';
+import type { Result } from '@/shared';
 import type {
   Geometry2DData,
   Geometry3DData,
   GeometryData,
-} from '../geometry-data/geometry-data-types';
+} from '../../geometry-data/types/geometry-data.types';
 
 const logger = createLogger('GeometryToMeshConverterService');
 

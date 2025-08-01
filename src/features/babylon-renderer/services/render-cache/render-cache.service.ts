@@ -28,6 +28,7 @@
  */
 
 import type { AbstractMesh } from '@babylonjs/core';
+import type { CleanupResult } from '../memory-management/memory-pool.service';
 import type { ASTNode } from '@/features/openscad-parser';
 import type { Result } from '@/shared';
 import { createLogger, error, success } from '@/shared';
@@ -259,6 +260,34 @@ export class RenderCacheService {
     this.missCount = 0;
 
     logger.debug(`[DEBUG][RenderCacheService] Cleared cache (${entryCount} entries removed)`);
+  }
+
+  /**
+   * Get cache statistics for performance monitoring
+   */
+  /**
+   * Perform automatic cleanup of the cache.
+   */
+  performAutomaticCleanup(): Result<CleanupResult, Error> {
+    const startTime = performance.now();
+    const pressureBefore = 'low' as const;
+    const initialMemory = this.getStatistics().totalMemoryMB;
+    const initialCount = this.cache.size;
+
+    this.enforceSharedLimits();
+
+    const finalMemory = this.getStatistics().totalMemoryMB;
+    const finalCount = this.cache.size;
+    const pressureAfter = 'low' as const;
+    const cleanupTimeMs = performance.now() - startTime;
+
+    return success({
+      resourcesFreed: initialCount - finalCount,
+      memoryFreedMB: initialMemory - finalMemory,
+      cleanupTimeMs,
+      pressureBefore,
+      pressureAfter,
+    });
   }
 
   /**

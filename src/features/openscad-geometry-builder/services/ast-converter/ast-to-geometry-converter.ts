@@ -43,8 +43,8 @@ import type {
   SquareNode,
 } from '@/features/openscad-parser';
 import { createLogger, error, success } from '@/shared';
-import type { Result } from '../../../../shared/types/result';
-import type { GeometryData } from '../geometry-data/geometry-data-types';
+import type { Result } from '@/shared';
+import type { GeometryData } from '../../geometry-data/types/geometry-data.types';
 
 const logger = createLogger('ASTToGeometryConverterService');
 

@@ -130,13 +130,15 @@ export class VertexDeduplicationService {
     // Build spatial hash for efficient duplicate detection
     for (let i = 0; i < vertices.length; i++) {
       const vertex = vertices[i];
+      if (!vertex) continue;
+
       const hashKey = this.createSpatialHashKey(vertex, options.tolerance);
 
       const existingIndex = spatialHash.get(hashKey);
       if (existingIndex !== undefined) {
         // Check if vertices are actually close enough (hash collision check)
         const existingVertex = uniqueVertices[existingIndex];
-        if (this.areVerticesEqual(vertex, existingVertex, options.tolerance)) {
+        if (existingVertex && this.areVerticesEqual(vertex, existingVertex, options.tolerance)) {
           vertexMapping[i] = existingIndex;
           continue;
         }
@@ -152,7 +154,12 @@ export class VertexDeduplicationService {
     // Update face indices to use new vertex mapping
     const updatedFaces: number[][] = [];
     for (const face of faces) {
-      const newFace = face.map((index) => vertexMapping[index]);
+      if (!face) continue;
+
+      const newFace = face.map((index) => {
+        const mappedIndex = vertexMapping[index];
+        return mappedIndex !== undefined ? mappedIndex : index;
+      });
 
       // Skip degenerate faces (faces with duplicate vertices after deduplication)
       if (this.isValidFace(newFace)) {

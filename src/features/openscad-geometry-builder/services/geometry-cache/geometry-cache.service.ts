@@ -32,8 +32,8 @@ import type { Result } from '@/shared/types/result.types';
 import { error, success } from '@/shared/utils/functional/result';
 import type {
   Polygon2DGeometryData,
-  Polyhedron3DGeometryData,
-} from '../primitive-generators/types';
+  PolyhedronGeometryData,
+} from '../../types';
 
 const logger = createLogger('GeometryCacheService');
 
@@ -42,7 +42,7 @@ const logger = createLogger('GeometryCacheService');
  */
 export interface GeometryCacheEntry {
   readonly cacheKey: string;
-  readonly geometry: Polyhedron3DGeometryData | Polygon2DGeometryData;
+  readonly geometry: PolyhedronGeometryData | Polygon2DGeometryData;
   readonly createdAt: number;
   readonly lastAccessed: number;
   readonly accessCount: number;
@@ -119,7 +119,7 @@ export class GeometryCacheService {
    */
   getCachedGeometry(
     cacheKey: string
-  ): Result<Polyhedron3DGeometryData | Polygon2DGeometryData, Error> {
+  ): Result<PolyhedronGeometryData | Polygon2DGeometryData, Error> {
     const entry = this.cache.get(cacheKey);
 
     if (!entry) {
@@ -156,7 +156,7 @@ export class GeometryCacheService {
    */
   cacheGeometry(
     cacheKey: string,
-    geometry: Polyhedron3DGeometryData | Polygon2DGeometryData
+    geometry: PolyhedronGeometryData | Polygon2DGeometryData
   ): Result<void, Error> {
     try {
       const now = Date.now();
@@ -271,16 +271,19 @@ export class GeometryCacheService {
     const entriesToRemove = Math.max(1, Math.floor(entries.length * 0.25));
 
     for (let i = 0; i < entriesToRemove; i++) {
-      const [key] = entries[i];
-      this.cache.delete(key);
-      logger.debug(`[CACHE_EVICT] Removed LRU entry: ${key}`);
+      const entry = entries[i];
+      if (entry) {
+        const [key] = entry;
+        this.cache.delete(key);
+        logger.debug(`[CACHE_EVICT] Removed LRU entry: ${key}`);
+      }
     }
   }
 
   /**
    * Estimate memory size of geometry data
    */
-  private estimateMemorySize(geometry: Polyhedron3DGeometryData | Polygon2DGeometryData): number {
+  private estimateMemorySize(geometry: PolyhedronGeometryData | Polygon2DGeometryData): number {
     // Rough estimation based on data structure
     const baseSize = 1000; // Base overhead
 

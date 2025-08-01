@@ -95,7 +95,7 @@ export class MemoryManagerService {
   private renderCache: RenderCacheService;
   private memoryPool: MemoryPoolService;
   private config: MemoryManagerConfig;
-  private optimizationTimer?: NodeJS.Timeout;
+  private optimizationTimer?: any;
   private isInitialized = false;
 
   constructor(config: Partial<MemoryManagerConfig> = {}) {
@@ -165,25 +165,19 @@ export class MemoryManagerService {
       const initialStats = this.getComprehensiveStatistics();
 
       // Perform cache cleanup
-      const cacheCleanupResult =
-        (await this.renderCache.performAutomaticCleanup?.()) ??
-        success({
-          resourcesFreed: 0,
-          memoryFreedMB: 0,
-          cleanupTimeMs: 0,
-          pressureBefore: 'low' as const,
-          pressureAfter: 'low' as const,
-        });
+      const cacheCleanupResult = await this.renderCache.performAutomaticCleanup();
 
       // Perform pool cleanup
       const poolCleanupResult = await this.memoryPool.performAutomaticCleanup();
 
-      if (isError(cacheCleanupResult)) {
-        return error(new Error(`Cache cleanup failed: ${cacheCleanupResult.error.message}`));
+      if (!cacheCleanupResult.success) {
+        const errorMessage = cacheCleanupResult.error instanceof Error ? cacheCleanupResult.error.message : 'Unknown cache cleanup error';
+        return error(new Error(`Cache cleanup failed: ${errorMessage}`));
       }
 
-      if (isError(poolCleanupResult)) {
-        return error(new Error(`Pool cleanup failed: ${poolCleanupResult.error.message}`));
+      if (!poolCleanupResult.success) {
+        const errorMessage = poolCleanupResult.error instanceof Error ? poolCleanupResult.error.message : 'Unknown pool cleanup error';
+        return error(new Error(`Pool cleanup failed: ${errorMessage}`));
       }
 
       const finalStats = this.getComprehensiveStatistics();

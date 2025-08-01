@@ -8,13 +8,15 @@
 
 import type { AbstractMesh, Scene } from '@babylonjs/core';
 import { MeshBuilder, StandardMaterial } from '@babylonjs/core';
+import type {
+  BabylonJSError,
+  NodeGenerationResult,
+  NodeValidationResult,
+} from '@/features/babylon-renderer/types';
 import {
-  type BabylonJSError,
   BabylonJSNode,
   BabylonJSNodeType,
-  type NodeGenerationResult,
-  type NodeValidationResult,
-} from '@/features/babylon-renderer';
+} from '@/features/babylon-renderer/types';
 import type { ASTNode, SourceLocation } from '@/features/openscad-parser';
 import { createLogger, tryCatch } from '@/shared';
 

@@ -27,7 +27,7 @@ import type { Result } from '@/shared/types/result.types';
 import { error, success } from '@/shared/utils/functional/result';
 import type {
   GeometryGenerationError,
-  Polyhedron3DGeometryData,
+  PolyhedronGeometryData,
 } from '../../../types/geometry-data';
 import type { ImportParameters, SupportedImportFormat } from '../../../types/import-parameters';
 import {
@@ -43,13 +43,15 @@ const logger = createLogger('ImportService');
 /**
  * Import result type
  */
-export type ImportResult = Result<Polyhedron3DGeometryData, GeometryGenerationError>;
+export type ImportResult = Result<PolyhedronGeometryData, GeometryGenerationError>;
 
 /**
  * Import statistics
  */
+import type { Supported3DFormat } from '../../../types/import-parameters';
+
 export interface ImportStatistics {
-  readonly format: SupportedImportFormat;
+  readonly format: Supported3DFormat;
   readonly fileSize: number;
   readonly vertexCount: number;
   readonly faceCount: number;
@@ -163,7 +165,7 @@ export class ImportService {
         );
 
         // Add import statistics to metadata
-        const enhancedGeometry: Polyhedron3DGeometryData = {
+        const enhancedGeometry: PolyhedronGeometryData = {
           ...result.data,
           metadata: {
             ...result.data.metadata,

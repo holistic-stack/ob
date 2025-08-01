@@ -8,11 +8,10 @@
 import type { AbstractMesh, Scene } from '@babylonjs/core';
 import type {
   BabylonJSError,
-  BabylonJSNode,
   NodeGenerationResult,
   NodeValidationResult,
 } from '@/features/babylon-renderer/types';
-import { BabylonJSNodeType } from '@/features/babylon-renderer/types';
+import { BabylonJSNode, BabylonJSNodeType } from '@/features/babylon-renderer/types';
 
 import type {
   ASTNode,

@@ -376,16 +376,18 @@ describe('Module System End-to-End', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(4); // directCube + directSphere + resolved cube + directCylinder
+      if (result.success) {
+        expect(result.data).toHaveLength(4); // directCube + directSphere + resolved cube + directCylinder
 
-      const nodeTypes = result.data?.map((node) => node.type) || [];
-      expect(nodeTypes).toContain('cube');
-      expect(nodeTypes).toContain('sphere');
-      expect(nodeTypes).toContain('cylinder');
+        const nodeTypes = result.data.map((node) => node.type);
+        expect(nodeTypes).toContain('cube');
+        expect(nodeTypes).toContain('sphere');
+        expect(nodeTypes).toContain('cylinder');
 
-      // Should have 2 cubes (direct + from module)
-      const cubeCount = nodeTypes.filter((type) => type === 'cube').length;
-      expect(cubeCount).toBe(2);
+        // Should have 2 cubes (direct + from module)
+        const cubeCount = nodeTypes.filter((type) => type === 'cube').length;
+        expect(cubeCount).toBe(2);
+      }
     });
   });
 });

@@ -113,3 +113,68 @@ export function parseFontString(fontString: string): { family: string; style?: s
 export function normalizeTextParameters(params: Partial<typeof DEFAULT_TEXT_PARAMETERS>) {
   return { ...DEFAULT_TEXT_PARAMETERS, ...params };
 }
+
+/**
+ * Text horizontal alignment options
+ */
+export type TextHorizontalAlignment = 'left' | 'center' | 'right';
+
+/**
+ * Text vertical alignment options
+ */
+export type TextVerticalAlignment = 'top' | 'center' | 'baseline' | 'bottom';
+
+/**
+ * Text direction options
+ */
+export type TextDirection = 'ltr' | 'rtl' | 'ttb' | 'btt';
+
+/**
+ * Font specification string or object
+ */
+export type FontSpecification = string | {
+  readonly family: string;
+  readonly style?: string;
+  readonly weight?: number;
+};
+
+/**
+ * Text parameters interface
+ */
+export interface TextParameters {
+  readonly text: string;
+  readonly size?: number;
+  readonly font?: FontSpecification;
+  readonly halign?: TextHorizontalAlignment;
+  readonly valign?: TextVerticalAlignment;
+  readonly spacing?: number;
+  readonly direction?: TextDirection;
+  readonly language?: string;
+  readonly script?: string;
+  readonly $fn?: number;
+}
+
+/**
+ * Normalized text parameters with all defaults applied
+ */
+export type NormalizedTextParameters = Required<TextParameters>;
+
+/**
+ * Font load result
+ */
+export interface FontLoadResult {
+  readonly success: boolean;
+  readonly font?: FontData;
+  readonly error?: string;
+}
+
+/**
+ * Text rendering configuration
+ */
+export interface TextRenderingConfig {
+  readonly resolution: number;
+  readonly antialiasing: boolean;
+  readonly hinting: boolean;
+  readonly kerning: boolean;
+  readonly ligatures: boolean;
+}

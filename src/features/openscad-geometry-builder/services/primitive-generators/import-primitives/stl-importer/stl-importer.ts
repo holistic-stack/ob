@@ -26,7 +26,7 @@ import type { Result } from '@/shared/types/result.types';
 import { error, success } from '@/shared/utils/functional/result';
 import type {
   GeometryGenerationError,
-  Polyhedron3DGeometryData,
+  PolyhedronGeometryData,
 } from '../../../../types/geometry-data';
 import type { ImportParameters } from '../../../../types/import-parameters';
 
@@ -66,7 +66,7 @@ export interface MeshBounds {
 /**
  * STL import result type
  */
-export type STLImportResult = Result<Polyhedron3DGeometryData, GeometryGenerationError>;
+export type STLImportResult = Result<PolyhedronGeometryData, GeometryGenerationError>;
 
 /**
  * STL Importer Service
@@ -486,13 +486,18 @@ export class STLImporterService {
   /**
    * Convert STL mesh to Polyhedron3DGeometryData
    */
-  private meshToGeometry(mesh: STLMesh, params: ImportParameters): Polyhedron3DGeometryData {
+  private meshToGeometry(mesh: STLMesh, params: ImportParameters): PolyhedronGeometryData {
     return {
       vertices: mesh.vertices,
       faces: mesh.faces.map((face) => Array.from(face)),
+      normals: mesh.normals,
       metadata: {
         primitiveType: '3d-polyhedron',
-        parameters: params,
+        parameters: {
+          pointCount: mesh.vertices.length,
+          faceCount: mesh.faces.length,
+          convexity: 1,
+        },
         fragmentCount: mesh.vertices.length,
         generatedAt: Date.now(),
         isConvex: false, // STL meshes are generally not convex

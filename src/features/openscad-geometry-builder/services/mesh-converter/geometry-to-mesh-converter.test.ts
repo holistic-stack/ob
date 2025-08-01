@@ -9,7 +9,7 @@ import { isError, isSuccess } from '@/shared';
 import type {
   Circle2DGeometryData,
   SphereGeometryData,
-} from '../geometry-data/geometry-data-types';
+} from '../../geometry-data/types/geometry-data.types';
 import { GeometryToMeshConverterService } from './geometry-to-mesh-converter';
 
 // Mock BabylonJS for testing

@@ -162,7 +162,7 @@ describe('GizmoConfigPanel', () => {
 
       const allMediumButtons = screen.getAllByRole('button', { name: 'Medium' });
       const mediumButton = allMediumButtons[0];
-      expect(mediumButton).toBeDefined();
+      expect(mediumButton).toBeInTheDocument();
       if (mediumButton) {
         fireEvent.click(mediumButton);
       }
@@ -372,7 +372,7 @@ describe('GizmoConfigPanel', () => {
 
       const allTopLeftButtons = screen.getAllByRole('button', { name: /top left/i });
       const topLeftButton = allTopLeftButtons[0];
-      expect(topLeftButton).toBeDefined();
+      expect(topLeftButton).toBeInTheDocument();
       if (topLeftButton) {
         fireEvent.click(topLeftButton);
       }
@@ -400,14 +400,9 @@ describe('GizmoConfigPanel', () => {
       const bottomRightButton = allBottomRightButtons[0]; // Take the first one
       expect(bottomRightButton).toHaveAttribute('aria-pressed', 'true');
       // Verify the Extra Large preset is highlighted (since size is 150)
-      const allExtraLargeButtons = screen.getAllByRole('button', { name: 'Extra Large' });
-      const extraLargeButton = allExtraLargeButtons.find((button) =>
-        button.closest('.space-y-3, [class*="space-x-2"]')
-      );
+      const extraLargeButton = screen.getByRole('button', { name: 'Extra Large' });
       expect(extraLargeButton).toBeInTheDocument();
-      if (extraLargeButton) {
-        expect(extraLargeButton).toHaveClass('bg-blue-50');
-      }
+      expect(extraLargeButton).toHaveClass('bg-blue-50');
 
       // Verify the store has the correct updated config
       expect(appStoreInstance.getState().babylonRendering.gizmo.config.size).toBe(150);
@@ -420,14 +415,9 @@ describe('GizmoConfigPanel', () => {
       render(<GizmoConfigPanel {...defaultProps} />);
 
       // Should use default config - check that the Medium preset is highlighted (since default size is 90)
-      const allMediumButtons = screen.getAllByRole('button', { name: 'Medium' });
-      const mediumButton = allMediumButtons.find((button) =>
-        button.closest('.space-y-3, [class*="space-x-2"]')
-      );
+      const mediumButton = screen.getByRole('button', { name: 'Medium' });
       expect(mediumButton).toBeInTheDocument();
-      if (mediumButton) {
-        expect(mediumButton).toHaveClass('bg-blue-50');
-      }
+      expect(mediumButton).toHaveClass('bg-blue-50');
 
       // Verify the store has the correct default config
       expect(appStoreInstance.getState().babylonRendering.gizmo.config.size).toBe(

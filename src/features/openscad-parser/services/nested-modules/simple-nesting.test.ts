@@ -136,11 +136,13 @@ describe('Simple Nested Module Support', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(1);
-      expect(result.data?.[0]?.type).toBe('translate');
-      expect((result.data?.[0] as any)?.vector).toEqual([1, 2, 3]);
-      expect((result.data?.[0] as any)?.children).toHaveLength(1);
-      expect((result.data?.[0] as any)?.children[0]?.type).toBe('cube');
+      if (result.success) {
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0]?.type).toBe('translate');
+        expect((result.data[0] as any)?.vector).toEqual([1, 2, 3]);
+        expect((result.data[0] as any)?.children).toHaveLength(1);
+        expect((result.data[0] as any)?.children[0]?.type).toBe('cube');
+      }
     });
   });
 
@@ -227,15 +229,17 @@ describe('Simple Nested Module Support', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
-      expect(result.data).toHaveLength(2);
+      if (result.success) {
+        expect(result.data).toHaveLength(2);
 
-      const sphereNodes = result.data?.filter((node: ASTNode) => node.type === 'sphere') || [];
-      const cubeNodes = result.data?.filter((node: ASTNode) => node.type === 'cube') || [];
+        const sphereNodes = result.data.filter((node: ASTNode) => node.type === 'sphere');
+        const cubeNodes = result.data.filter((node: ASTNode) => node.type === 'cube');
 
-      expect(sphereNodes).toHaveLength(1);
-      expect(cubeNodes).toHaveLength(1);
-      expect((sphereNodes[0] as any)?.radius).toBe(5);
-      expect((cubeNodes[0] as any)?.size).toBe(10);
+        expect(sphereNodes).toHaveLength(1);
+        expect(cubeNodes).toHaveLength(1);
+        expect((sphereNodes[0] as any)?.radius).toBe(5);
+        expect((cubeNodes[0] as any)?.size).toBe(10);
+      }
     });
   });
 });

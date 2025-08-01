@@ -10,8 +10,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { isError, isSuccess } from '@/shared/types';
 import type {
   Polygon2DGeometryData,
-  Polyhedron3DGeometryData,
-} from '../primitive-generators/types';
+  PolyhedronGeometryData,
+} from '../../types';
 import { GeometryCacheService } from './geometry-cache.service';
 
 describe('GeometryCacheService', () => {
@@ -63,7 +63,7 @@ describe('GeometryCacheService', () => {
   });
 
   describe('Cache Operations', () => {
-    const mockSphereGeometry: Polyhedron3DGeometryData = {
+    const mockSphereGeometry: PolyhedronGeometryData = {
       vertices: [
         { x: 0, y: 0, z: 1 },
         { x: 1, y: 0, z: 0 },
@@ -139,12 +139,17 @@ describe('GeometryCacheService', () => {
   });
 
   describe('Cache Statistics', () => {
-    const mockGeometry: Polyhedron3DGeometryData = {
+    const mockGeometry: PolyhedronGeometryData = {
       vertices: [{ x: 0, y: 0, z: 0 }],
       faces: [[0, 0, 0]],
+      normals: [{ x: 0, y: 0, z: 1 }],
       metadata: {
         primitiveType: '3d-polyhedron',
-        parameters: {},
+        parameters: {
+          pointCount: 1,
+          faceCount: 1,
+          convexity: 1,
+        },
         fragmentCount: 1,
         generatedAt: Date.now(),
         isConvex: true,
@@ -193,12 +198,17 @@ describe('GeometryCacheService', () => {
       // Create cache with small limit
       const limitedCache = new GeometryCacheService({ maxEntries: 3 });
 
-      const mockGeometry: Polyhedron3DGeometryData = {
+      const mockGeometry: PolyhedronGeometryData = {
         vertices: [{ x: 0, y: 0, z: 0 }],
         faces: [[0, 0, 0]],
+        normals: [{ x: 0, y: 0, z: 1 }],
         metadata: {
           primitiveType: '3d-polyhedron',
-          parameters: {},
+          parameters: {
+            pointCount: 1,
+            faceCount: 1,
+            convexity: 1,
+          },
           fragmentCount: 1,
           generatedAt: Date.now(),
           isConvex: true,
@@ -221,12 +231,17 @@ describe('GeometryCacheService', () => {
       // Create cache with very short TTL
       const shortTtlCache = new GeometryCacheService({ ttlMs: 10 });
 
-      const mockGeometry: Polyhedron3DGeometryData = {
+      const mockGeometry: PolyhedronGeometryData = {
         vertices: [{ x: 0, y: 0, z: 0 }],
         faces: [[0, 0, 0]],
+        normals: [{ x: 0, y: 0, z: 1 }],
         metadata: {
           primitiveType: '3d-polyhedron',
-          parameters: {},
+          parameters: {
+            pointCount: 1,
+            faceCount: 1,
+            convexity: 1,
+          },
           fragmentCount: 1,
           generatedAt: Date.now(),
           isConvex: true,
@@ -257,12 +272,17 @@ describe('GeometryCacheService', () => {
 
   describe('Cache Clearing', () => {
     it('should clear all cached entries', () => {
-      const mockGeometry: Polyhedron3DGeometryData = {
+      const mockGeometry: PolyhedronGeometryData = {
         vertices: [{ x: 0, y: 0, z: 0 }],
         faces: [[0, 0, 0]],
+        normals: [{ x: 0, y: 0, z: 1 }],
         metadata: {
           primitiveType: '3d-polyhedron',
-          parameters: {},
+          parameters: {
+            pointCount: 1,
+            faceCount: 1,
+            convexity: 1,
+          },
           fragmentCount: 1,
           generatedAt: Date.now(),
           isConvex: true,
@@ -302,7 +322,11 @@ describe('GeometryCacheService', () => {
       holes: [],
       metadata: {
         primitiveType: '2d-polygon',
-        parameters: { size: 1 },
+        parameters: {
+          pointCount: 4,
+          pathCount: 1,
+          hasHoles: false,
+        },
         fragmentCount: 4,
         generatedAt: Date.now(),
         isConvex: true,

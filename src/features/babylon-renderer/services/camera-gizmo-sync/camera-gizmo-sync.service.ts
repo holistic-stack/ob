@@ -119,7 +119,7 @@ export class CameraGizmoSyncService {
   private camera: ArcRotateCamera | null = null;
   private gizmoService: OrientationGizmoService | null = null;
   private easingFunction: EasingFunction | null = null;
-  private updateThrottleId: number | null = null;
+  private updateThrottleId: any | null = null;
   private animationGroup: Animatable[] = [];
   private storeUnsubscribe: (() => void) | null = null;
 
@@ -335,7 +335,7 @@ export class CameraGizmoSyncService {
     // Subscribe to gizmo axis selection changes
     // Use the store instance directly since it's passed in constructor
     this.storeUnsubscribe = this.store.subscribe((state: AppStore) => {
-      const selectedAxis = state.babylonRendering?.gizmo?.selectedAxis;
+      const selectedAxis = state.babylonRendering.gizmo.selectedAxis;
 
       // Only react to actual changes in selectedAxis
       if (selectedAxis !== previousSelectedAxis && selectedAxis && !this.state.isAnimating) {

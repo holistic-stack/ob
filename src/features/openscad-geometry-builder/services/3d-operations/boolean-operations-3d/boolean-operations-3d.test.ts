@@ -197,7 +197,9 @@ describe('BooleanOperations3DService', () => {
         expect(isSuccess(result)).toBe(true);
         if (isSuccess(result)) {
           // For non-overlapping meshes, union volume should be sum of individual volumes
-          const expectedVolume = sphere.metadata.volume + cube.metadata.volume;
+          const sphereVolume = sphere.metadata.volume ?? 0;
+          const cubeVolume = cube.metadata.volume ?? 0;
+          const expectedVolume = sphereVolume + cubeVolume;
           expect(result.data.metadata.volume).toBeCloseTo(expectedVolume, 1);
         }
       });
@@ -211,9 +213,11 @@ describe('BooleanOperations3DService', () => {
         expect(isSuccess(result)).toBe(true);
         if (isSuccess(result)) {
           // Union volume should be less than sum due to overlap
-          const sumVolume = sphere1.metadata.volume + sphere2.metadata.volume;
+          const sphere1Volume = sphere1.metadata.volume ?? 0;
+          const sphere2Volume = sphere2.metadata.volume ?? 0;
+          const sumVolume = sphere1Volume + sphere2Volume;
           expect(result.data.metadata.volume).toBeLessThan(sumVolume);
-          expect(result.data.metadata.volume).toBeGreaterThan(sphere1.metadata.volume);
+          expect(result.data.metadata.volume).toBeGreaterThan(sphere1Volume);
         }
       });
 
@@ -413,7 +417,8 @@ describe('BooleanOperations3DService', () => {
         expect(isSuccess(result)).toBe(true);
         if (isSuccess(result)) {
           // Volume should be very small or zero when completely subtracted
-          expect(result.data.metadata.volume).toBeLessThanOrEqual(smallCube.metadata.volume * 0.1);
+          const smallCubeVolume = smallCube.metadata.volume ?? 0;
+          expect(result.data.metadata.volume).toBeLessThanOrEqual(smallCubeVolume * 0.1);
         }
       });
 

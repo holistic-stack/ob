@@ -37,6 +37,7 @@ import type {
   BaseGeometryData,
   Geometry3DData,
   GeometryGenerationError,
+  GeometryMetadata,
   Vector3,
 } from '../../../types/geometry-data';
 import { VertexDeduplicationService } from '../vertex-operations/vertex-deduplication';
@@ -51,33 +52,25 @@ export type BooleanOperation3DType = 'union' | 'difference' | 'intersection';
 /**
  * 3D Boolean operation result metadata
  */
-export interface BooleanOperation3DMetadata {
+export interface BooleanOperation3DMetadata extends GeometryMetadata {
+  readonly primitiveType: '3d-boolean-result';
+  readonly parameters: {
+    readonly operation: BooleanOperation3DType;
+    readonly inputGeometries: readonly string[];
+  };
   readonly operationType: BooleanOperation3DType;
   readonly inputMeshCount: number;
   readonly operationTime: number;
-  readonly volume: number;
-  readonly surfaceArea: number;
   readonly vertexCount: number;
   readonly faceCount: number;
   readonly isManifold: boolean;
-  readonly boundingBox: {
-    readonly min: Vector3;
-    readonly max: Vector3;
-    readonly size: Vector3;
-  };
 }
 
 /**
  * 3D Boolean operation result geometry data
  */
 export interface BooleanOperation3DGeometryData extends BaseGeometryData {
-  readonly metadata: BooleanOperation3DMetadata & {
-    readonly primitiveType: '3d-boolean-result';
-    readonly parameters: {
-      readonly operation: BooleanOperation3DType;
-      readonly inputGeometries: readonly string[];
-    };
-  };
+  readonly metadata: BooleanOperation3DMetadata;
 }
 
 /**
@@ -396,6 +389,12 @@ export class BooleanOperations3DService {
       normals: optimizedNormals,
       metadata: {
         primitiveType: '3d-boolean-result' as const,
+        parameters: {
+          operation: 'union',
+          inputGeometries: [meshA.metadata.primitiveType, meshB.metadata.primitiveType],
+        },
+        generatedAt: Date.now(),
+        isConvex: false, // Boolean results are generally not convex
         volume,
         surfaceArea,
         boundingBox,
@@ -437,9 +436,18 @@ export class BooleanOperations3DService {
       normals: optimizedNormals,
       metadata: {
         primitiveType: '3d-boolean-result' as const,
-        volume: meshA.metadata.volume, // No volume change for non-overlapping
-        surfaceArea: meshA.metadata.surfaceArea,
-        boundingBox: meshA.metadata.boundingBox,
+        parameters: {
+          operation: 'difference',
+          inputGeometries: [meshA.metadata.primitiveType],
+        },
+        generatedAt: Date.now(),
+        isConvex: false, // Boolean results are generally not convex
+        volume: meshA.metadata.volume ?? 0, // No volume change for non-overlapping
+        surfaceArea: meshA.metadata.surfaceArea ?? 0,
+        boundingBox: meshA.metadata.boundingBox ?? {
+          min: { x: 0, y: 0, z: 0 },
+          max: { x: 0, y: 0, z: 0 },
+        },
         isValid: true,
         generationTime: 1,
       },
@@ -491,9 +499,19 @@ export class BooleanOperations3DService {
       normals: optimizedNormals,
       metadata: {
         primitiveType: '3d-boolean-result' as const,
+        parameters: {
+          operation: 'difference' as const,
+          inputGeometries: ['meshA', 'meshB'],
+        },
+        fragmentCount: optimizedVertices.length,
+        generatedAt: Date.now(),
+        isConvex: false,
         volume: differenceVolume,
         surfaceArea,
-        boundingBox: meshA.metadata.boundingBox, // Base mesh bounding box
+        boundingBox: meshA.metadata.boundingBox || {
+          min: { x: 0, y: 0, z: 0 },
+          max: { x: 1, y: 1, z: 1 },
+        },
         isValid: true,
         generationTime: 1,
       },
@@ -546,12 +564,17 @@ export class BooleanOperations3DService {
       normals: minimalNormals,
       metadata: {
         primitiveType: '3d-boolean-result' as const,
+        parameters: {
+          operation: 'intersection',
+          inputGeometries: ['no-intersection'],
+        },
+        generatedAt: Date.now(),
+        isConvex: false,
         volume: 0, // No intersection volume
         surfaceArea: 0, // No surface area
         boundingBox: {
           min: { x: 0, y: 0, z: 0 },
           max: { x: 0.001, y: 0.001, z: 0 },
-          size: { x: 0.001, y: 0.001, z: 0 },
         },
         isValid: true,
         generationTime: 1,
@@ -568,8 +591,10 @@ export class BooleanOperations3DService {
     overlapFactor: number
   ): BaseGeometryData {
     // Step 1: Determine which mesh to use as base (smaller one for intersection)
-    const baseMesh = meshA.metadata.volume <= meshB.metadata.volume ? meshA : meshB;
-    const otherMesh = meshA.metadata.volume <= meshB.metadata.volume ? meshB : meshA;
+    const volumeA = meshA.metadata.volume ?? 0;
+    const volumeB = meshB.metadata.volume ?? 0;
+    const baseMesh = volumeA <= volumeB ? meshA : meshB;
+    const otherMesh = volumeA <= volumeB ? meshB : meshA;
 
     // Step 2: Check for complete containment
     const isCompletelyContained = this.isMeshCompletelyContained(baseMesh, otherMesh);
@@ -624,6 +649,12 @@ export class BooleanOperations3DService {
       normals: optimizedNormals,
       metadata: {
         primitiveType: '3d-boolean-result' as const,
+        parameters: {
+          operation: 'intersection',
+          inputGeometries: [meshA.metadata.primitiveType, meshB.metadata.primitiveType],
+        },
+        generatedAt: Date.now(),
+        isConvex: false,
         volume: intersectionVolume,
         surfaceArea,
         boundingBox,
@@ -645,27 +676,34 @@ export class BooleanOperations3DService {
     // Convert positions to Vector3 array
     const vertices: Vector3[] = [];
     for (let i = 0; i < positions.length; i += 3) {
-      vertices.push({
-        x: positions[i],
-        y: positions[i + 1],
-        z: positions[i + 2],
-      });
+      const x = positions[i];
+      const y = positions[i + 1];
+      const z = positions[i + 2];
+      if (x !== undefined && y !== undefined && z !== undefined) {
+        vertices.push({ x, y, z });
+      }
     }
 
     // Convert indices to face array (assuming triangular faces)
     const faces: number[][] = [];
     for (let i = 0; i < indices.length; i += 3) {
-      faces.push([indices[i], indices[i + 1], indices[i + 2]]);
+      const a = indices[i];
+      const b = indices[i + 1];
+      const c = indices[i + 2];
+      if (a !== undefined && b !== undefined && c !== undefined) {
+        faces.push([a, b, c]);
+      }
     }
 
     // Convert normals to Vector3 array
     const normalVectors: Vector3[] = [];
     for (let i = 0; i < normals.length; i += 3) {
-      normalVectors.push({
-        x: normals[i],
-        y: normals[i + 1],
-        z: normals[i + 2],
-      });
+      const x = normals[i];
+      const y = normals[i + 1];
+      const z = normals[i + 2];
+      if (x !== undefined && y !== undefined && z !== undefined) {
+        normalVectors.push({ x, y, z });
+      }
     }
 
     // Calculate basic metadata
@@ -679,6 +717,12 @@ export class BooleanOperations3DService {
       normals: normalVectors,
       metadata: {
         primitiveType: '3d-boolean-result' as const,
+        parameters: {
+          operation: 'union',
+          inputGeometries: ['babylon-csg'],
+        },
+        generatedAt: Date.now(),
+        isConvex: false,
         volume,
         surfaceArea,
         boundingBox: {
@@ -691,11 +735,6 @@ export class BooleanOperations3DService {
             x: boundingInfo.maximum.x,
             y: boundingInfo.maximum.y,
             z: boundingInfo.maximum.z,
-          },
-          size: {
-            x: boundingInfo.maximum.x - boundingInfo.minimum.x,
-            y: boundingInfo.maximum.y - boundingInfo.minimum.y,
-            z: boundingInfo.maximum.z - boundingInfo.minimum.z,
           },
         },
         isValid: true,
@@ -715,9 +754,20 @@ export class BooleanOperations3DService {
 
     for (const face of faces) {
       if (face.length >= 3) {
-        const v0 = vertices[face[0]];
-        const v1 = vertices[face[1]];
-        const v2 = vertices[face[2]];
+        // Check if face indices are valid
+        const idx0 = face[0];
+        const idx1 = face[1];
+        const idx2 = face[2];
+
+        if (idx0 === undefined || idx1 === undefined || idx2 === undefined) continue;
+        if (idx0 >= vertices.length || idx1 >= vertices.length || idx2 >= vertices.length) continue;
+
+        const v0 = vertices[idx0];
+        const v1 = vertices[idx1];
+        const v2 = vertices[idx2];
+
+        // Check if all vertices exist
+        if (!v0 || !v1 || !v2) continue;
 
         // Calculate signed volume of tetrahedron formed by origin and triangle
         volume +=
@@ -742,9 +792,20 @@ export class BooleanOperations3DService {
 
     for (const face of faces) {
       if (face.length >= 3) {
-        const v0 = vertices[face[0]];
-        const v1 = vertices[face[1]];
-        const v2 = vertices[face[2]];
+        // Check if face indices are valid
+        const idx0 = face[0];
+        const idx1 = face[1];
+        const idx2 = face[2];
+
+        if (idx0 === undefined || idx1 === undefined || idx2 === undefined) continue;
+        if (idx0 >= vertices.length || idx1 >= vertices.length || idx2 >= vertices.length) continue;
+
+        const v0 = vertices[idx0];
+        const v1 = vertices[idx1];
+        const v2 = vertices[idx2];
+
+        // Check if all vertices exist
+        if (!v0 || !v1 || !v2) continue;
 
         // Calculate triangle area using cross product
         const edge1 = { x: v1.x - v0.x, y: v1.y - v0.y, z: v1.z - v0.z };
@@ -771,16 +832,25 @@ export class BooleanOperations3DService {
     const boxA = meshA.metadata.boundingBox;
     const boxB = meshB.metadata.boundingBox;
 
+    // Provide default bounding box if either is undefined
+    const defaultBox = {
+      min: { x: 0, y: 0, z: 0 },
+      max: { x: 1, y: 1, z: 1 },
+    };
+
+    const safeBoxA = boxA ?? defaultBox;
+    const safeBoxB = boxB ?? defaultBox;
+
     const min = {
-      x: Math.min(boxA.min.x, boxB.min.x),
-      y: Math.min(boxA.min.y, boxB.min.y),
-      z: Math.min(boxA.min.z, boxB.min.z),
+      x: Math.min(safeBoxA.min.x, safeBoxB.min.x),
+      y: Math.min(safeBoxA.min.y, safeBoxB.min.y),
+      z: Math.min(safeBoxA.min.z, safeBoxB.min.z),
     };
 
     const max = {
-      x: Math.max(boxA.max.x, boxB.max.x),
-      y: Math.max(boxA.max.y, boxB.max.y),
-      z: Math.max(boxA.max.z, boxB.max.z),
+      x: Math.max(safeBoxA.max.x, safeBoxB.max.x),
+      y: Math.max(safeBoxA.max.y, safeBoxB.max.y),
+      z: Math.max(safeBoxA.max.z, safeBoxB.max.z),
     };
 
     return {
@@ -812,8 +882,14 @@ export class BooleanOperations3DService {
       normals: combinedNormals,
       metadata: {
         primitiveType: '3d-boolean-result' as const,
-        volume: meshA.metadata.volume + meshB.metadata.volume, // Simplified
-        surfaceArea: meshA.metadata.surfaceArea + meshB.metadata.surfaceArea, // Simplified
+        parameters: {
+          operation: 'union',
+          inputGeometries: [meshA.metadata.primitiveType, meshB.metadata.primitiveType],
+        },
+        generatedAt: Date.now(),
+        isConvex: false,
+        volume: (meshA.metadata.volume ?? 0) + (meshB.metadata.volume ?? 0), // Simplified
+        surfaceArea: (meshA.metadata.surfaceArea ?? 0) + (meshB.metadata.surfaceArea ?? 0), // Simplified
         boundingBox,
         isValid: true,
         generationTime: 1,
@@ -836,9 +912,20 @@ export class BooleanOperations3DService {
     // Calculate face normals and accumulate to vertex normals
     for (const face of faces) {
       if (face.length >= 3) {
-        const v0 = vertices[face[0]];
-        const v1 = vertices[face[1]];
-        const v2 = vertices[face[2]];
+        // Check if face indices are valid
+        const idx0 = face[0];
+        const idx1 = face[1];
+        const idx2 = face[2];
+
+        if (idx0 === undefined || idx1 === undefined || idx2 === undefined) continue;
+        if (idx0 >= vertices.length || idx1 >= vertices.length || idx2 >= vertices.length) continue;
+
+        const v0 = vertices[idx0];
+        const v1 = vertices[idx1];
+        const v2 = vertices[idx2];
+
+        // Check if all vertices exist
+        if (!v0 || !v1 || !v2) continue;
 
         // Calculate face normal using cross product
         const edge1 = { x: v1.x - v0.x, y: v1.y - v0.y, z: v1.z - v0.z };
@@ -851,23 +938,29 @@ export class BooleanOperations3DService {
         };
 
         // Accumulate to vertex normals
-        for (const vertexIndex of face) {
-          normals[vertexIndex].x += faceNormal.x;
-          normals[vertexIndex].y += faceNormal.y;
-          normals[vertexIndex].z += faceNormal.z;
-          counts[vertexIndex]++;
+        for (const vertexIndex of [idx0, idx1, idx2]) {
+          const vertexNormal = normals[vertexIndex];
+          const count = counts[vertexIndex];
+          if (vertexNormal && count !== undefined) {
+            vertexNormal.x += faceNormal.x;
+            vertexNormal.y += faceNormal.y;
+            vertexNormal.z += faceNormal.z;
+            counts[vertexIndex] = count + 1;
+          }
         }
       }
     }
 
     // Normalize vertex normals
     for (let i = 0; i < normals.length; i++) {
-      if (counts[i] > 0) {
-        const length = Math.sqrt(normals[i].x ** 2 + normals[i].y ** 2 + normals[i].z ** 2);
+      const count = counts[i];
+      const normal = normals[i];
+      if (count && count > 0 && normal) {
+        const length = Math.sqrt(normal.x ** 2 + normal.y ** 2 + normal.z ** 2);
         if (length > 0) {
-          normals[i].x /= length;
-          normals[i].y /= length;
-          normals[i].z /= length;
+          normal.x /= length;
+          normal.y /= length;
+          normal.z /= length;
         }
       }
     }
@@ -889,16 +982,19 @@ export class BooleanOperations3DService {
     const actualVolume = this.calculateMeshVolume(vertices, faces);
 
     // If the calculated volume is reasonable, use it
+    const safeVolumeA = meshA.metadata.volume ?? 0;
+    const safeVolumeB = meshB.metadata.volume ?? 0;
+
     if (
       actualVolume > 0 &&
-      actualVolume >= Math.max(meshA.metadata.volume, meshB.metadata.volume)
+      actualVolume >= Math.max(safeVolumeA, safeVolumeB)
     ) {
       return actualVolume;
     }
 
     // Fallback: estimate based on overlap
     const overlapFactor = this.estimateOverlapFactor(meshA, meshB);
-    return meshA.metadata.volume + meshB.metadata.volume * (1 - overlapFactor);
+    return safeVolumeA + safeVolumeB * (1 - overlapFactor);
   }
 
   /**
@@ -908,17 +1004,26 @@ export class BooleanOperations3DService {
     const boxA = meshA.metadata.boundingBox;
     const boxB = meshB.metadata.boundingBox;
 
+    // Provide default bounding box if either is undefined
+    const defaultBox = {
+      min: { x: 0, y: 0, z: 0 },
+      max: { x: 1, y: 1, z: 1 },
+    };
+
+    const safeBoxA = boxA ?? defaultBox;
+    const safeBoxB = boxB ?? defaultBox;
+
     // Calculate intersection volume
     const intersectionMin = {
-      x: Math.max(boxA.min.x, boxB.min.x),
-      y: Math.max(boxA.min.y, boxB.min.y),
-      z: Math.max(boxA.min.z, boxB.min.z),
+      x: Math.max(safeBoxA.min.x, safeBoxB.min.x),
+      y: Math.max(safeBoxA.min.y, safeBoxB.min.y),
+      z: Math.max(safeBoxA.min.z, safeBoxB.min.z),
     };
 
     const intersectionMax = {
-      x: Math.min(boxA.max.x, boxB.max.x),
-      y: Math.min(boxA.max.y, boxB.max.y),
-      z: Math.min(boxA.max.z, boxB.max.z),
+      x: Math.min(safeBoxA.max.x, safeBoxB.max.x),
+      y: Math.min(safeBoxA.max.y, safeBoxB.max.y),
+      z: Math.min(safeBoxA.max.z, safeBoxB.max.z),
     };
 
     // Check if there's any intersection
@@ -937,8 +1042,19 @@ export class BooleanOperations3DService {
       (intersectionMax.z - intersectionMin.z);
 
     // Calculate volumes of bounding boxes
-    const volumeA = boxA.size.x * boxA.size.y * boxA.size.z;
-    const volumeB = boxB.size.x * boxB.size.y * boxB.size.z;
+    const sizeA = {
+      x: safeBoxA.max.x - safeBoxA.min.x,
+      y: safeBoxA.max.y - safeBoxA.min.y,
+      z: safeBoxA.max.z - safeBoxA.min.z,
+    };
+    const sizeB = {
+      x: safeBoxB.max.x - safeBoxB.min.x,
+      y: safeBoxB.max.y - safeBoxB.min.y,
+      z: safeBoxB.max.z - safeBoxB.min.z,
+    };
+
+    const volumeA = sizeA.x * sizeA.y * sizeA.z;
+    const volumeB = sizeB.x * sizeB.y * sizeB.z;
 
     // Return overlap factor as ratio of intersection to smaller volume
     return intersectionVolume / Math.min(volumeA, volumeB);
@@ -952,8 +1068,8 @@ export class BooleanOperations3DService {
     meshB: Geometry3DData,
     overlapFactor: number
   ): number {
-    const baseVolume = meshA.metadata.volume;
-    const subtractVolume = meshB.metadata.volume;
+    const baseVolume = meshA.metadata.volume ?? 0;
+    const subtractVolume = meshB.metadata.volume ?? 0;
 
     // Calculate the volume of the intersection (what gets subtracted)
     const intersectionVolume = Math.min(baseVolume, subtractVolume) * overlapFactor;
@@ -972,7 +1088,7 @@ export class BooleanOperations3DService {
     meshB: Geometry3DData,
     overlapFactor: number
   ): number {
-    const baseSurfaceArea = meshA.metadata.surfaceArea;
+    const baseSurfaceArea = meshA.metadata.surfaceArea ?? 0;
 
     if (overlapFactor === 0) {
       // No overlap, surface area remains the same
@@ -982,7 +1098,7 @@ export class BooleanOperations3DService {
     // For overlapping case, surface area may increase due to holes/cavities
     // This is a simplified estimation - in a full CSG implementation,
     // this would be calculated from the actual resulting mesh
-    const additionalSurfaceArea = meshB.metadata.surfaceArea * overlapFactor * 0.5;
+    const additionalSurfaceArea = (meshB.metadata.surfaceArea ?? 0) * overlapFactor * 0.5;
 
     return baseSurfaceArea + additionalSurfaceArea;
   }
@@ -993,6 +1109,11 @@ export class BooleanOperations3DService {
   private isMeshCompletelyContained(innerMesh: Geometry3DData, outerMesh: Geometry3DData): boolean {
     const innerBox = innerMesh.metadata.boundingBox;
     const outerBox = outerMesh.metadata.boundingBox;
+
+    // If either bounding box is undefined, assume not contained
+    if (!innerBox || !outerBox) {
+      return false;
+    }
 
     // Check if inner bounding box is completely within outer bounding box
     return (
@@ -1013,7 +1134,9 @@ export class BooleanOperations3DService {
     subtractMesh: Geometry3DData
   ): number {
     // When completely contained, subtract the full volume of the inner mesh
-    return Math.max(0, baseMesh.metadata.volume - subtractMesh.metadata.volume);
+    const baseVolume = baseMesh.metadata.volume ?? 0;
+    const subtractVolume = subtractMesh.metadata.volume ?? 0;
+    return Math.max(0, baseVolume - subtractVolume);
   }
 
   /**
@@ -1025,13 +1148,16 @@ export class BooleanOperations3DService {
     overlapFactor: number,
     isCompletelyContained: boolean
   ): number {
+    const volumeA = meshA.metadata.volume ?? 0;
+    const volumeB = meshB.metadata.volume ?? 0;
+
     if (isCompletelyContained) {
       // When one mesh completely contains the other, intersection is the smaller mesh
-      return Math.min(meshA.metadata.volume, meshB.metadata.volume);
+      return Math.min(volumeA, volumeB);
     }
 
     // Calculate intersection volume based on overlap factor
-    const smallerVolume = Math.min(meshA.metadata.volume, meshB.metadata.volume);
+    const smallerVolume = Math.min(volumeA, volumeB);
     const intersectionVolume = smallerVolume * overlapFactor;
 
     return intersectionVolume;
@@ -1046,13 +1172,16 @@ export class BooleanOperations3DService {
     overlapFactor: number,
     isCompletelyContained: boolean
   ): number {
+    const surfaceAreaA = meshA.metadata.surfaceArea ?? 0;
+    const surfaceAreaB = meshB.metadata.surfaceArea ?? 0;
+
     if (isCompletelyContained) {
       // When completely contained, surface area is approximately the smaller mesh
-      return Math.min(meshA.metadata.surfaceArea, meshB.metadata.surfaceArea);
+      return Math.min(surfaceAreaA, surfaceAreaB);
     }
 
     // For partial intersection, surface area is reduced based on overlap
-    const smallerSurfaceArea = Math.min(meshA.metadata.surfaceArea, meshB.metadata.surfaceArea);
+    const smallerSurfaceArea = Math.min(surfaceAreaA, surfaceAreaB);
     return smallerSurfaceArea * overlapFactor;
   }
 
@@ -1070,17 +1199,26 @@ export class BooleanOperations3DService {
     const boxA = meshA.metadata.boundingBox;
     const boxB = meshB.metadata.boundingBox;
 
+    // Provide default bounding box if either is undefined
+    const defaultBox = {
+      min: { x: 0, y: 0, z: 0 },
+      max: { x: 1, y: 1, z: 1 },
+    };
+
+    const safeBoxA = boxA ?? defaultBox;
+    const safeBoxB = boxB ?? defaultBox;
+
     // Intersection bounding box is the overlap region
     const min = {
-      x: Math.max(boxA.min.x, boxB.min.x),
-      y: Math.max(boxA.min.y, boxB.min.y),
-      z: Math.max(boxA.min.z, boxB.min.z),
+      x: Math.max(safeBoxA.min.x, safeBoxB.min.x),
+      y: Math.max(safeBoxA.min.y, safeBoxB.min.y),
+      z: Math.max(safeBoxA.min.z, safeBoxB.min.z),
     };
 
     const max = {
-      x: Math.min(boxA.max.x, boxB.max.x),
-      y: Math.min(boxA.max.y, boxB.max.y),
-      z: Math.min(boxA.max.z, boxB.max.z),
+      x: Math.min(safeBoxA.max.x, safeBoxB.max.x),
+      y: Math.min(safeBoxA.max.y, safeBoxB.max.y),
+      z: Math.min(safeBoxA.max.z, safeBoxB.max.z),
     };
 
     // Ensure valid bounding box (min <= max)
@@ -1114,15 +1252,27 @@ export class BooleanOperations3DService {
     operationTime: number
   ): BooleanOperation3DMetadata {
     return {
+      primitiveType: '3d-boolean-result' as const,
+      parameters: {
+        operation,
+        inputGeometries: inputMeshes.map(mesh => mesh.metadata.primitiveType),
+      },
+      generatedAt: Date.now(),
+      isConvex: false,
       operationType: operation,
       inputMeshCount: inputMeshes.length,
       operationTime,
-      volume: result.metadata.volume,
-      surfaceArea: result.metadata.surfaceArea,
+      volume: result.metadata.volume ?? 0,
+      surfaceArea: result.metadata.surfaceArea ?? 0,
       vertexCount: result.vertices.length,
       faceCount: result.faces.length,
       isManifold: this.checkMeshManifold(result.vertices, result.faces),
-      boundingBox: result.metadata.boundingBox,
+      boundingBox: result.metadata.boundingBox ?? {
+        min: { x: 0, y: 0, z: 0 },
+        max: { x: 1, y: 1, z: 1 },
+      },
+      isValid: true,
+      generationTime: operationTime,
     };
   }
 

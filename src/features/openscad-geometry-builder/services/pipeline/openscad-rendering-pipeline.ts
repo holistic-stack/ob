@@ -32,7 +32,7 @@ import {
 } from '@/features/openscad-geometry-builder';
 import type { ASTNode, AssignStatementNode } from '@/features/openscad-parser';
 import { createLogger, error, success } from '@/shared';
-import type { Result } from '../../../../shared/types/result';
+import type { Result } from '@/shared';
 
 const logger = createLogger('OpenSCADRenderingPipelineService');
 

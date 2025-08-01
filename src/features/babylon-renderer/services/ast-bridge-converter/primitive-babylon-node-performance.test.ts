@@ -13,7 +13,7 @@ import type {
   CylinderNode,
   OpenSCADGlobalsState,
   SphereNode,
-} from '@/features/openscad-parser/types';
+} from '@/features/openscad-parser';
 import { isSuccess } from '@/shared/types';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 

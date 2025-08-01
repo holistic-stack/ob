@@ -12,8 +12,8 @@ import type {
   Option,
   Result,
   ValidationResult,
-} from '@/shared';
-import { isError, isSuccess } from '@/shared';
+} from '@/shared/types/result.types';
+import { isError, isSuccess } from '@/shared/types/result.types';
 
 // Re-export types
 export type { Result, AsyncResult, Option, ValidationResult, NetworkResult, NetworkError };

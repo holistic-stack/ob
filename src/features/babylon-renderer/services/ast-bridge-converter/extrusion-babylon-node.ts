@@ -5,14 +5,14 @@
  * Supports linear_extrude and rotate_extrude with OpenSCAD-compatible behavior.
  */
 
-import type { AbstractMesh, Scene, Vector3 } from '@babylonjs/core';
+import { Vector3 } from '@babylonjs/core';
+import type { AbstractMesh, Scene } from '@babylonjs/core';
 import type {
   BabylonJSError,
-  BabylonJSNode,
   NodeGenerationResult,
   NodeValidationResult,
 } from '@/features/babylon-renderer/types';
-import { BabylonJSNodeType } from '@/features/babylon-renderer/types';
+import { BabylonJSNode, BabylonJSNodeType } from '@/features/babylon-renderer/types';
 
 import type {
   ASTNode,
@@ -125,7 +125,7 @@ export class ExtrusionBabylonNode extends BabylonJSNode {
       const angle = (i / segments) * Math.PI * 2;
       const x = Math.cos(angle) * radius;
       const y = Math.sin(angle) * radius;
-      profile.push({ x, y, z: 0 } as Vector3);
+      profile.push(new Vector3(x, y, 0));
     }
 
     return profile;

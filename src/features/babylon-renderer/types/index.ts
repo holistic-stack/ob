@@ -10,7 +10,6 @@ export type {
   BabylonJSCubeParameters,
   BabylonJSCylinderParameters,
   BabylonJSError,
-  BabylonJSNode,
   BabylonJSParameters,
   BabylonJSSphereParameters,
   BridgeConversionResult,
@@ -18,6 +17,7 @@ export type {
   NodeValidationResult,
 } from './babylon-ast.types';
 export {
+  BabylonJSNode,
   BabylonJSCSGType,
   BabylonJSNodeType,
   BabylonJSPrimitiveType,

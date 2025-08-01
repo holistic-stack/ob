@@ -70,7 +70,7 @@ export interface BaseGeometryData {
  */
 export interface GeometryMetadata {
   /** Type of primitive that generated this geometry */
-  readonly primitiveType: '3d-sphere' | '3d-cube' | '3d-cylinder' | '3d-polyhedron';
+  readonly primitiveType: '3d-sphere' | '3d-cube' | '3d-cylinder' | '3d-polyhedron' | '3d-boolean-result';
 
   /** Parameters used to generate the geometry */
   readonly parameters: Record<string, unknown>;
@@ -83,6 +83,24 @@ export interface GeometryMetadata {
 
   /** Whether the geometry is convex (optimization hint) */
   readonly isConvex: boolean;
+
+  /** Volume of the geometry in cubic units */
+  readonly volume?: number;
+
+  /** Surface area of the geometry in square units */
+  readonly surfaceArea?: number;
+
+  /** Bounding box of the geometry */
+  readonly boundingBox?: {
+    readonly min: Vector3;
+    readonly max: Vector3;
+  };
+
+  /** Whether the geometry is valid (no self-intersections, etc.) */
+  readonly isValid?: boolean;
+
+  /** Time taken to generate the geometry in milliseconds */
+  readonly generationTime?: number;
 }
 
 /**

@@ -667,7 +667,7 @@ export const createOpenSCADGlobalsSlice = (
             const validationResult = validateGlobalVariable(variable, value);
             if (validationResult.success) {
               extractedGlobals[variable] = value;
-            } else {
+            } else if (validationResult.error) {
               errors.push(validationResult.error);
             }
           }

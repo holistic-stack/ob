@@ -65,7 +65,7 @@
 
 import type { Node as TSNode } from 'web-tree-sitter';
 import { ErrorCode } from '@/features/openscad-parser';
-import { RangeExpressionVisitor } from '@/features/openscad-parser/ast/visitors/expression-visitor';
+import { RangeExpressionVisitor } from '@/features/openscad-parser/ast/visitors/expression-visitor/range-expression-visitor/range-expression-visitor';
 import type { ErrorHandler } from '../../error-handling/index.js';
 import type * as ast from '../ast-types.js';
 import { getLocation } from '../utils/location-utils.js';

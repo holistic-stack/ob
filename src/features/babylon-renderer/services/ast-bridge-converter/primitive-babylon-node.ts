@@ -31,11 +31,10 @@ import {
 import earcut from 'earcut';
 import type {
   BabylonJSError,
-  BabylonJSNode,
   NodeGenerationResult,
   NodeValidationResult,
 } from '@/features/babylon-renderer/types';
-import { BabylonJSNodeType } from '@/features/babylon-renderer/types';
+import { BabylonJSNode, BabylonJSNodeType } from '@/features/babylon-renderer/types';
 import type {
   ASTNode,
   CircleNode,

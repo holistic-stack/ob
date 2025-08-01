@@ -197,7 +197,7 @@ export class BabylonMeshBuilderService {
     for (let faceIndex = 0; faceIndex < geometryData.faces.length; faceIndex++) {
       const face = geometryData.faces[faceIndex];
 
-      if (face.length < 3) {
+      if (!face || face.length < 3) {
         return error({
           type: 'INVALID_GEOMETRY',
           message: `Face ${faceIndex} has less than 3 vertices`,
@@ -241,18 +241,22 @@ export class BabylonMeshBuilderService {
       const positions = new Float32Array(geometryData.vertices.length * 3);
       for (let i = 0; i < geometryData.vertices.length; i++) {
         const vertex = geometryData.vertices[i];
-        positions[i * 3] = vertex.x;
-        positions[i * 3 + 1] = vertex.y;
-        positions[i * 3 + 2] = vertex.z;
+        if (vertex) {
+          positions[i * 3] = vertex.x;
+          positions[i * 3 + 1] = vertex.y;
+          positions[i * 3 + 2] = vertex.z;
+        }
       }
 
       // Convert normals to normals array (x, y, z, x, y, z, ...)
       const normals = new Float32Array(geometryData.normals.length * 3);
       for (let i = 0; i < geometryData.normals.length; i++) {
         const normal = geometryData.normals[i];
-        normals[i * 3] = normal.x;
-        normals[i * 3 + 1] = normal.y;
-        normals[i * 3 + 2] = normal.z;
+        if (normal) {
+          normals[i * 3] = normal.x;
+          normals[i * 3 + 1] = normal.y;
+          normals[i * 3 + 2] = normal.z;
+        }
       }
 
       // Convert faces to indices array (triangulate quads and higher polygons)

@@ -203,12 +203,12 @@ describe('CameraStoreSyncService', () => {
 
       // Verify store was updated with actual camera state
       const updatedState = store.getState().babylonRendering.camera;
-      expect(updatedState.position[0]).toBeCloseTo(actualPosition[0], 5);
-      expect(updatedState.position[1]).toBeCloseTo(actualPosition[1], 5);
-      expect(updatedState.position[2]).toBeCloseTo(actualPosition[2], 5);
-      expect(updatedState.target[0]).toBeCloseTo(actualTarget[0], 5);
-      expect(updatedState.target[1]).toBeCloseTo(actualTarget[1], 5);
-      expect(updatedState.target[2]).toBeCloseTo(actualTarget[2], 5);
+      expect(updatedState.position?.[0] ?? 0).toBeCloseTo(actualPosition[0], 5);
+      expect(updatedState.position?.[1] ?? 0).toBeCloseTo(actualPosition[1], 5);
+      expect(updatedState.position?.[2] ?? 0).toBeCloseTo(actualPosition[2], 5);
+      expect(updatedState.target?.[0] ?? 0).toBeCloseTo(actualTarget[0], 5);
+      expect(updatedState.target?.[1] ?? 0).toBeCloseTo(actualTarget[1], 5);
+      expect(updatedState.target?.[2] ?? 0).toBeCloseTo(actualTarget[2], 5);
       expect(updatedState.zoom).toBeCloseTo(actualZoom, 5);
 
       // Dispose current service (simulating page unload)
@@ -237,12 +237,12 @@ describe('CameraStoreSyncService', () => {
       expect(result2.success).toBe(true);
 
       // Verify camera was restored to the last saved position
-      expect(newCamera.position.x).toBeCloseTo(actualPosition[0], 5);
-      expect(newCamera.position.y).toBeCloseTo(actualPosition[1], 5);
-      expect(newCamera.position.z).toBeCloseTo(actualPosition[2], 5);
-      expect(newCamera.target.x).toBeCloseTo(actualTarget[0], 5);
-      expect(newCamera.target.y).toBeCloseTo(actualTarget[1], 5);
-      expect(newCamera.target.z).toBeCloseTo(actualTarget[2], 5);
+      expect(newCamera.position.x).toBeCloseTo(actualPosition[0] ?? 0, 5);
+      expect(newCamera.position.y).toBeCloseTo(actualPosition[1] ?? 0, 5);
+      expect(newCamera.position.z).toBeCloseTo(actualPosition[2] ?? 0, 5);
+      expect(newCamera.target.x).toBeCloseTo(actualTarget[0] ?? 0, 5);
+      expect(newCamera.target.y).toBeCloseTo(actualTarget[1] ?? 0, 5);
+      expect(newCamera.target.z).toBeCloseTo(actualTarget[2] ?? 0, 5);
       expect(newCamera.radius).toBeCloseTo(8, 5);
 
       // Cleanup

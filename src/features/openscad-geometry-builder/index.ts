@@ -37,8 +37,35 @@ export * from './services/primitive-generators/import-primitives';
 // Text and Import Generators (Future phases)
 export * from './services/primitive-generators/text-primitives';
 
-// Types and Utilities
-export * from './types';
+// Types and Utilities - Explicit exports to avoid conflicts
+export type {
+  // Core geometry types
+  BaseGeometryData,
+  GeometryMetadata,
+  // 3D geometry types
+  CubeGeometryData,
+  CylinderGeometryData,
+  PolyhedronGeometryData,
+  SphereGeometryData,
+} from './types/geometry-data';
+
+export type {
+  // Primitive parameters
+  CubeParameters,
+  CylinderParameters,
+  PolyhedronParameters,
+  SphereParameters,
+} from './types/primitive-parameters';
+
+// Note: TextParameters exported by text-primitives service to avoid conflicts
+
+export type {
+  // 2D geometry data
+  Circle2DGeometryData,
+  Polygon2DGeometryData,
+  Square2DGeometryData,
+} from './types/2d-geometry-data';
+
 export * from './utils';
 
 /**

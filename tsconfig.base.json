@@ -3,8 +3,8 @@
     // TypeScript 5.8+ Base Configuration
     // Aligned with docs/typescript-guidelines.md and ESLint strict rules
     "target": "ES2022",
-    "module": "preserve", // TypeScript 5.8+ for modern bundlers
-    "moduleResolution": "bundler",
+    "module": "ESNext", // Compatible with both bundlers and Node.js
+    "moduleResolution": "node",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
 
     // Strict type checking - aligned with ESLint rules
@@ -59,12 +59,13 @@
     "moduleDetection": "force",
 
     // Paths and base URL for monorepo
-    "baseUrl": ".",
+    "baseUrl": "./src",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/shared/*": ["./src/shared/*"],
-      "@/features/*": ["./src/features/*"],
-      "@/components/*": ["./src/components/*"]
+      "@/shared": ["shared"],
+      "@/shared/*": ["shared/*"],
+      "@/features/*": ["features/*"],
+      "@/components/*": ["components/*"],
+      "@/*": ["*"]
     }
   },
   "exclude": [

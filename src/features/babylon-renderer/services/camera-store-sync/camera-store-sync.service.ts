@@ -45,7 +45,7 @@
  * ```
  */
 
-import type { ArcRotateCamera, Observer } from '@babylonjs/core';
+import type { ArcRotateCamera, Camera, Observer } from '@babylonjs/core';
 import type { CameraConfig, Result } from '@/shared';
 import { createLogger, debounce } from '@/shared';
 import {
@@ -70,7 +70,7 @@ export class CameraStoreSyncService {
   private camera: ArcRotateCamera | null = null;
   private store: ReturnType<typeof import('../../../store/app-store.js').createAppStore> | null =
     null;
-  private viewMatrixObserver: Observer<ArcRotateCamera> | null = null;
+  private viewMatrixObserver: Observer<Camera> | null = null;
   private debouncedUpdateStore: ((state: Partial<CameraConfig>) => void) | null = null;
   private state: CameraStoreSyncState = this.createInitialState();
   private metrics: CameraStoreSyncMetrics = this.createInitialMetrics();
@@ -288,7 +288,7 @@ export class CameraStoreSyncService {
     // Check position
     if (cameraState.position) {
       const positionMatches = cameraState.position.every(
-        (value, index) => Math.abs(value - DEFAULT_POSITION[index]) < threshold
+        (value, index) => Math.abs(value - (DEFAULT_POSITION[index] ?? 0)) < threshold
       );
       if (!positionMatches) return false;
     }
@@ -296,7 +296,7 @@ export class CameraStoreSyncService {
     // Check target
     if (cameraState.target) {
       const targetMatches = cameraState.target.every(
-        (value, index) => Math.abs(value - DEFAULT_TARGET[index]) < threshold
+        (value, index) => Math.abs(value - (DEFAULT_TARGET[index] ?? 0)) < threshold
       );
       if (!targetMatches) return false;
     }
@@ -402,7 +402,7 @@ export class CameraStoreSyncService {
     if (newState.position && this.state.lastCameraPosition) {
       const lastPosition = this.state.lastCameraPosition;
       const positionChanged = newState.position.some(
-        (value, index) => Math.abs(value - (lastPosition?.[index] ?? 0)) > threshold
+        (value, index) => Math.abs(value - (lastPosition?.[index] ?? 0)) > threshold,
       );
       if (positionChanged) return true;
     }
@@ -411,7 +411,7 @@ export class CameraStoreSyncService {
     if (newState.target && this.state.lastCameraTarget) {
       const lastTarget = this.state.lastCameraTarget;
       const targetChanged = newState.target.some(
-        (value, index) => Math.abs(value - (lastTarget?.[index] ?? 0)) > threshold
+        (value, index) => Math.abs(value - (lastTarget?.[index] ?? 0)) > threshold,
       );
       if (targetChanged) return true;
     }
