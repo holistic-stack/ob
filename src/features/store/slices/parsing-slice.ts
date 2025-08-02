@@ -532,8 +532,8 @@ export const createParsingSlice = (
             // Clear the module registry for fresh parsing
             moduleRegistry.clear();
 
-            // Resolve modules in the AST with source code for Tree-sitter text extraction
-            const resolutionResult = moduleResolver.resolveAST([...rawAST], code);
+            // Resolve modules in the AST
+            const resolutionResult = moduleResolver.resolveAST([...rawAST]);
 
             let resolvedAST: ReadonlyArray<ASTNode>;
             if (resolutionResult.success) {

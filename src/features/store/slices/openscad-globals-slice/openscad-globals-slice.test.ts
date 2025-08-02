@@ -323,7 +323,7 @@ describe('OpenSCADGlobalsSlice', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toHaveLength(3);
-        expect(result.error.map((e) => e.variable)).toEqual(['$fn', '$fa', '$fs']);
+        expect(result.error.map((e: any) => e.variable)).toEqual(['$fn', '$fa', '$fs']);
       }
     });
   });

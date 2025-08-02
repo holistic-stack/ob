@@ -50,8 +50,8 @@ import type {
   ExpressionNode,
   LiteralNode,
 } from '@/features/openscad-parser/ast/ast-types.js';
-import type { Result } from '@/shared';
 import type { AppStore } from '@/features/store';
+import type { Result } from '@/shared';
 
 /**
  * @function createSuccess
@@ -69,7 +69,9 @@ const createError = <E>(error: E): Result<never, E> => ({ success: false, error 
  * @function createValidationError
  * @description Creates a validation error Result specifically for OpenSCADGlobalsValidationError.
  */
-const createValidationError = (error: OpenSCADGlobalsValidationError): Result<void, OpenSCADGlobalsValidationError> => ({ success: false, error });
+const createValidationError = (
+  error: OpenSCADGlobalsValidationError
+): Result<void, OpenSCADGlobalsValidationError> => ({ success: false, error });
 
 /**
  * @function extractGlobalVariableFromAssignment
@@ -549,7 +551,7 @@ export const createOpenSCADGlobalsSlice = (
       },
     }));
 
-    return createSuccess(undefined);
+    return createSuccess(undefined as void);
   },
 
   updateVariable: (variable, value) => {
@@ -571,7 +573,11 @@ export const createOpenSCADGlobalsSlice = (
     }
 
     if (errors.length > 0) {
-      return createError(errors[0]);
+      const firstError = errors[0];
+      if (!firstError) {
+        throw new Error('Expected error to exist when errors.length > 0');
+      }
+      return createError(firstError);
     }
 
     set((state) => ({
@@ -584,7 +590,7 @@ export const createOpenSCADGlobalsSlice = (
       },
     }));
 
-    return createSuccess(undefined);
+    return createSuccess(undefined as void);
   },
 
   resetToDefaults: () => {

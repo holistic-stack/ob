@@ -985,10 +985,7 @@ export class BooleanOperations3DService {
     const safeVolumeA = meshA.metadata.volume ?? 0;
     const safeVolumeB = meshB.metadata.volume ?? 0;
 
-    if (
-      actualVolume > 0 &&
-      actualVolume >= Math.max(safeVolumeA, safeVolumeB)
-    ) {
+    if (actualVolume > 0 && actualVolume >= Math.max(safeVolumeA, safeVolumeB)) {
       return actualVolume;
     }
 
@@ -1255,7 +1252,7 @@ export class BooleanOperations3DService {
       primitiveType: '3d-boolean-result' as const,
       parameters: {
         operation,
-        inputGeometries: inputMeshes.map(mesh => mesh.metadata.primitiveType),
+        inputGeometries: inputMeshes.map((mesh) => mesh.metadata.primitiveType),
       },
       generatedAt: Date.now(),
       isConvex: false,

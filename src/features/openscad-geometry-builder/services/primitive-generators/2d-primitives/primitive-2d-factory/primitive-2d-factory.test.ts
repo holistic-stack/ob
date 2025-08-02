@@ -157,8 +157,8 @@ describe('Primitive2DFactory', () => {
 
     describe('error handling', () => {
       it('should handle unknown primitive type', () => {
-        // @ts-expect-error Testing invalid type
-        const result = factory.generatePrimitive('unknown', {});
+        // Testing invalid type - should cause TypeScript error
+        const result = factory.generatePrimitive('unknown' as any, {});
 
         expect(isError(result)).toBe(true);
         if (isError(result)) {

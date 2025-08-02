@@ -140,7 +140,11 @@ export class MemoryPoolService {
         return error(new Error('Resource cannot be null or undefined'));
       }
 
-      if ('isDisposed' in resource && typeof resource.isDisposed === 'function' && resource.isDisposed()) {
+      if (
+        'isDisposed' in resource &&
+        typeof resource.isDisposed === 'function' &&
+        resource.isDisposed()
+      ) {
         return error(new Error('Cannot pool disposed resource'));
       }
 

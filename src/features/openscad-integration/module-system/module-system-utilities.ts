@@ -365,11 +365,17 @@ export class VariableScopeManager {
    * @returns New variable scope
    */
   createScope(scopeId: string, parentScope?: VariableScope): VariableScope {
-    return {
+    const scope: VariableScope = {
       scopeId,
       variables: new Map<string, unknown>(),
-      parentScope,
     };
+
+    // Only include parentScope if it's defined
+    if (parentScope !== undefined) {
+      (scope as any).parentScope = parentScope;
+    }
+
+    return scope;
   }
 
   /**

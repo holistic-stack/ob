@@ -80,7 +80,10 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'sphere',
           radius: 5,
-          location: { start: { line: 4, column: 1, offset: 0 }, end: { line: 4, column: 10, offset: 9 } },
+          location: {
+            start: { line: 4, column: 1, offset: 0 },
+            end: { line: 4, column: 10, offset: 9 },
+          },
         } as SphereNode,
       ];
 
@@ -97,7 +100,10 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'sphere',
           radius: 5,
-          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 10, offset: 9 },
+          },
         } as SphereNode,
       ];
 
@@ -115,13 +121,19 @@ describe('OpenSCADRenderingPipelineService', () => {
           type: 'assign_statement',
           variable: '$fn',
           value: 'invalid',
-          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 10, offset: 9 },
+          },
         } as any,
         {
           type: 'assign_statement',
           variable: '$fa',
           value: 6,
-          location: { start: { line: 2, column: 1, offset: 0 }, end: { line: 2, column: 10, offset: 9 } },
+          location: {
+            start: { line: 2, column: 1, offset: 0 },
+            end: { line: 2, column: 10, offset: 9 },
+          },
         } as AssignStatementNode,
       ];
 
@@ -139,23 +151,35 @@ describe('OpenSCADRenderingPipelineService', () => {
           type: 'assign_statement',
           variable: '$fn',
           value: 8,
-          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 10, offset: 9 },
+          },
         } as AssignStatementNode,
         {
           type: 'sphere',
           radius: 5,
-          location: { start: { line: 2, column: 1, offset: 0 }, end: { line: 2, column: 10, offset: 9 } },
+          location: {
+            start: { line: 2, column: 1, offset: 0 },
+            end: { line: 2, column: 10, offset: 9 },
+          },
         } as SphereNode,
         {
           type: 'cube',
           size: 2,
-          location: { start: { line: 3, column: 1, offset: 0 }, end: { line: 3, column: 10, offset: 9 } },
+          location: {
+            start: { line: 3, column: 1, offset: 0 },
+            end: { line: 3, column: 10, offset: 9 },
+          },
         } as CubeNode,
         {
           type: 'assign_statement',
           variable: '$fa',
           value: 12,
-          location: { start: { line: 4, column: 1, offset: 0 }, end: { line: 4, column: 10, offset: 9 } },
+          location: {
+            start: { line: 4, column: 1, offset: 0 },
+            end: { line: 4, column: 10, offset: 9 },
+          },
         } as AssignStatementNode,
       ];
 
@@ -172,13 +196,19 @@ describe('OpenSCADRenderingPipelineService', () => {
           type: 'assign_statement',
           variable: '$fn',
           value: 8,
-          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
+          location: {
+            start: { line: 1, column: 1, offset: 0 },
+            end: { line: 1, column: 10, offset: 9 },
+          },
         } as AssignStatementNode,
         {
           type: 'assign_statement',
           variable: '$fa',
           value: 12,
-          location: { start: { line: 2, column: 1, offset: 0 }, end: { line: 2, column: 10, offset: 9 } },
+          location: {
+            start: { line: 2, column: 1, offset: 0 },
+            end: { line: 2, column: 10, offset: 9 },
+          },
         } as AssignStatementNode,
       ];
 

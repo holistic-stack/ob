@@ -70,7 +70,12 @@ export interface BaseGeometryData {
  */
 export interface GeometryMetadata {
   /** Type of primitive that generated this geometry */
-  readonly primitiveType: '3d-sphere' | '3d-cube' | '3d-cylinder' | '3d-polyhedron' | '3d-boolean-result';
+  readonly primitiveType:
+    | '3d-sphere'
+    | '3d-cube'
+    | '3d-cylinder'
+    | '3d-polyhedron'
+    | '3d-boolean-result';
 
   /** Parameters used to generate the geometry */
   readonly parameters: Record<string, unknown>;

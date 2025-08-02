@@ -397,12 +397,20 @@ export class OFFImporterService {
       };
     }
 
-    let minX = vertices[0].x,
-      maxX = vertices[0].x;
-    let minY = vertices[0].y,
-      maxY = vertices[0].y;
-    let minZ = vertices[0].z,
-      maxZ = vertices[0].z;
+    const firstVertex = vertices[0];
+    if (!firstVertex) {
+      return {
+        min: { x: 0, y: 0, z: 0 },
+        max: { x: 0, y: 0, z: 0 },
+      };
+    }
+
+    let minX = firstVertex.x,
+      maxX = firstVertex.x;
+    let minY = firstVertex.y,
+      maxY = firstVertex.y;
+    let minZ = firstVertex.z,
+      maxZ = firstVertex.z;
 
     for (const vertex of vertices) {
       minX = Math.min(minX, vertex.x);

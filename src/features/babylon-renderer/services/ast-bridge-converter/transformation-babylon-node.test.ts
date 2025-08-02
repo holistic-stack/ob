@@ -406,7 +406,16 @@ describe('TransformationBabylonNode', () => {
       const cubeCode = 'cube([1, 1, 1]);';
       const cubeAst = parser.parseAST(cubeCode);
       expect(cubeAst.length).toBeGreaterThan(0);
-      const cubeNode = new PrimitiveBabylonNode('child_cube', scene, cubeAst[0], OPENSCAD_DEFAULTS);
+      const firstCubeNode = cubeAst[0];
+      if (!firstCubeNode) {
+        throw new Error('Failed to parse cube AST');
+      }
+      const cubeNode = new PrimitiveBabylonNode(
+        'child_cube',
+        scene,
+        firstCubeNode,
+        OPENSCAD_DEFAULTS
+      );
 
       const transformationNode = new TransformationBabylonNode('debug_rotate', scene, rotateNode, [
         cubeNode,

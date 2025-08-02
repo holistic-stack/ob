@@ -277,19 +277,31 @@ export function validateImportParameters(params: ImportParameters): ImportValida
  * @returns Normalized parameters with all defaults applied
  */
 export function normalizeImportParameters(params: ImportParameters): NormalizedImportParameters {
-  return {
+  const normalized: NormalizedImportParameters = {
     file: params.file,
     convexity: params.convexity ?? DEFAULT_IMPORT_PARAMETERS.convexity,
     center: params.center ?? DEFAULT_IMPORT_PARAMETERS.center,
     scale: params.scale ?? DEFAULT_IMPORT_PARAMETERS.scale,
     origin: params.origin ?? DEFAULT_IMPORT_PARAMETERS.origin,
-    width: params.width,
-    height: params.height,
     dpi: params.dpi ?? DEFAULT_IMPORT_PARAMETERS.dpi,
-    id: params.id,
-    layer: params.layer,
     fn: params.$fn ?? DEFAULT_IMPORT_PARAMETERS.$fn,
     fa: params.$fa ?? DEFAULT_IMPORT_PARAMETERS.$fa,
     fs: params.$fs ?? DEFAULT_IMPORT_PARAMETERS.$fs,
   };
+
+  // Only include optional properties if they are defined
+  if (params.width !== undefined) {
+    (normalized as any).width = params.width;
+  }
+  if (params.height !== undefined) {
+    (normalized as any).height = params.height;
+  }
+  if (params.id !== undefined) {
+    (normalized as any).id = params.id;
+  }
+  if (params.layer !== undefined) {
+    (normalized as any).layer = params.layer;
+  }
+
+  return normalized;
 }

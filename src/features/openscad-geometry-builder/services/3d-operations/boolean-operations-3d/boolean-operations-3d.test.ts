@@ -372,7 +372,7 @@ describe('BooleanOperations3DService', () => {
         expect(isSuccess(result)).toBe(true);
         if (isSuccess(result)) {
           // For non-overlapping meshes, volume should remain the same as base mesh
-          expect(result.data.metadata.volume).toBeCloseTo(cube.metadata.volume, 1);
+          expect(result.data.metadata.volume).toBeCloseTo(cube.metadata.volume ?? 0, 1);
         }
       });
 
@@ -385,7 +385,7 @@ describe('BooleanOperations3DService', () => {
         expect(isSuccess(result)).toBe(true);
         if (isSuccess(result)) {
           // Volume should be less than original cube due to subtraction
-          expect(result.data.metadata.volume).toBeLessThan(cube.metadata.volume);
+          expect(result.data.metadata.volume).toBeLessThan(cube.metadata.volume ?? 0);
           expect(result.data.metadata.volume).toBeGreaterThan(0);
         }
       });
@@ -496,7 +496,7 @@ describe('BooleanOperations3DService', () => {
           // Intersection volume should be reasonable for partial overlap
           expect(result.data.metadata.volume).toBeGreaterThan(0);
           expect(result.data.metadata.volume).toBeLessThanOrEqual(
-            Math.min(sphere.metadata.volume, cube.metadata.volume)
+            Math.min(sphere.metadata.volume ?? 0, cube.metadata.volume ?? 0)
           );
         }
       });
@@ -539,7 +539,7 @@ describe('BooleanOperations3DService', () => {
         expect(isSuccess(result)).toBe(true);
         if (isSuccess(result)) {
           // Intersection should be approximately the smaller mesh
-          expect(result.data.metadata.volume).toBeCloseTo(smallCube.metadata.volume, 0);
+          expect(result.data.metadata.volume).toBeCloseTo(smallCube.metadata.volume ?? 0, 0);
         }
       });
 

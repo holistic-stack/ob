@@ -26,6 +26,7 @@
  */
 
 import type { Vector2, Vector3 } from './geometry-data';
+import type { TextParameters } from './text-parameters';
 
 /**
  * Base fragment parameters for tessellation control

@@ -6,8 +6,8 @@
 import { Engine, Scene } from '@babylonjs/core';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { isError, isSuccess } from '@/shared';
-import type { SphereGeometryData } from '../../types/geometry-data';
 import type { Circle2DGeometryData } from '../../types/2d-geometry-data';
+import type { SphereGeometryData } from '../../types/geometry-data';
 import { GeometryToMeshConverterService } from './geometry-to-mesh-converter';
 
 // Mock BabylonJS for testing

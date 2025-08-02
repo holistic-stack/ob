@@ -1071,8 +1071,14 @@ export class PrimitiveVisitor extends BaseASTVisitor {
 
           for (const pointMatch of pointMatches) {
             const coords = pointMatch.match(/([\d.+-]+)/g);
-            if (coords && coords.length >= 2 && coords[0] && coords[1] &&
-                typeof coords[0] === 'string' && typeof coords[1] === 'string') {
+            if (
+              coords &&
+              coords.length >= 2 &&
+              coords[0] &&
+              coords[1] &&
+              typeof coords[0] === 'string' &&
+              typeof coords[1] === 'string'
+            ) {
               const x = parseFloat(coords[0]);
               const y = parseFloat(coords[1]);
               if (!Number.isNaN(x) && !Number.isNaN(y)) {
@@ -1105,7 +1111,12 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         if (i + 1 < flatArray.length) {
           const x = flatArray[i];
           const y = flatArray[i + 1];
-          if (x !== undefined && y !== undefined && typeof x === 'number' && typeof y === 'number') {
+          if (
+            x !== undefined &&
+            y !== undefined &&
+            typeof x === 'number' &&
+            typeof y === 'number'
+          ) {
             points.push([x, y]);
           }
           console.log('[DEBUG] extractPolygonPoints: reconstructed point:', [x, y]);
@@ -1184,8 +1195,14 @@ export class PrimitiveVisitor extends BaseASTVisitor {
 
         for (const pointMatch of pointMatches) {
           const coords = pointMatch.match(/([\d.+-]+)/g);
-          if (coords && coords.length >= 2 && coords[0] && coords[1] &&
-              typeof coords[0] === 'string' && typeof coords[1] === 'string') {
+          if (
+            coords &&
+            coords.length >= 2 &&
+            coords[0] &&
+            coords[1] &&
+            typeof coords[0] === 'string' &&
+            typeof coords[1] === 'string'
+          ) {
             const x = parseFloat(coords[0]);
             const y = parseFloat(coords[1]);
             if (!Number.isNaN(x) && !Number.isNaN(y)) {

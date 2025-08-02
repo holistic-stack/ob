@@ -442,8 +442,19 @@ export class BooleanOperationsService {
     let inside = false;
 
     for (let i = 0, j = outline.length - 1; i < outline.length; j = i++) {
-      const vi = vertices[outline[i]];
-      const vj = vertices[outline[j]];
+      const iIndex = outline[i];
+      const jIndex = outline[j];
+
+      if (iIndex === undefined || jIndex === undefined) {
+        continue; // Skip invalid indices
+      }
+
+      const vi = vertices[iIndex];
+      const vj = vertices[jIndex];
+
+      if (!vi || !vj) {
+        continue; // Skip if vertices don't exist
+      }
 
       if (
         vi.y > point.y !== vj.y > point.y &&
@@ -579,14 +590,32 @@ export class BooleanOperationsService {
     for (let i = 0; i < polygonA.outline.length; i++) {
       const i1 = polygonA.outline[i];
       const i2 = polygonA.outline[(i + 1) % polygonA.outline.length];
+
+      if (i1 === undefined || i2 === undefined) {
+        continue; // Skip invalid indices
+      }
+
       const edgeA1 = polygonA.vertices[i1];
       const edgeA2 = polygonA.vertices[i2];
+
+      if (!edgeA1 || !edgeA2) {
+        continue; // Skip if vertices don't exist
+      }
 
       for (let j = 0; j < polygonB.outline.length; j++) {
         const j1 = polygonB.outline[j];
         const j2 = polygonB.outline[(j + 1) % polygonB.outline.length];
+
+        if (j1 === undefined || j2 === undefined) {
+          continue; // Skip invalid indices
+        }
+
         const edgeB1 = polygonB.vertices[j1];
         const edgeB2 = polygonB.vertices[j2];
+
+        if (!edgeB1 || !edgeB2) {
+          continue; // Skip if vertices don't exist
+        }
 
         if (this.doLineSegmentsIntersect(edgeA1, edgeA2, edgeB1, edgeB2)) {
           return true;

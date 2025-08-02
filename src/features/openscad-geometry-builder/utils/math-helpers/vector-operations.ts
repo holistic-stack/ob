@@ -22,8 +22,8 @@
  * @since 2025-07-29
  */
 
-import type { Vector2, Vector3 } from '../../types/geometry-data';
 import type { Vector2D, Vector3D } from '@/features/openscad-parser/ast/ast-types';
+import type { Vector2, Vector3 } from '../../types/geometry-data';
 
 /**
  * 3D Vector operations following OpenSCAD coordinate system (Z-up, right-handed)

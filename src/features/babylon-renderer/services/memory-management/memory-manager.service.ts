@@ -171,12 +171,18 @@ export class MemoryManagerService {
       const poolCleanupResult = await this.memoryPool.performAutomaticCleanup();
 
       if (!cacheCleanupResult.success) {
-        const errorMessage = cacheCleanupResult.error instanceof Error ? cacheCleanupResult.error.message : 'Unknown cache cleanup error';
+        const errorMessage =
+          cacheCleanupResult.error instanceof Error
+            ? cacheCleanupResult.error.message
+            : 'Unknown cache cleanup error';
         return error(new Error(`Cache cleanup failed: ${errorMessage}`));
       }
 
       if (!poolCleanupResult.success) {
-        const errorMessage = poolCleanupResult.error instanceof Error ? poolCleanupResult.error.message : 'Unknown pool cleanup error';
+        const errorMessage =
+          poolCleanupResult.error instanceof Error
+            ? poolCleanupResult.error.message
+            : 'Unknown pool cleanup error';
         return error(new Error(`Pool cleanup failed: ${errorMessage}`));
       }
 

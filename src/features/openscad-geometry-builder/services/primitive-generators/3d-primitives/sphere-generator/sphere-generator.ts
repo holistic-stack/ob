@@ -32,7 +32,11 @@
 import type { SphereParameters } from '@/features/openscad-geometry-builder';
 import type { Result } from '@/shared';
 import { error, isError, success } from '@/shared';
-import type { GeometryGenerationError, SphereGeometryData, Vector3 } from '../../../../types/geometry-data';
+import type {
+  GeometryGenerationError,
+  SphereGeometryData,
+  Vector3,
+} from '../../../../types/geometry-data';
 import {
   calculateFragmentsWithErrorHandling,
   createGeometryData,

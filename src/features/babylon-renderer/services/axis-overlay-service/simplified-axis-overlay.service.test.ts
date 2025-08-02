@@ -379,8 +379,8 @@ describe('Factory functions and defaults', () => {
 
     it('should be readonly', () => {
       expect(() => {
-        // @ts-expect-error - Testing readonly behavior
-        DEFAULT_SKETCHUP_CONFIG.visible = false;
+        // Testing readonly behavior
+        (DEFAULT_SKETCHUP_CONFIG as any).visible = false;
       }).toThrow();
     });
   });

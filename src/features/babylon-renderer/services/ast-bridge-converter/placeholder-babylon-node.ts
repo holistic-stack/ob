@@ -13,10 +13,7 @@ import type {
   NodeGenerationResult,
   NodeValidationResult,
 } from '@/features/babylon-renderer/types';
-import {
-  BabylonJSNode,
-  BabylonJSNodeType,
-} from '@/features/babylon-renderer/types';
+import { BabylonJSNode, BabylonJSNodeType } from '@/features/babylon-renderer/types';
 import type { ASTNode, SourceLocation } from '@/features/openscad-parser';
 import { createLogger, tryCatch } from '@/shared';
 

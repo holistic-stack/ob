@@ -197,18 +197,22 @@ describe('CameraStoreSyncService', () => {
       vi.advanceTimersByTime(150);
 
       // Get the actual camera state after BabylonJS calculations
-      const actualPosition = [camera.position.x, camera.position.y, camera.position.z];
-      const actualTarget = [camera.target.x, camera.target.y, camera.target.z];
-      const actualZoom = 1 / camera.radius;
+      const actualPosition = [
+        camera.position.x ?? 0,
+        camera.position.y ?? 0,
+        camera.position.z ?? 0,
+      ];
+      const actualTarget = [camera.target.x ?? 0, camera.target.y ?? 0, camera.target.z ?? 0];
+      const actualZoom = 1 / (camera.radius ?? 1);
 
       // Verify store was updated with actual camera state
       const updatedState = store.getState().babylonRendering.camera;
-      expect(updatedState.position?.[0] ?? 0).toBeCloseTo(actualPosition[0], 5);
-      expect(updatedState.position?.[1] ?? 0).toBeCloseTo(actualPosition[1], 5);
-      expect(updatedState.position?.[2] ?? 0).toBeCloseTo(actualPosition[2], 5);
-      expect(updatedState.target?.[0] ?? 0).toBeCloseTo(actualTarget[0], 5);
-      expect(updatedState.target?.[1] ?? 0).toBeCloseTo(actualTarget[1], 5);
-      expect(updatedState.target?.[2] ?? 0).toBeCloseTo(actualTarget[2], 5);
+      expect(updatedState.position?.[0] ?? 0).toBeCloseTo(actualPosition[0] ?? 0, 5);
+      expect(updatedState.position?.[1] ?? 0).toBeCloseTo(actualPosition[1] ?? 0, 5);
+      expect(updatedState.position?.[2] ?? 0).toBeCloseTo(actualPosition[2] ?? 0, 5);
+      expect(updatedState.target?.[0] ?? 0).toBeCloseTo(actualTarget[0] ?? 0, 5);
+      expect(updatedState.target?.[1] ?? 0).toBeCloseTo(actualTarget[1] ?? 0, 5);
+      expect(updatedState.target?.[2] ?? 0).toBeCloseTo(actualTarget[2] ?? 0, 5);
       expect(updatedState.zoom).toBeCloseTo(actualZoom, 5);
 
       // Dispose current service (simulating page unload)

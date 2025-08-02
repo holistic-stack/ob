@@ -296,17 +296,26 @@ describe('Edge Cases in Nested Modules', () => {
               type: 'expression',
               expressionType: 'identifier',
               name: 'leaf',
-              location: { start: { line: depth, column: 1, offset: 0 }, end: { line: depth, column: 5, offset: 4 } },
+              location: {
+                start: { line: depth, column: 1, offset: 0 },
+                end: { line: depth, column: 5, offset: 4 },
+              },
             },
             parameters: [],
             body: [
               {
                 type: 'sphere',
                 radius: 1,
-                location: { start: { line: depth, column: 10, offset: 0 }, end: { line: depth, column: 20, offset: 10 } },
+                location: {
+                  start: { line: depth, column: 10, offset: 0 },
+                  end: { line: depth, column: 20, offset: 10 },
+                },
               },
             ],
-            location: { start: { line: depth, column: 1, offset: 0 }, end: { line: depth, column: 10, offset: 9 } },
+            location: {
+              start: { line: depth, column: 1, offset: 0 },
+              end: { line: depth, column: 10, offset: 9 },
+            },
           };
         }
 
@@ -317,7 +326,10 @@ describe('Edge Cases in Nested Modules', () => {
             type: 'expression',
             expressionType: 'identifier',
             name: `level${depth}`,
-            location: { start: { line: depth, column: 1, offset: 0 }, end: { line: depth, column: 10, offset: 9 } },
+            location: {
+              start: { line: depth, column: 1, offset: 0 },
+              end: { line: depth, column: 10, offset: 9 },
+            },
           },
           parameters: [],
           body: [
@@ -326,10 +338,16 @@ describe('Edge Cases in Nested Modules', () => {
               type: 'module_instantiation',
               name: depth === 1 ? 'leaf' : `level${depth - 1}`,
               args: [],
-              location: { start: { line: depth, column: 20, offset: 0 }, end: { line: depth, column: 30, offset: 10 } },
+              location: {
+                start: { line: depth, column: 20, offset: 0 },
+                end: { line: depth, column: 30, offset: 10 },
+              },
             },
           ],
-          location: { start: { line: depth, column: 1, offset: 0 }, end: { line: depth, column: 10, offset: 9 } },
+          location: {
+            start: { line: depth, column: 1, offset: 0 },
+            end: { line: depth, column: 10, offset: 9 },
+          },
         };
       };
 
@@ -453,17 +471,26 @@ describe('Edge Cases in Nested Modules', () => {
               type: 'expression',
               expressionType: 'identifier',
               name: `nested${i}`,
-              location: { start: { line: i + 2, column: 11, offset: 0 }, end: { line: i + 2, column: 20, offset: 9 } },
+              location: {
+                start: { line: i + 2, column: 11, offset: 0 },
+                end: { line: i + 2, column: 20, offset: 9 },
+              },
             },
             parameters: [],
             body: [
               {
                 type: 'sphere',
                 radius: i + 1,
-                location: { start: { line: i + 2, column: 25, offset: 0 }, end: { line: i + 2, column: 35, offset: 10 } },
+                location: {
+                  start: { line: i + 2, column: 25, offset: 0 },
+                  end: { line: i + 2, column: 35, offset: 10 },
+                },
               },
             ],
-            location: { start: { line: i + 2, column: 3, offset: 0 }, end: { line: i + 2, column: 12, offset: 9 } },
+            location: {
+              start: { line: i + 2, column: 3, offset: 0 },
+              end: { line: i + 2, column: 12, offset: 9 },
+            },
           };
 
           const parentModule: ModuleDefinitionNode = {
@@ -472,7 +499,10 @@ describe('Edge Cases in Nested Modules', () => {
               type: 'expression',
               expressionType: 'identifier',
               name: `parent${i}`,
-              location: { start: { line: i + 1, column: 8, offset: 0 }, end: { line: i + 1, column: 17, offset: 9 } },
+              location: {
+                start: { line: i + 1, column: 8, offset: 0 },
+                end: { line: i + 1, column: 17, offset: 9 },
+              },
             },
             parameters: [],
             body: [
@@ -481,10 +511,16 @@ describe('Edge Cases in Nested Modules', () => {
                 type: 'module_instantiation',
                 name: `nested${i}`,
                 args: [],
-                location: { start: { line: i + 3, column: 3, offset: 0 }, end: { line: i + 3, column: 12, offset: 9 } },
+                location: {
+                  start: { line: i + 3, column: 3, offset: 0 },
+                  end: { line: i + 3, column: 12, offset: 9 },
+                },
               },
             ],
-            location: { start: { line: i + 1, column: 1, offset: 0 }, end: { line: i + 1, column: 10, offset: 9 } },
+            location: {
+              start: { line: i + 1, column: 1, offset: 0 },
+              end: { line: i + 1, column: 10, offset: 9 },
+            },
           };
 
           modules.push(parentModule);
@@ -492,7 +528,10 @@ describe('Edge Cases in Nested Modules', () => {
             type: 'module_instantiation',
             name: `parent${i}`,
             args: [],
-            location: { start: { line: 100 + i, column: 1, offset: 0 }, end: { line: 100 + i, column: 10, offset: 9 } },
+            location: {
+              start: { line: 100 + i, column: 1, offset: 0 },
+              end: { line: 100 + i, column: 10, offset: 9 },
+            },
           });
         }
 

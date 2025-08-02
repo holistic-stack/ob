@@ -5,8 +5,8 @@
  * Supports linear_extrude and rotate_extrude with OpenSCAD-compatible behavior.
  */
 
-import { Vector3 } from '@babylonjs/core';
 import type { AbstractMesh, Scene } from '@babylonjs/core';
+import { Vector3 } from '@babylonjs/core';
 import type {
   BabylonJSError,
   NodeGenerationResult,

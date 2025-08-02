@@ -31,8 +31,8 @@ import {
   type GlobalVariables,
 } from '@/features/openscad-geometry-builder';
 import type { ASTNode, AssignStatementNode } from '@/features/openscad-parser';
-import { createLogger, error, success } from '@/shared';
 import type { Result } from '@/shared';
+import { createLogger, error, success } from '@/shared';
 
 const logger = createLogger('OpenSCADRenderingPipelineService');
 

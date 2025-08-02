@@ -230,7 +230,10 @@ describe('Deep Nested Module Support', () => {
             height: level,
             radius: level,
             center: false,
-            location: { start: { line: level * 2, column: level * 2 + 1, offset: 0 }, end: { line: level * 2, column: level * 2 + 10, offset: 9 } },
+            location: {
+              start: { line: level * 2, column: level * 2 + 1, offset: 0 },
+              end: { line: level * 2, column: level * 2 + 10, offset: 9 },
+            },
           });
         } else {
           // Non-leaf: add nested module definition and call
@@ -240,7 +243,10 @@ describe('Deep Nested Module Support', () => {
             type: 'module_instantiation',
             name: `level${level + 1}`,
             args: [],
-            location: { start: { line: level * 2 + 1, column: level * 2 + 1, offset: 0 }, end: { line: level * 2 + 1, column: level * 2 + 10, offset: 9 } },
+            location: {
+              start: { line: level * 2 + 1, column: level * 2 + 1, offset: 0 },
+              end: { line: level * 2 + 1, column: level * 2 + 10, offset: 9 },
+            },
           });
         }
 
@@ -250,11 +256,17 @@ describe('Deep Nested Module Support', () => {
             type: 'expression',
             expressionType: 'identifier',
             name: `level${level}`,
-            location: { start: { line: level * 2, column: level * 2, offset: 0 }, end: { line: level * 2, column: level * 2 + 9, offset: 9 } },
+            location: {
+              start: { line: level * 2, column: level * 2, offset: 0 },
+              end: { line: level * 2, column: level * 2 + 9, offset: 9 },
+            },
           },
           parameters: [],
           body,
-          location: { start: { line: level * 2, column: level * 2, offset: 0 }, end: { line: level * 2, column: level * 2 + 9, offset: 9 } },
+          location: {
+            start: { line: level * 2, column: level * 2, offset: 0 },
+            end: { line: level * 2, column: level * 2 + 9, offset: 9 },
+          },
         };
       };
 

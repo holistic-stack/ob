@@ -17,8 +17,8 @@ export type {
   NodeValidationResult,
 } from './babylon-ast.types';
 export {
-  BabylonJSNode,
   BabylonJSCSGType,
+  BabylonJSNode,
   BabylonJSNodeType,
   BabylonJSPrimitiveType,
   BabylonJSTransformType,

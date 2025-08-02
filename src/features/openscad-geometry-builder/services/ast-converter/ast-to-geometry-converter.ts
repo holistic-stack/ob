@@ -42,9 +42,9 @@ import type {
   SphereNode,
   SquareNode,
 } from '@/features/openscad-parser';
-import { createLogger, error, success } from '@/shared';
 import type { Result } from '@/shared';
-import type { BaseGeometryData } from '../../types/geometry-data';
+import { createLogger, error, success } from '@/shared';
+import type { BaseGeometryData, Vector2 } from '../../types/geometry-data';
 
 const logger = createLogger('ASTToGeometryConverterService');
 
@@ -391,21 +391,21 @@ export class ASTToGeometryConverterService {
       const paths = node.paths;
       const convexity = node.convexity || 1;
 
-      // Convert points array to Vector2D format
-      const vector2DPoints = points.map((point) => ({
+      // Convert points array to Vector2 format
+      const vector2Points = points.map((point) => ({
         x: Array.isArray(point) && point.length >= 2 ? point[0] || 0 : 0,
         y: Array.isArray(point) && point.length >= 2 ? point[1] || 0 : 0,
       }));
 
       // Generate polygon geometry
       interface PolygonParameters {
-        points: Vector2D[];
+        points: Vector2[];
         convexity: number;
         paths?: number[][];
       }
 
       const polygonParameters: PolygonParameters = {
-        points: vector2DPoints,
+        points: vector2Points,
         convexity,
       };
 

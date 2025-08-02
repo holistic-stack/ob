@@ -41,23 +41,23 @@ export * from './services/primitive-generators/text-primitives';
 export type {
   // Core geometry types
   BaseGeometryData,
-  GeometryMetadata,
   // 3D geometry types
   CubeGeometryData,
   CylinderGeometryData,
+  GeometryMetadata,
   PolyhedronGeometryData,
   SphereGeometryData,
 } from './types/geometry-data';
 
 export type {
+  // 2D primitive parameters
+  CircleParameters,
   // Primitive parameters
   CubeParameters,
   CylinderParameters,
+  PolygonParameters,
   PolyhedronParameters,
   SphereParameters,
-  // 2D primitive parameters
-  CircleParameters,
-  PolygonParameters,
   SquareParameters,
 } from './types/primitive-parameters';
 

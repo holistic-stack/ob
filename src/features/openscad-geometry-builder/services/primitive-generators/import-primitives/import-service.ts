@@ -25,10 +25,7 @@
 import { createLogger } from '@/shared/services/logger.service';
 import type { Result } from '@/shared/types/result.types';
 import { error, success } from '@/shared/utils/functional/result';
-import type {
-  GeometryGenerationError,
-  PolyhedronGeometryData,
-} from '../../../types/geometry-data';
+import type { GeometryGenerationError, PolyhedronGeometryData } from '../../../types/geometry-data';
 import type { ImportParameters, SupportedImportFormat } from '../../../types/import-parameters';
 import {
   detectFileFormat,

@@ -873,8 +873,6 @@ export const createAppStore = (
     const store = create<AppStore>()(storeCreator);
     return store;
   }
-
-
 };
 
 /**

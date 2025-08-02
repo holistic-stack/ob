@@ -26,8 +26,8 @@
 import { createLogger } from '@/shared/services/logger.service';
 import type { Result } from '@/shared/types/result.types';
 import { error, success } from '@/shared/utils/functional/result';
-import type { GeometryGenerationError } from '../../../../types/geometry-data';
 import type { Polygon2DGeometryData } from '../../../../types/2d-geometry-data';
+import type { GeometryGenerationError } from '../../../../types/geometry-data';
 import type { TextParameters } from '../../../../types/text-parameters';
 import { FontLoaderService } from '../font-loader/font-loader';
 
@@ -425,7 +425,7 @@ interface TextLayout {
     readonly y: number;
     readonly width: number;
     readonly height: number;
-  }>;
+  }[];
   readonly totalWidth: number;
   readonly totalHeight: number;
   readonly baseline: number;

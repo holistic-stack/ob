@@ -402,7 +402,7 @@ export class CameraStoreSyncService {
     if (newState.position && this.state.lastCameraPosition) {
       const lastPosition = this.state.lastCameraPosition;
       const positionChanged = newState.position.some(
-        (value, index) => Math.abs(value - (lastPosition?.[index] ?? 0)) > threshold,
+        (value, index) => Math.abs(value - (lastPosition?.[index] ?? 0)) > threshold
       );
       if (positionChanged) return true;
     }
@@ -411,7 +411,7 @@ export class CameraStoreSyncService {
     if (newState.target && this.state.lastCameraTarget) {
       const lastTarget = this.state.lastCameraTarget;
       const targetChanged = newState.target.some(
-        (value, index) => Math.abs(value - (lastTarget?.[index] ?? 0)) > threshold,
+        (value, index) => Math.abs(value - (lastTarget?.[index] ?? 0)) > threshold
       );
       if (targetChanged) return true;
     }

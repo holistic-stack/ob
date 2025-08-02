@@ -21,6 +21,7 @@ import { describe, expect, it } from 'vitest';
 import type { ASTNode, ModuleDefinitionNode } from '../../ast/ast-types.js';
 import { ModuleRegistry } from '../module-registry/module-registry.js';
 import { ModuleResolver } from '../module-resolver/module-resolver.js';
+import { createSourceLocation } from '../test-utils.js';
 
 describe('Scope Isolation in Nested Modules', () => {
   describe('Same-named modules in different scopes', () => {
@@ -32,17 +33,26 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'localModule',
-          location: { start: { line: 2, column: 11, offset: 0 }, end: { line: 2, column: 20, offset: 9 } },
+          location: {
+            start: { line: 2, column: 11, offset: 0 },
+            end: { line: 2, column: 20, offset: 9 },
+          },
         },
         parameters: [],
         body: [
           {
             type: 'sphere',
             radius: 5,
-            location: { start: { line: 2, column: 30, offset: 0 }, end: { line: 2, column: 40, offset: 10 } },
+            location: {
+              start: { line: 2, column: 30, offset: 0 },
+              end: { line: 2, column: 40, offset: 10 },
+            },
           },
         ],
-        location: { start: { line: 2, column: 3, offset: 0 }, end: { line: 2, column: 12, offset: 9 } },
+        location: {
+          start: { line: 2, column: 3, offset: 0 },
+          end: { line: 2, column: 12, offset: 9 },
+        },
       };
 
       const localModuleB: ModuleDefinitionNode = {
@@ -51,7 +61,10 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'localModule',
-          location: { start: { line: 6, column: 11, offset: 0 }, end: { line: 6, column: 20, offset: 9 } },
+          location: {
+            start: { line: 6, column: 11, offset: 0 },
+            end: { line: 6, column: 20, offset: 9 },
+          },
         },
         parameters: [],
         body: [
@@ -59,10 +72,16 @@ describe('Scope Isolation in Nested Modules', () => {
             type: 'cube',
             size: 10,
             center: false,
-            location: { start: { line: 6, column: 30, offset: 0 }, end: { line: 6, column: 40, offset: 10 } },
+            location: {
+              start: { line: 6, column: 30, offset: 0 },
+              end: { line: 6, column: 40, offset: 10 },
+            },
           },
         ],
-        location: { start: { line: 6, column: 3, offset: 0 }, end: { line: 6, column: 12, offset: 9 } },
+        location: {
+          start: { line: 6, column: 3, offset: 0 },
+          end: { line: 6, column: 12, offset: 9 },
+        },
       };
 
       const moduleA: ModuleDefinitionNode = {
@@ -71,7 +90,10 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'moduleA',
-          location: { start: { line: 1, column: 8, offset: 0 }, end: { line: 1, column: 17, offset: 9 } },
+          location: {
+            start: { line: 1, column: 8, offset: 0 },
+            end: { line: 1, column: 17, offset: 9 },
+          },
         },
         parameters: [],
         body: [
@@ -80,10 +102,16 @@ describe('Scope Isolation in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'localModule',
             args: [],
-            location: { start: { line: 3, column: 3, offset: 0 }, end: { line: 3, column: 12, offset: 9 } },
+            location: {
+              start: { line: 3, column: 3, offset: 0 },
+              end: { line: 3, column: 12, offset: 9 },
+            },
           },
         ],
-        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 10, offset: 9 },
+        },
       };
 
       const moduleB: ModuleDefinitionNode = {
@@ -92,7 +120,10 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'moduleB',
-          location: { start: { line: 5, column: 8, offset: 0 }, end: { line: 5, column: 17, offset: 9 } },
+          location: {
+            start: { line: 5, column: 8, offset: 0 },
+            end: { line: 5, column: 17, offset: 9 },
+          },
         },
         parameters: [],
         body: [
@@ -101,10 +132,16 @@ describe('Scope Isolation in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'localModule',
             args: [],
-            location: { start: { line: 7, column: 3, offset: 0 }, end: { line: 7, column: 12, offset: 9 } },
+            location: {
+              start: { line: 7, column: 3, offset: 0 },
+              end: { line: 7, column: 12, offset: 9 },
+            },
           },
         ],
-        location: { start: { line: 5, column: 1, offset: 0 }, end: { line: 5, column: 10, offset: 9 } },
+        location: {
+          start: { line: 5, column: 1, offset: 0 },
+          end: { line: 5, column: 10, offset: 9 },
+        },
       };
 
       const inputAST: ASTNode[] = [
@@ -114,13 +151,19 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'module_instantiation',
           name: 'moduleA',
           args: [],
-          location: { start: { line: 9, column: 1, offset: 0 }, end: { line: 9, column: 10, offset: 9 } },
+          location: {
+            start: { line: 9, column: 1, offset: 0 },
+            end: { line: 9, column: 10, offset: 9 },
+          },
         },
         {
           type: 'module_instantiation',
           name: 'moduleB',
           args: [],
-          location: { start: { line: 10, column: 1, offset: 0 }, end: { line: 10, column: 10, offset: 9 } },
+          location: {
+            start: { line: 10, column: 1, offset: 0 },
+            end: { line: 10, column: 10, offset: 9 },
+          },
         },
       ];
 
@@ -152,7 +195,10 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'parentHelper',
-          location: { start: { line: 2, column: 11, offset: 0 }, end: { line: 2, column: 20, offset: 9 } },
+          location: {
+            start: { line: 2, column: 11, offset: 0 },
+            end: { line: 2, column: 20, offset: 9 },
+          },
         },
         parameters: [],
         body: [
@@ -161,10 +207,16 @@ describe('Scope Isolation in Nested Modules', () => {
             height: 10,
             radius: 3,
             center: false,
-            location: { start: { line: 2, column: 30, offset: 0 }, end: { line: 2, column: 40, offset: 10 } },
+            location: {
+              start: { line: 2, column: 30, offset: 0 },
+              end: { line: 2, column: 40, offset: 10 },
+            },
           },
         ],
-        location: { start: { line: 2, column: 3, offset: 0 }, end: { line: 2, column: 12, offset: 9 } },
+        location: {
+          start: { line: 2, column: 3, offset: 0 },
+          end: { line: 2, column: 12, offset: 9 },
+        },
       };
 
       const nestedModule: ModuleDefinitionNode = {
@@ -173,7 +225,10 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'nestedModule',
-          location: { start: { line: 3, column: 11, offset: 0 }, end: { line: 3, column: 20, offset: 9 } },
+          location: {
+            start: { line: 3, column: 11, offset: 0 },
+            end: { line: 3, column: 20, offset: 9 },
+          },
         },
         parameters: [],
         body: [
@@ -181,10 +236,16 @@ describe('Scope Isolation in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'parentHelper', // Calling parent scope module
             args: [],
-            location: { start: { line: 4, column: 5, offset: 0 }, end: { line: 4, column: 14, offset: 9 } },
+            location: {
+              start: { line: 4, column: 5, offset: 0 },
+              end: { line: 4, column: 14, offset: 9 },
+            },
           },
         ],
-        location: { start: { line: 3, column: 3, offset: 0 }, end: { line: 3, column: 12, offset: 9 } },
+        location: {
+          start: { line: 3, column: 3, offset: 0 },
+          end: { line: 3, column: 12, offset: 9 },
+        },
       };
 
       const parentModule: ModuleDefinitionNode = {
@@ -193,7 +254,10 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'parentModule',
-          location: { start: { line: 1, column: 8, offset: 0 }, end: { line: 1, column: 17, offset: 9 } },
+          location: {
+            start: { line: 1, column: 8, offset: 0 },
+            end: { line: 1, column: 17, offset: 9 },
+          },
         },
         parameters: [],
         body: [
@@ -203,10 +267,16 @@ describe('Scope Isolation in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'nestedModule',
             args: [],
-            location: { start: { line: 6, column: 3, offset: 0 }, end: { line: 6, column: 12, offset: 9 } },
+            location: {
+              start: { line: 6, column: 3, offset: 0 },
+              end: { line: 6, column: 12, offset: 9 },
+            },
           },
         ],
-        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
+        location: {
+          start: { line: 1, column: 1, offset: 0 },
+          end: { line: 1, column: 10, offset: 9 },
+        },
       };
 
       const inputAST: ASTNode[] = [
@@ -215,7 +285,10 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'module_instantiation',
           name: 'parentModule',
           args: [],
-          location: { start: { line: 8, column: 1, offset: 0 }, end: { line: 8, column: 10, offset: 9 } },
+          location: {
+            start: { line: 8, column: 1, offset: 0 },
+            end: { line: 8, column: 10, offset: 9 },
+          },
         },
       ];
 
@@ -242,17 +315,17 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'helper',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 14, 14),
         },
         parameters: [],
         body: [
           {
             type: 'sphere',
             radius: 100, // This should NOT be used
-            location: { line: 1, column: 20 },
+            location: createSourceLocation(1, 20, 20, 1, 30, 30),
           },
         ],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 40, 40),
       };
 
       const localHelper: ModuleDefinitionNode = {

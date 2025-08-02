@@ -30,11 +30,11 @@
 import type { CircleParameters } from '@/features/openscad-geometry-builder';
 import type { Result } from '@/shared';
 import { error, isError, success } from '@/shared';
+import type { Vector2 } from '../../../../types';
 import type {
   Circle2DGeometryData,
   Geometry2DGenerationError,
 } from '../../../../types/2d-geometry-data';
-import type { Vector2 } from '../../../../types/geometry-data';
 import { resolveRadiusFromParameters } from '../../../../utils/geometry-helpers';
 import { cosDegrees, sinDegrees } from '../../../../utils/math-helpers';
 import { validateFragmentCount, validateRadius } from '../../../../utils/validation-helpers';
@@ -169,8 +169,20 @@ export class CircleGeneratorService {
     let area = 0;
     for (let i = 0; i < outline.length; i++) {
       const j = (i + 1) % outline.length;
-      const vi = vertices[outline[i]];
-      const vj = vertices[outline[j]];
+      const iIndex = outline[i];
+      const jIndex = outline[j];
+
+      if (iIndex === undefined || jIndex === undefined) {
+        continue; // Skip invalid indices
+      }
+
+      const vi = vertices[iIndex];
+      const vj = vertices[jIndex];
+
+      if (!vi || !vj) {
+        continue; // Skip if vertices don't exist
+      }
+
       area += vi.x * vj.y - vj.x * vi.y;
     }
     return Math.abs(area) / 2;

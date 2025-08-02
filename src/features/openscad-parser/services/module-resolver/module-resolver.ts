@@ -124,6 +124,7 @@ interface ResolutionContext {
   /** Scoped module registry for nested modules */
   scopedRegistry: ModuleRegistryInterface;
   /** Source code for Tree-sitter text extraction */
+  sourceCode?: string;
 }
 
 /**
@@ -331,7 +332,9 @@ export class ModuleResolver implements ModuleResolverInterface {
         console.log(`[ModuleResolver] DEBUG - Resolving child node: ${childNode.type}`);
         const childResult = this.resolveNode(childNode, context);
         if (childResult.success) {
-          console.log(`[ModuleResolver] DEBUG - Child resolved to ${childResult.data.length} nodes`);
+          console.log(
+            `[ModuleResolver] DEBUG - Child resolved to ${childResult.data.length} nodes`
+          );
           resolvedChildren.push(...childResult.data);
         } else {
           return childResult;

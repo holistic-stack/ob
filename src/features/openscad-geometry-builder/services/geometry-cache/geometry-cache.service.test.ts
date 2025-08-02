@@ -8,10 +8,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { isError, isSuccess } from '@/shared/types';
-import type {
-  Polygon2DGeometryData,
-  PolyhedronGeometryData,
-} from '../../types';
+import type { Polygon2DGeometryData, PolyhedronGeometryData } from '../../types';
 import { GeometryCacheService } from './geometry-cache.service';
 
 describe('GeometryCacheService', () => {

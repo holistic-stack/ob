@@ -132,11 +132,13 @@ export type TextDirection = 'ltr' | 'rtl' | 'ttb' | 'btt';
 /**
  * Font specification string or object
  */
-export type FontSpecification = string | {
-  readonly family: string;
-  readonly style?: string;
-  readonly weight?: number;
-};
+export type FontSpecification =
+  | string
+  | {
+      readonly family: string;
+      readonly style?: string;
+      readonly weight?: number;
+    };
 
 /**
  * Text parameters interface

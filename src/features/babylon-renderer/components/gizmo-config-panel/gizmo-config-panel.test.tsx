@@ -233,6 +233,10 @@ describe('GizmoConfigPanel', () => {
       const advancedButton = allAdvancedButtons[0];
       expect(advancedButton).toBeDefined();
 
+      if (!advancedButton) {
+        throw new Error('Advanced button not found');
+      }
+
       // Initially collapsed
       expect(advancedButton).toHaveAttribute('aria-expanded', 'false');
       expect(screen.queryByText('Custom Colors')).not.toBeInTheDocument();

@@ -28,7 +28,6 @@
  */
 
 import type { AbstractMesh } from '@babylonjs/core';
-import type { CleanupResult } from '../memory-management/memory-pool.service';
 import type { ASTNode } from '@/features/openscad-parser';
 import type { Result } from '@/shared';
 import { createLogger, error, success } from '@/shared';
@@ -38,6 +37,7 @@ import {
   CacheLimitsEnforcer,
   CacheStatisticsCalculator,
 } from '@/shared/utils/caching';
+import type { CleanupResult } from '../memory-management/memory-pool.service';
 
 const logger = createLogger('RenderCacheService');
 

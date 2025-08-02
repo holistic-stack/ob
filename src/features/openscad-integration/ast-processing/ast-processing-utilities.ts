@@ -168,13 +168,17 @@ export class ASTNodeProcessor {
         originalNode: node,
         nodeType,
         parameters,
-        children,
         processingMetadata: {
           processingTime,
           memoryUsage: memoryAfter - memoryBefore,
           validationPassed: true,
         },
       };
+
+      // Only include children if they exist
+      if (children !== undefined) {
+        (processedNode as any).children = children;
+      }
 
       return success(processedNode);
     } catch (err) {

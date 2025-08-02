@@ -210,16 +210,26 @@ export class STLImporterService {
         }
       }
 
+      const metadata: STLMesh['metadata'] = {
+        format: 'ascii',
+        triangleCount,
+      };
+
+      // Only include header if it's defined
+      if (header !== undefined) {
+        (metadata as any).header = header;
+      }
+
       const mesh: STLMesh = {
         vertices,
         faces,
-        normals: normals.length > 0 ? normals : undefined,
-        metadata: {
-          format: 'ascii',
-          triangleCount,
-          header,
-        },
+        metadata,
       };
+
+      // Only include normals if the array has elements
+      if (normals.length > 0) {
+        (mesh as any).normals = normals;
+      }
 
       return success(mesh);
     } catch (err) {

@@ -290,7 +290,11 @@ describe('RenderCacheService', () => {
       expect(stats.totalEntries).toBe(2);
 
       // First entry should be removed (LRU)
-      const firstEntry = limitedService.getCachedMeshes(keys[0]);
+      const firstKey = keys[0];
+      if (!firstKey) {
+        throw new Error('First key should exist');
+      }
+      const firstEntry = limitedService.getCachedMeshes(firstKey);
       expect(firstEntry).toBeNull();
     });
   });
