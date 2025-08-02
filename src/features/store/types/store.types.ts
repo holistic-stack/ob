@@ -110,7 +110,7 @@ import type {
 import type { ParseOptions } from '../slices/parsing-slice.types.js';
 
 // Re-export types for external use
-export type { BabylonRenderingState };
+export type { BabylonRenderingState, OpenSCADGlobalsState };
 
 /**
  * Parsing state interface for OpenSCAD Abstract Syntax Tree (AST) processing.

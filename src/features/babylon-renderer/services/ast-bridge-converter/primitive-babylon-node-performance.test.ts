@@ -11,9 +11,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type {
   CubeNode,
   CylinderNode,
-  OpenSCADGlobalsState,
   SphereNode,
 } from '@/features/openscad-parser';
+import type { OpenSCADGlobalsState } from '@/features/store';
 import { isSuccess } from '@/shared/types';
 import { PrimitiveBabylonNode } from './primitive-babylon-node';
 
@@ -54,9 +54,7 @@ describe('PrimitiveBabylonNode Performance Tests', () => {
         type: 'sphere',
         r: 5,
         $fn: 16,
-        $fa: undefined,
-        $fs: undefined,
-        location: { line: 1, column: 0 },
+        location: { start: { line: 1, column: 0, offset: 0 }, end: { line: 1, column: 10, offset: 10 } },
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -83,7 +81,7 @@ describe('PrimitiveBabylonNode Performance Tests', () => {
         type: 'cube',
         size: { x: 5, y: 5, z: 5 },
         center: true,
-        location: { line: 1, column: 0 },
+        location: { start: { line: 1, column: 0, offset: 0 }, end: { line: 1, column: 10, offset: 10 } },
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -110,13 +108,9 @@ describe('PrimitiveBabylonNode Performance Tests', () => {
         type: 'cylinder',
         h: 10,
         r: 3,
-        r1: undefined,
-        r2: undefined,
         center: false,
         $fn: 16,
-        $fa: undefined,
-        $fs: undefined,
-        location: { line: 1, column: 0 },
+        location: { start: { line: 1, column: 0, offset: 0 }, end: { line: 1, column: 10, offset: 10 } },
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -145,9 +139,7 @@ describe('PrimitiveBabylonNode Performance Tests', () => {
         type: 'sphere',
         r: 5,
         $fn: 8,
-        $fa: undefined,
-        $fs: undefined,
-        location: { line: 1, column: 0 },
+        location: { start: { line: 1, column: 0, offset: 0 }, end: { line: 1, column: 10, offset: 10 } },
       };
 
       const times: number[] = [];
@@ -201,9 +193,7 @@ describe('PrimitiveBabylonNode Performance Tests', () => {
         type: 'sphere',
         r: 10,
         $fn: 64, // High detail
-        $fa: undefined,
-        $fs: undefined,
-        location: { line: 1, column: 0 },
+        location: { start: { line: 1, column: 0, offset: 0 }, end: { line: 1, column: 10, offset: 10 } },
       };
 
       const primitiveNode = new PrimitiveBabylonNode(
@@ -240,9 +230,7 @@ describe('PrimitiveBabylonNode Performance Tests', () => {
         type: 'sphere',
         r: 3,
         $fn: 8,
-        $fa: undefined,
-        $fs: undefined,
-        location: { line: 1, column: 0 },
+        location: { start: { line: 1, column: 0, offset: 0 }, end: { line: 1, column: 10, offset: 10 } },
       };
 
       const initialMemory = process.memoryUsage().heapUsed;
@@ -284,7 +272,7 @@ describe('PrimitiveBabylonNode Performance Tests', () => {
             type: 'sphere' as const,
             r: 5,
             $fn: 8,
-            location: { line: 1, column: 0 },
+            location: { start: { line: 1, column: 0, offset: 0 }, end: { line: 1, column: 10, offset: 10 } },
           },
         },
         {
@@ -293,7 +281,7 @@ describe('PrimitiveBabylonNode Performance Tests', () => {
             type: 'cube' as const,
             size: { x: 2, y: 2, z: 2 },
             center: true,
-            location: { line: 1, column: 0 },
+            location: { start: { line: 1, column: 0, offset: 0 }, end: { line: 1, column: 10, offset: 10 } },
           },
         },
         {
@@ -303,7 +291,7 @@ describe('PrimitiveBabylonNode Performance Tests', () => {
             h: 5,
             r: 2,
             $fn: 8,
-            location: { line: 1, column: 0 },
+            location: { start: { line: 1, column: 0, offset: 0 }, end: { line: 1, column: 10, offset: 10 } },
           },
         },
       ];

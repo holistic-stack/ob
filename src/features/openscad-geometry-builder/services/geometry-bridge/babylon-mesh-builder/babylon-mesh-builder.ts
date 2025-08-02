@@ -121,9 +121,9 @@ export class BabylonMeshBuilderService {
       const meshName = name || this.generateMeshName(geometryData.metadata.primitiveType);
 
       // Convert 2D vertices to BabylonJS Vector3 points (Z=0)
-      const points = geometryData.vertices.map(
-        (vertex) => new BABYLON.Vector3(vertex.x, vertex.y, 0)
-      );
+      const points = geometryData.vertices
+        .filter((vertex): vertex is Vector2 => vertex !== undefined)
+        .map((vertex) => new BABYLON.Vector3(vertex.x, vertex.y, 0));
 
       // Create the mesh using BabylonJS CreatePolygon for proper triangulation
       const mesh = BABYLON.MeshBuilder.CreatePolygon(

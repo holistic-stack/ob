@@ -116,6 +116,7 @@ describe('ModuleProcessingPipeline', () => {
       const result = await pipeline.processModuleDefinition(moduleDefinition);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.moduleName).toBe('test_module');
       expect(result.data.parameters).toHaveLength(2);
       expect(result.data.body).toHaveLength(1);
@@ -127,6 +128,7 @@ describe('ModuleProcessingPipeline', () => {
       const result = await pipeline.processModuleDefinition(invalidModule);
 
       expect(result.success).toBe(false);
+      if (result.success) return; // Type guard for TypeScript
       expect(result.error.message).toContain('Invalid module definition');
     });
 
@@ -135,6 +137,7 @@ describe('ModuleProcessingPipeline', () => {
       const result = await pipeline.processModuleDefinition(moduleDefinition);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.parameters[0].name).toBe('size');
       expect(result.data.parameters[0].defaultValue).toBe(10);
       expect(result.data.parameters[1].name).toBe('center');
@@ -148,6 +151,7 @@ describe('ModuleProcessingPipeline', () => {
       const result = await pipeline.processModuleCall(moduleCall);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.moduleName).toBe('test_module');
       expect(result.data.arguments).toHaveLength(2);
       expect(result.data.processingMetadata.processingTime).toBeGreaterThan(0);
@@ -158,6 +162,7 @@ describe('ModuleProcessingPipeline', () => {
       const result = await pipeline.processModuleCall(moduleCall);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.arguments[0].name).toBe('size');
       expect(result.data.arguments[0].value).toBe(20);
       expect(result.data.arguments[1].name).toBe('center');
@@ -169,6 +174,7 @@ describe('ModuleProcessingPipeline', () => {
       const result = await pipeline.processModuleCall(moduleCall);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.arguments).toHaveLength(0);
     });
   });
@@ -275,6 +281,7 @@ describe('ConditionalProcessor', () => {
       const result = await processor.processConditional(conditionalStatement, variables);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.conditionResult).toBe(true); // size (15) > 10
       expect(result.data.executedBranch).toBe('then');
       expect(result.data.resultingNodes).toHaveLength(1);
@@ -288,6 +295,7 @@ describe('ConditionalProcessor', () => {
       const result = await processor.processConditional(conditionalStatement, variables);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.conditionResult).toBe(false); // size (5) > 10
       expect(result.data.executedBranch).toBe('else');
       expect(result.data.resultingNodes).toHaveLength(1);
@@ -301,6 +309,7 @@ describe('ConditionalProcessor', () => {
       const result = await processor.processConditional(conditionalStatement, variables);
 
       expect(result.success).toBe(false);
+      if (result.success) return; // Type guard for TypeScript
       expect(result.error.message).toContain('Variable not found');
     });
   });
@@ -418,6 +427,7 @@ describe('utility functions', () => {
       const result = await processModuleDefinition(moduleDefinition);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.moduleName).toBe('test_module');
     });
   });
@@ -428,6 +438,7 @@ describe('utility functions', () => {
       const result = await processModuleCall(moduleCall);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.moduleName).toBe('test_module');
     });
   });
@@ -449,6 +460,7 @@ describe('utility functions', () => {
       const result = await processConditionalStatement(conditionalStatement, variables);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.conditionResult).toBe(true);
     });
   });

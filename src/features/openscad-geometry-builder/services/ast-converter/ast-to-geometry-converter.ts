@@ -44,7 +44,7 @@ import type {
 } from '@/features/openscad-parser';
 import { createLogger, error, success } from '@/shared';
 import type { Result } from '@/shared';
-import type { GeometryData } from '../../geometry-data/types/geometry-data.types';
+import type { BaseGeometryData } from '../../types/geometry-data';
 
 const logger = createLogger('ASTToGeometryConverterService');
 
@@ -73,8 +73,8 @@ export interface ConversionError {
 /**
  * AST to geometry conversion result type
  */
-export type ConversionResult = Result<GeometryData, ConversionError>;
-export type BatchConversionResult = Result<GeometryData[], ConversionError>;
+export type ConversionResult = Result<BaseGeometryData, ConversionError>;
+export type BatchConversionResult = Result<BaseGeometryData[], ConversionError>;
 
 /**
  * AST to Geometry Converter Service
@@ -154,7 +154,7 @@ export class ASTToGeometryConverterService {
     try {
       logger.debug(`[CONVERT_BATCH] Converting ${nodes.length} AST nodes to geometry`);
 
-      const geometries: GeometryData[] = [];
+      const geometries: BaseGeometryData[] = [];
 
       for (const node of nodes) {
         const result = this.convertASTNodeToGeometry(node, globals);

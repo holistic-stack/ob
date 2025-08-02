@@ -101,6 +101,16 @@ export interface GeometryMetadata {
 
   /** Time taken to generate the geometry in milliseconds */
   readonly generationTime?: number;
+
+  /** Import statistics for imported geometry */
+  readonly importStatistics?: {
+    readonly format: string;
+    readonly fileSize: number;
+    readonly vertexCount: number;
+    readonly faceCount: number;
+    readonly parseTime: number;
+    readonly totalTime: number;
+  };
 }
 
 /**
@@ -167,6 +177,11 @@ export type Geometry3DData =
   | CubeGeometryData
   | CylinderGeometryData
   | PolyhedronGeometryData;
+
+/**
+ * Union type for all geometry data (2D and 3D)
+ */
+export type GeometryData = Geometry3DData | import('./2d-geometry-data').Geometry2DData;
 
 /**
  * Bounding box for geometry optimization

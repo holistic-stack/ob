@@ -26,10 +26,8 @@
 import { createLogger } from '@/shared/services/logger.service';
 import type { Result } from '@/shared/types/result.types';
 import { error, success } from '@/shared/utils/functional/result';
-import type {
-  GeometryGenerationError,
-  Polygon2DGeometryData,
-} from '../../../../types/geometry-data';
+import type { GeometryGenerationError } from '../../../../types/geometry-data';
+import type { Polygon2DGeometryData } from '../../../../types/2d-geometry-data';
 import type { TextParameters } from '../../../../types/text-parameters';
 import { FontLoaderService } from '../font-loader/font-loader';
 
@@ -404,8 +402,12 @@ export class TextGeneratorService {
     let area = 0;
     for (let i = 0; i < outline.length; i++) {
       const j = (i + 1) % outline.length;
-      const vi = vertices[outline[i]];
-      const vj = vertices[outline[j]];
+      const idxI = outline[i];
+      const idxJ = outline[j];
+      if (idxI === undefined || idxJ === undefined) continue;
+      const vi = vertices[idxI];
+      const vj = vertices[idxJ];
+      if (vi === undefined || vj === undefined) continue;
       area += vi.x * vj.y - vj.x * vi.y;
     }
 
@@ -417,7 +419,7 @@ export class TextGeneratorService {
  * Simple text layout interface for internal use
  */
 interface TextLayout {
-  readonly glyphs: readonly Array<{
+  readonly glyphs: readonly {
     readonly character: string;
     readonly x: number;
     readonly y: number;

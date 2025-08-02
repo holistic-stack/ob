@@ -89,6 +89,7 @@ describe('OpenSCADIntegrationPipeline', () => {
       const result = await failingPipeline.initialize();
 
       expect(result.success).toBe(false);
+      if (result.success) return; // Type guard for TypeScript
       expect(result.error.message).toContain('Failed to initialize integration pipeline');
     });
 
@@ -114,6 +115,7 @@ describe('OpenSCADIntegrationPipeline', () => {
       const result = await pipeline.processCode(SIMPLE_CUBE_CODE);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.geometryNodes).toHaveLength(1);
       expect(result.data.processingMetadata.processingTime).toBeGreaterThan(0);
       expect(result.data.processingMetadata.stagesCompleted).toContain('parsing');
@@ -125,6 +127,7 @@ describe('OpenSCADIntegrationPipeline', () => {
       const result = await pipeline.processCode(MODULE_CODE);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.geometryNodes).toHaveLength(1);
       expect(result.data.processingMetadata.stagesCompleted).toContain('module_processing');
     });
@@ -133,6 +136,7 @@ describe('OpenSCADIntegrationPipeline', () => {
       const result = await pipeline.processCode(CONDITIONAL_CODE);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.geometryNodes).toHaveLength(1);
       expect(result.data.processingMetadata.stagesCompleted).toContain('conditional_processing');
     });
@@ -141,6 +145,7 @@ describe('OpenSCADIntegrationPipeline', () => {
       const result = await pipeline.processCode(COMPLEX_CODE);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.geometryNodes).toHaveLength(3); // 3 boxes from for loop
       expect(result.data.processingMetadata.stagesCompleted).toContain('module_processing');
       expect(result.data.processingMetadata.stagesCompleted).toContain('loop_processing');
@@ -151,6 +156,7 @@ describe('OpenSCADIntegrationPipeline', () => {
       const result = await pipeline.processCode(invalidCode);
 
       expect(result.success).toBe(false);
+      if (result.success) return; // Type guard for TypeScript
       expect(result.error.message).toContain('Syntax error');
     });
 
@@ -158,6 +164,7 @@ describe('OpenSCADIntegrationPipeline', () => {
       const result = await pipeline.processCode('');
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.geometryNodes).toHaveLength(0);
     });
   });
@@ -171,6 +178,7 @@ describe('OpenSCADIntegrationPipeline', () => {
       const result = await pipeline.processCode(SIMPLE_CUBE_CODE);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.processingMetadata.processingTime).toBeGreaterThan(0);
       expect(result.data.processingMetadata.memoryUsage).toBeGreaterThanOrEqual(0);
     });
@@ -179,6 +187,7 @@ describe('OpenSCADIntegrationPipeline', () => {
       const result = await pipeline.processCode(MODULE_CODE);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.processingMetadata.stageTiming).toBeDefined();
       expect(result.data.processingMetadata.stageTiming.parsing).toBeGreaterThan(0);
       expect(result.data.processingMetadata.stageTiming.ast_processing).toBeGreaterThan(0);
@@ -196,6 +205,7 @@ describe('OpenSCADIntegrationPipeline', () => {
       const result = await pipeline.processCode(invalidCode);
 
       expect(result.success).toBe(false);
+      if (result.success) return; // Type guard for TypeScript
       expect(result.error.stage).toBeDefined();
       expect(result.error.originalError).toBeDefined();
       expect(result.error.context).toBeDefined();
@@ -206,6 +216,7 @@ describe('OpenSCADIntegrationPipeline', () => {
       const result = await pipeline.processCode(invalidCode);
 
       expect(result.success).toBe(false);
+      if (result.success) return; // Type guard for TypeScript
       expect(result.error.stage).toBe('parsing');
       expect(result.error.context.sourceCode).toBe(invalidCode);
     });
@@ -225,6 +236,7 @@ describe('OpenSCADIntegrationPipeline', () => {
       const result = await configuredPipeline.processCode(MODULE_CODE);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       // Should not include module processing stage when disabled
       expect(result.data.processingMetadata.stagesCompleted).not.toContain('module_processing');
     });
@@ -353,6 +365,7 @@ describe('GeometryGenerationPipeline', () => {
       const result = await pipeline.generateGeometry(mockASTNodes);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.geometryNodes).toHaveLength(1);
       expect(result.data.processingMetadata.processingTime).toBeGreaterThan(0);
     });
@@ -361,6 +374,7 @@ describe('GeometryGenerationPipeline', () => {
       const result = await pipeline.generateGeometry([]);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.geometryNodes).toHaveLength(0);
     });
 
@@ -370,6 +384,7 @@ describe('GeometryGenerationPipeline', () => {
       const result = await pipeline.generateGeometry(invalidNodes as any);
 
       expect(result.success).toBe(false);
+      if (result.success) return; // Type guard for TypeScript
       expect(result.error.message).toContain('invalid_type');
     });
   });
@@ -387,6 +402,7 @@ describe('utility functions', () => {
       const result = await processOpenSCADCode(SIMPLE_CUBE_CODE, mockScene);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.geometryNodes).toHaveLength(1);
     });
   });

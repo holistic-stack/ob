@@ -75,6 +75,9 @@ describe('SphereGeneratorService', () => {
         const ringRadius = 3.535534;
         for (let i = 0; i < 6; i++) {
           const vertex = sphere.vertices[i];
+          if (!vertex) {
+            throw new Error(`Missing vertex at index ${i}`);
+          }
           const actualRadius = Math.sqrt(vertex.x * vertex.x + vertex.y * vertex.y);
           expect(actualRadius).toBeCloseTo(ringRadius, 5);
         }

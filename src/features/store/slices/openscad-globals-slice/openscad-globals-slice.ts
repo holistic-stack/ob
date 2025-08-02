@@ -66,6 +66,12 @@ const createSuccess = <T>(data: T): Result<T, never> => ({ success: true, data }
 const createError = <E>(error: E): Result<never, E> => ({ success: false, error });
 
 /**
+ * @function createValidationError
+ * @description Creates a validation error Result specifically for OpenSCADGlobalsValidationError.
+ */
+const createValidationError = (error: OpenSCADGlobalsValidationError): Result<void, OpenSCADGlobalsValidationError> => ({ success: false, error });
+
+/**
  * @function extractGlobalVariableFromAssignment
  * @description Extracts global variable name and value from an assignment AST node.
  * @param node - Assignment AST node
@@ -161,7 +167,7 @@ function validateGlobalVariable(
   switch (variable) {
     case '$fn':
       if (value !== undefined && (typeof value !== 'number' || value < 0)) {
-        return createError({
+        return createValidationError({
           variable: '$fn' as keyof OpenSCADGlobalsState,
           value,
           message: '$fn must be undefined or a non-negative number',
@@ -171,7 +177,7 @@ function validateGlobalVariable(
       break;
     case '$fa':
       if (typeof value !== 'number' || value <= 0 || value > 180) {
-        return createError({
+        return createValidationError({
           variable: '$fa' as keyof OpenSCADGlobalsState,
           value,
           message: '$fa must be a number between 0 and 180 degrees',
@@ -181,7 +187,7 @@ function validateGlobalVariable(
       break;
     case '$fs':
       if (typeof value !== 'number' || value <= 0) {
-        return createError({
+        return createValidationError({
           variable: '$fs' as keyof OpenSCADGlobalsState,
           value,
           message: '$fs must be a positive number',
@@ -191,7 +197,7 @@ function validateGlobalVariable(
       break;
     case '$t':
       if (typeof value !== 'number' || value < 0 || value > 1) {
-        return createError({
+        return createValidationError({
           variable: '$t' as keyof OpenSCADGlobalsState,
           value,
           message: '$t must be a number between 0 and 1',
@@ -201,11 +207,11 @@ function validateGlobalVariable(
       break;
     default:
       // Unknown global variable - ignore for now
-      return createError({
+      return createValidationError({
         variable: variable as keyof OpenSCADGlobalsState,
         value,
         message: `Unknown global variable: ${variable}`,
-      } as OpenSCADGlobalsValidationError);
+      });
   }
 
   return createSuccess(undefined);

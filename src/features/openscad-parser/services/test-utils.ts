@@ -56,6 +56,28 @@ export const createSourceLocation = (
 });
 
 /**
+ * @function createSimpleSourceLocation
+ * @description Creates a SourceLocation object from simple line/column coordinates.
+ * This is a convenience function for test cases that don't need precise offset tracking.
+ *
+ * @param {number} line - Line number (will be used for both start and end)
+ * @param {number} column - Starting column number
+ * @param {number} [length] - Length of the source text (defaults to 10)
+ * @param {string} [text] - Optional source text
+ * @returns {SourceLocation} Properly typed SourceLocation object
+ */
+export const createSimpleSourceLocation = (
+  line: number,
+  column: number,
+  length: number = 10,
+  text?: string
+): SourceLocation => ({
+  start: createPosition(line, column, line * 80 + column),
+  end: createPosition(line, column + length, line * 80 + column + length),
+  ...(text && { text }),
+});
+
+/**
  * @function createTestModule
  * @description Creates a test ModuleDefinitionNode with proper typing and locations.
  *

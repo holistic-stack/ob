@@ -23,6 +23,7 @@
  */
 
 import type { Vector2, Vector3 } from '../../types/geometry-data';
+import type { Vector2D, Vector3D } from '@/features/openscad-parser/ast/ast-types';
 
 /**
  * 3D Vector operations following OpenSCAD coordinate system (Z-up, right-handed)
@@ -339,5 +340,60 @@ export const Vector2Utils = {
       y: v.y,
       z,
     });
+  },
+} as const;
+
+/**
+ * Vector type conversion utilities
+ * Converts between AST tuple types (Vector3D, Vector2D) and geometry object types (Vector3, Vector2)
+ */
+export const VectorConversionUtils = {
+  /**
+   * Convert Vector3D tuple to Vector3 object
+   */
+  vector3DToVector3(tuple: Vector3D): Vector3 {
+    return Object.freeze({
+      x: tuple[0] ?? 0,
+      y: tuple[1] ?? 0,
+      z: tuple[2] ?? 0,
+    });
+  },
+
+  /**
+   * Convert Vector3 object to Vector3D tuple
+   */
+  vector3ToVector3D(obj: Vector3): Vector3D {
+    return [obj.x, obj.y, obj.z];
+  },
+
+  /**
+   * Convert Vector2D tuple to Vector2 object
+   */
+  vector2DToVector2(tuple: Vector2D): Vector2 {
+    return Object.freeze({
+      x: tuple[0] ?? 0,
+      y: tuple[1] ?? 0,
+    });
+  },
+
+  /**
+   * Convert Vector2 object to Vector2D tuple
+   */
+  vector2ToVector2D(obj: Vector2): Vector2D {
+    return [obj.x, obj.y];
+  },
+
+  /**
+   * Convert array of Vector3D tuples to Vector3 objects
+   */
+  vector3DArrayToVector3Array(tuples: readonly Vector3D[]): readonly Vector3[] {
+    return tuples.map(this.vector3DToVector3);
+  },
+
+  /**
+   * Convert array of Vector3 objects to Vector3D tuples
+   */
+  vector3ArrayToVector3DArray(objects: readonly Vector3[]): readonly Vector3D[] {
+    return objects.map(this.vector3ToVector3D);
   },
 } as const;

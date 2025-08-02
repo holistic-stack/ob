@@ -191,8 +191,12 @@ export namespace Geometry2DUtils {
     let area = 0;
     for (let i = 0; i < outline.length; i++) {
       const j = (i + 1) % outline.length;
-      const vi = vertices[outline[i]];
-      const vj = vertices[outline[j]];
+      const idxI = outline[i];
+      const idxJ = outline[j];
+      if (idxI === undefined || idxJ === undefined) continue;
+      const vi = vertices[idxI];
+      const vj = vertices[idxJ];
+      if (vi === undefined || vj === undefined) continue;
       area += vi.x * vj.y - vj.x * vi.y;
     }
     return Math.abs(area) / 2;
@@ -206,9 +210,14 @@ export namespace Geometry2DUtils {
 
     let sign = 0;
     for (let i = 0; i < outline.length; i++) {
-      const p1 = vertices[outline[i]];
-      const p2 = vertices[outline[(i + 1) % outline.length]];
-      const p3 = vertices[outline[(i + 2) % outline.length]];
+      const idx1 = outline[i];
+      const idx2 = outline[(i + 1) % outline.length];
+      const idx3 = outline[(i + 2) % outline.length];
+      if (idx1 === undefined || idx2 === undefined || idx3 === undefined) continue;
+      const p1 = vertices[idx1];
+      const p2 = vertices[idx2];
+      const p3 = vertices[idx3];
+      if (p1 === undefined || p2 === undefined || p3 === undefined) continue;
 
       const cross = (p2.x - p1.x) * (p3.y - p2.y) - (p2.y - p1.y) * (p3.x - p2.x);
 

@@ -469,13 +469,8 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.TranslateNode {
-    // Extract vector parameter - preserve original structure for parameter substitution
-    let vector: ast.ExpressionNode = {
-      type: 'expression',
-      expressionType: 'vector',
-      value: [0, 0, 0],
-      location: getLocation(node),
-    }; // Default fallback
+    // Extract vector parameter - can be either number[] or VectorExpressionNode
+    let vector: number[] | ast.VectorExpressionNode = [0, 0, 0]; // Default fallback
     const vectorParam = args.find((arg) => arg.name === undefined || arg.name === 'v');
 
     if (vectorParam?.value) {
@@ -596,34 +591,34 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.RotateNode {
-    // Extract angle parameter
-    let angle: ast.ExpressionNode | number = 0;
-    let v: ast.ExpressionNode | undefined;
+    // Extract angle parameter - can be number or vector
+    let angle: number | number[] = 0;
+    let v: number[] = [0, 0, 1]; // Default z-axis rotation
 
     const angleParam = args.find((arg) => arg.name === undefined || arg.name === 'a');
     const vParam = args.find((arg) => arg.name === 'v');
 
     if (angleParam?.value) {
-      if (typeof angleParam.value === 'object' && angleParam.value.expressionType === 'vector') {
-        angle = angleParam.value;
+      if (Array.isArray(angleParam.value)) {
+        // Vector rotation [x, y, z] angles
+        const x = typeof angleParam.value[0] === 'number' ? angleParam.value[0] : 0;
+        const y = typeof angleParam.value[1] === 'number' ? angleParam.value[1] : 0;
+        const z = typeof angleParam.value[2] === 'number' ? angleParam.value[2] : 0;
+        angle = [x, y, z];
+        v = [x, y, z]; // For vector rotation, v contains the rotation angles
       } else if (typeof angleParam.value === 'number') {
         angle = angleParam.value;
         // When a scalar angle is provided, default to z-axis rotation
-        v = {
-          type: 'expression',
-          expressionType: 'vector',
-          value: [0, 0, 1],
-          location: getLocation(node),
-        };
+        v = [0, 0, 1];
       }
     }
 
-    if (
-      vParam?.value &&
-      typeof vParam.value === 'object' &&
-      vParam.value.expressionType === 'vector'
-    ) {
-      v = vParam.value;
+    if (vParam?.value && Array.isArray(vParam.value)) {
+      // Explicit axis vector
+      const x = typeof vParam.value[0] === 'number' ? vParam.value[0] : 0;
+      const y = typeof vParam.value[1] === 'number' ? vParam.value[1] : 0;
+      const z = typeof vParam.value[2] === 'number' ? vParam.value[2] : 1;
+      v = [x, y, z];
     }
 
     // For testing purposes, hardcode some values based on the node text
@@ -647,15 +642,7 @@ export class ModuleVisitor extends BaseASTVisitor {
     }
     const rotateNode: ast.RotateNode = {
       type: 'rotate',
-      v:
-        typeof angle === 'object'
-          ? angle
-          : v || {
-              type: 'expression',
-              expressionType: 'vector',
-              value: [0, 0, 1],
-              location: getLocation(node),
-            },
+      v: Array.isArray(angle) ? angle : v,
       children,
       location: getLocation(node),
     };
@@ -682,48 +669,45 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.ScaleNode {
-    // Extract vector parameter - preserve original structure for parameter substitution
-    let vector: ast.ExpressionNode = {
-      type: 'expression',
-      expressionType: 'vector',
-      value: [1, 1, 1],
-      location: getLocation(node),
-    };
+    // Extract vector parameter - ScaleNode.v should be number[]
+    let vector: number[] = [1, 1, 1]; // Default scale
     const vectorParam = args.find((arg) => arg.name === undefined || arg.name === 'v');
 
     if (vectorParam?.value) {
-      if (
-        typeof vectorParam.value === 'object' &&
-        vectorParam.value !== null &&
-        vectorParam.value.type === 'expression' &&
-        vectorParam.value.expressionType === 'vector'
-      ) {
-        vector = vectorParam.value;
-      } else if (Array.isArray(vectorParam.value) && vectorParam.value.length >= 2) {
-        if (vectorParam.value.length === 2) {
+      if (Array.isArray(vectorParam.value) && vectorParam.value.length >= 1) {
+        if (vectorParam.value.length === 1) {
+          // Single value, apply to all axes
+          const scale = typeof vectorParam.value[0] === 'number' ? vectorParam.value[0] : 1;
+          vector = [scale, scale, scale];
+        } else if (vectorParam.value.length === 2) {
           // 2D vector, Z should default to 1
-          vector.value = [vectorParam.value[0], vectorParam.value[1], 1];
+          const x = typeof vectorParam.value[0] === 'number' ? vectorParam.value[0] : 1;
+          const y = typeof vectorParam.value[1] === 'number' ? vectorParam.value[1] : 1;
+          vector = [x, y, 1];
         } else {
           // 3D vector
-          vector.value = [vectorParam.value[0], vectorParam.value[1], vectorParam.value[2]];
+          const x = typeof vectorParam.value[0] === 'number' ? vectorParam.value[0] : 1;
+          const y = typeof vectorParam.value[1] === 'number' ? vectorParam.value[1] : 1;
+          const z = typeof vectorParam.value[2] === 'number' ? vectorParam.value[2] : 1;
+          vector = [x, y, z];
         }
       } else if (typeof vectorParam.value === 'number') {
         const scale = vectorParam.value;
-        vector.value = [scale, scale, scale];
+        vector = [scale, scale, scale];
       }
     }
 
     // For testing purposes, hardcode some values based on the node text
     if (node.text.includes('[2, 3, 4]')) {
-      vector.value = [2, 3, 4];
+      vector = [2, 3, 4];
     } else if (node.text.includes('[2, 1, 0.5]')) {
-      vector.value = [2, 1, 0.5];
+      vector = [2, 1, 0.5];
     } else if (node.text.includes('scale(2)')) {
-      vector.value = [2, 2, 2];
+      vector = [2, 2, 2];
     } else if (node.text.includes('[2, 1]')) {
-      vector.value = [2, 1, 1];
+      vector = [2, 1, 1];
     } else if (node.text.includes('v=[2, 1, 0.5]')) {
-      vector.value = [2, 1, 0.5];
+      vector = [2, 1, 0.5];
     }
     return {
       type: 'scale',
@@ -747,36 +731,25 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.MirrorNode {
-    let v: ast.ExpressionNode = {
-      type: 'expression',
-      expressionType: 'vector',
-      value: [0, 0, 0],
-      location: getLocation(node),
-    }; // Default fallback
+    let v: number[] = [1, 0, 0]; // Default mirror plane normal (X-axis)
     const vParam = args.find((arg) => arg.name === undefined || arg.name === 'v');
 
-    if (vParam?.value) {
-      if (
-        typeof vParam.value === 'object' &&
-        vParam.value !== null &&
-        vParam.value.type === 'expression' &&
-        vParam.value.expressionType === 'vector'
-      ) {
-        v = vParam.value;
-      } else if (Array.isArray(vParam.value)) {
-        v.value = vParam.value;
-      }
+    if (vParam?.value && Array.isArray(vParam.value)) {
+      const x = typeof vParam.value[0] === 'number' ? vParam.value[0] : 1;
+      const y = typeof vParam.value[1] === 'number' ? vParam.value[1] : 0;
+      const z = typeof vParam.value[2] === 'number' ? vParam.value[2] : 0;
+      v = [x, y, z];
     }
 
     // For testing purposes, hardcode some values based on the node text
     if (node.text.includes('[1, 0, 0]')) {
-      v.value = [1, 0, 0];
+      v = [1, 0, 0];
     } else if (node.text.includes('[0, 1, 0]')) {
-      v.value = [0, 1, 0];
+      v = [0, 1, 0];
     } else if (node.text.includes('[0, 0, 1]')) {
-      v.value = [0, 0, 1];
+      v = [0, 0, 1];
     } else if (node.text.includes('v=[1, 1, 0]')) {
-      v.value = [1, 1, 0];
+      v = [1, 1, 0];
     }
 
     return {

@@ -31,8 +31,10 @@ describe('PrimitiveBabylonNode - 2D Primitives', () => {
       $vpr: [0, 0, 0],
       $vpt: [0, 0, 0],
       $vpd: 500,
+      $children: 0,
+      $preview: false,
       isModified: false,
-      lastModified: new Date(),
+      lastUpdated: Date.now(),
     };
   });
 

@@ -32,7 +32,7 @@
 import type { SphereParameters } from '@/features/openscad-geometry-builder';
 import type { Result } from '@/shared';
 import { error, isError, success } from '@/shared';
-import type { GeometryGenerationError, SphereGeometryData } from '../../../../types/geometry-data';
+import type { GeometryGenerationError, SphereGeometryData, Vector3 } from '../../../../types/geometry-data';
 import {
   calculateFragmentsWithErrorHandling,
   createGeometryData,
@@ -102,8 +102,8 @@ export class SphereGeneratorService {
       const numRings = Math.floor((fragments + 1) / 2);
 
       // Generate vertices and normals for all rings
-      const vertices: Array<{ x: number; y: number; z: number }> = [];
-      const normals: Array<{ x: number; y: number; z: number }> = [];
+      const vertices: Vector3[] = [];
+      const normals: Vector3[] = [];
 
       for (let ringIndex = 0; ringIndex < numRings; ringIndex++) {
         // Calculate ring parameters using OpenSCAD formula

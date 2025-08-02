@@ -32,7 +32,7 @@ import type {
   Geometry2DData,
   Geometry3DData,
   GeometryData,
-} from '../../geometry-data/types/geometry-data.types';
+} from '../../types/geometry-data';
 
 const logger = createLogger('GeometryToMeshConverterService');
 

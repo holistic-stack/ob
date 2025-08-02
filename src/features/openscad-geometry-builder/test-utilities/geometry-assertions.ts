@@ -76,6 +76,7 @@ export function expectValidVertices(vertices: readonly Vector3[], expectedCount?
   for (let index = 0; index < vertices.length; index++) {
     const vertex = vertices[index];
     expect(vertex, `Vertex at index ${index} should be defined`).toBeDefined();
+    if (!vertex) continue; // Type guard for TypeScript
     expect(typeof vertex.x, `Vertex ${index}.x should be a number`).toBe('number');
     expect(typeof vertex.y, `Vertex ${index}.y should be a number`).toBe('number');
     expect(typeof vertex.z, `Vertex ${index}.z should be a number`).toBe('number');

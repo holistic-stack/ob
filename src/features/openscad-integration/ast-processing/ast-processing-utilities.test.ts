@@ -80,6 +80,7 @@ describe('ASTNodeProcessor', () => {
       const result = processor.processNode(cubeNode);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.nodeType).toBe('primitive');
       expect(result.data.originalNode).toBe(cubeNode);
       expect(result.data.processingMetadata.processingTime).toBeGreaterThan(0);
@@ -90,9 +91,11 @@ describe('ASTNodeProcessor', () => {
       const result = processor.processNode(translateNode);
 
       expect(result.success).toBe(true);
-      expect(result.data.nodeType).toBe('transformation');
-      expect(result.data.originalNode).toBe(translateNode);
-      expect(result.data.children).toHaveLength(1);
+      if (result.success) {
+        expect(result.data.nodeType).toBe('transformation');
+        expect(result.data.originalNode).toBe(translateNode);
+        expect(result.data.children).toHaveLength(1);
+      }
     });
 
     it('should process CSG operation nodes correctly', () => {
@@ -100,9 +103,11 @@ describe('ASTNodeProcessor', () => {
       const result = processor.processNode(unionNode);
 
       expect(result.success).toBe(true);
-      expect(result.data.nodeType).toBe('csg_operation');
-      expect(result.data.originalNode).toBe(unionNode);
-      expect(result.data.children).toHaveLength(2);
+      if (result.success) {
+        expect(result.data.nodeType).toBe('csg_operation');
+        expect(result.data.originalNode).toBe(unionNode);
+        expect(result.data.children).toHaveLength(2);
+      }
     });
 
     it('should handle unknown node types gracefully', () => {
@@ -117,6 +122,7 @@ describe('ASTNodeProcessor', () => {
       const result = processor.processNode(unknownNode);
 
       expect(result.success).toBe(false);
+      if (result.success) return; // Type guard for TypeScript
       expect(result.error.message).toContain('Unknown node type');
     });
   });
@@ -182,8 +188,10 @@ describe('ASTProcessingPipeline', () => {
       const result = await pipeline.processNode(cubeNode);
 
       expect(result.success).toBe(true);
-      expect(result.data.processedNode).toBeDefined();
-      expect(result.data.pipelineMetadata.stagesExecuted.length).toBeGreaterThan(0);
+      if (result.success) {
+        expect(result.data.processedNode).toBeDefined();
+        expect(result.data.pipelineMetadata.stagesExecuted.length).toBeGreaterThan(0);
+      }
     });
 
     it('should process multiple nodes through pipeline', async () => {
@@ -191,6 +199,7 @@ describe('ASTProcessingPipeline', () => {
       const result = await pipeline.processNodes(nodes);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.processedNodes).toHaveLength(2);
       expect(result.data.pipelineMetadata.totalProcessingTime).toBeGreaterThan(0);
     });
@@ -200,6 +209,7 @@ describe('ASTProcessingPipeline', () => {
       const result = await pipeline.processNode(invalidNode);
 
       expect(result.success).toBe(false);
+      if (result.success) return; // Type guard for TypeScript
       expect(result.error.message).toContain('Pipeline validation failed');
     });
   });
@@ -209,6 +219,8 @@ describe('ASTProcessingPipeline', () => {
       const cubeNode = createMockCubeNode();
       const result = await pipeline.processNode(cubeNode);
 
+      expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.pipelineMetadata.stagesExecuted).toContain('validation');
     });
 
@@ -216,6 +228,8 @@ describe('ASTProcessingPipeline', () => {
       const cubeNode = createMockCubeNode();
       const result = await pipeline.processNode(cubeNode);
 
+      expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.pipelineMetadata.stagesExecuted).toContain('processing');
     });
 
@@ -223,6 +237,8 @@ describe('ASTProcessingPipeline', () => {
       const cubeNode = createMockCubeNode();
       const result = await pipeline.processNode(cubeNode);
 
+      expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.pipelineMetadata.stagesExecuted).toContain('optimization');
     });
   });
@@ -386,6 +402,7 @@ describe('utility functions', () => {
       const result = processASTNode(cubeNode);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
       expect(result.data.nodeType).toBe('primitive');
     });
   });

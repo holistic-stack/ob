@@ -103,11 +103,12 @@ simple();
     }
 
     expect(result.success).toBe(true);
-    expect(result.data).toBeDefined();
 
-    if (!result.data) {
-      throw new Error('Expected resolved nodes to be defined');
+    if (!result.success) {
+      throw new Error('Expected result to be successful');
     }
+
+    expect(result.data).toBeDefined();
     const resolvedNodes = result.data;
     console.log('Resolved nodes count:', resolvedNodes.length);
 
@@ -165,11 +166,12 @@ multi();
 
     const result = resolver.resolveAST(ast);
     expect(result.success).toBe(true);
-    expect(result.data).toBeDefined();
 
-    if (!result.data) {
-      throw new Error('Expected resolved nodes to be defined');
+    if (!result.success) {
+      throw new Error('Expected result to be successful');
     }
+
+    expect(result.data).toBeDefined();
     const resolvedNodes = result.data;
     const translateNode = resolvedNodes.find((node) => node.type === 'translate') as any;
     expect(translateNode).toBeDefined();

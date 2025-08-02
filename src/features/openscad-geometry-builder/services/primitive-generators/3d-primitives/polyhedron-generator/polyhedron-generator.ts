@@ -219,13 +219,17 @@ export class PolyhedronGeneratorService {
    * Convert vertex arrays to Vector3 format
    */
   private convertVertices(vertices: readonly (readonly number[])[]): readonly Vector3[] {
-    return vertices.map((vertex) =>
-      Object.freeze({
-        x: vertex[0],
-        y: vertex[1],
-        z: vertex[2],
-      })
-    );
+    return vertices.map((vertex) => {
+      // Ensure we have valid numbers for each coordinate, defaulting to 0 for undefined
+      const x: number = typeof vertex[0] === 'number' ? vertex[0] : 0;
+      const y: number = typeof vertex[1] === 'number' ? vertex[1] : 0;
+      const z: number = typeof vertex[2] === 'number' ? vertex[2] : 0;
+      return Object.freeze({
+        x,
+        y,
+        z,
+      });
+    });
   }
 
   /**
@@ -251,9 +255,14 @@ export class PolyhedronGeneratorService {
     for (const face of faces) {
       if (face.length >= 3) {
         // Calculate face normal using first three vertices
-        const v0 = vertices[face[0]];
-        const v1 = vertices[face[1]];
-        const v2 = vertices[face[2]];
+        const idx0 = face[0];
+        const idx1 = face[1];
+        const idx2 = face[2];
+        if (idx0 === undefined || idx1 === undefined || idx2 === undefined) continue;
+        const v0 = vertices[idx0];
+        const v1 = vertices[idx1];
+        const v2 = vertices[idx2];
+        if (v0 === undefined || v1 === undefined || v2 === undefined) continue;
 
         // Calculate two edge vectors
         const edge1 = { x: v1.x - v0.x, y: v1.y - v0.y, z: v1.z - v0.z };

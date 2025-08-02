@@ -107,8 +107,7 @@ export const PERFORMANCE_TARGETS = Object.freeze({
 export const getOptimalPerformanceConfig = (): Readonly<DebounceConfig> => {
   // Check for high-refresh display
   if (typeof window !== 'undefined' && window.screen) {
-    // @ts-expect-error - refreshRate is not in all browsers
-    const refreshRate = window.screen.refreshRate;
+    const refreshRate = (window.screen as any).refreshRate;
     if (refreshRate && refreshRate >= 120) {
       return ULTRA_PERFORMANCE_DEBOUNCE_CONFIG;
     }

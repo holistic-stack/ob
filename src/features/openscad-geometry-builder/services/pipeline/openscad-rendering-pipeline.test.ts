@@ -11,6 +11,7 @@ import type {
   CubeNode,
   SphereNode,
 } from '@/features/openscad-parser';
+import { createSimpleSourceLocation } from '@/features/openscad-parser/services/test-utils';
 import { isError, isSuccess } from '@/shared';
 import { OpenSCADRenderingPipelineService } from './openscad-rendering-pipeline';
 
@@ -46,25 +47,40 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'assign_statement',
           variable: '$fn',
-          value: 8,
-          location: { line: 1, column: 1 },
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 8,
+            location: createSimpleSourceLocation(1, 1),
+          },
+          location: createSimpleSourceLocation(1, 1),
         } as AssignStatementNode,
         {
           type: 'assign_statement',
           variable: '$fa',
-          value: 6,
-          location: { line: 2, column: 1 },
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 6,
+            location: createSimpleSourceLocation(2, 1),
+          },
+          location: createSimpleSourceLocation(2, 1),
         } as AssignStatementNode,
         {
           type: 'assign_statement',
           variable: '$fs',
-          value: 1,
-          location: { line: 3, column: 1 },
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 1,
+            location: createSimpleSourceLocation(3, 1),
+          },
+          location: createSimpleSourceLocation(3, 1),
         } as AssignStatementNode,
         {
           type: 'sphere',
           radius: 5,
-          location: { line: 4, column: 1 },
+          location: { start: { line: 4, column: 1, offset: 0 }, end: { line: 4, column: 10, offset: 9 } },
         } as SphereNode,
       ];
 
@@ -81,7 +97,7 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'sphere',
           radius: 5,
-          location: { line: 1, column: 1 },
+          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
         } as SphereNode,
       ];
 
@@ -99,13 +115,13 @@ describe('OpenSCADRenderingPipelineService', () => {
           type: 'assign_statement',
           variable: '$fn',
           value: 'invalid',
-          location: { line: 1, column: 1 },
+          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
         } as any,
         {
           type: 'assign_statement',
           variable: '$fa',
           value: 6,
-          location: { line: 2, column: 1 },
+          location: { start: { line: 2, column: 1, offset: 0 }, end: { line: 2, column: 10, offset: 9 } },
         } as AssignStatementNode,
       ];
 
@@ -123,23 +139,23 @@ describe('OpenSCADRenderingPipelineService', () => {
           type: 'assign_statement',
           variable: '$fn',
           value: 8,
-          location: { line: 1, column: 1 },
+          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
         } as AssignStatementNode,
         {
           type: 'sphere',
           radius: 5,
-          location: { line: 2, column: 1 },
+          location: { start: { line: 2, column: 1, offset: 0 }, end: { line: 2, column: 10, offset: 9 } },
         } as SphereNode,
         {
           type: 'cube',
           size: 2,
-          location: { line: 3, column: 1 },
+          location: { start: { line: 3, column: 1, offset: 0 }, end: { line: 3, column: 10, offset: 9 } },
         } as CubeNode,
         {
           type: 'assign_statement',
           variable: '$fa',
           value: 12,
-          location: { line: 4, column: 1 },
+          location: { start: { line: 4, column: 1, offset: 0 }, end: { line: 4, column: 10, offset: 9 } },
         } as AssignStatementNode,
       ];
 
@@ -156,13 +172,13 @@ describe('OpenSCADRenderingPipelineService', () => {
           type: 'assign_statement',
           variable: '$fn',
           value: 8,
-          location: { line: 1, column: 1 },
+          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
         } as AssignStatementNode,
         {
           type: 'assign_statement',
           variable: '$fa',
           value: 12,
-          location: { line: 2, column: 1 },
+          location: { start: { line: 2, column: 1, offset: 0 }, end: { line: 2, column: 10, offset: 9 } },
         } as AssignStatementNode,
       ];
 

@@ -691,30 +691,29 @@ export const createAppStore = (
     ...createConfigSlice(set, get, { DEFAULT_CONFIG }),
   }));
 
-  // Apply persistence if enabled
-  const withPersistence = options.enablePersistence
-    ? persist(storeCreator, {
-        name: 'openscad-app-store',
-        partialize: (state: AppStore) => ({
-          config: state.config,
-          editor: {
-            code: state.editor.code,
-            lastSaved: state.editor.lastSaved,
-          },
-          openscadGlobals: state.openscadGlobals,
-          babylonRendering: {
-            camera: state.babylonRendering?.camera,
-            gizmo: state.babylonRendering?.gizmo,
-            axisOverlay: state.babylonRendering?.axisOverlay,
-          },
+  // Create store with proper middleware typing
+  // Apply middleware in the correct order: immer -> persist -> devtools
+  if (options.enablePersistence && options.enableDevtools) {
+    // Both persistence and devtools enabled
+    const store = create<AppStore>()(
+      devtools(
+        persist(storeCreator, {
+          name: 'openscad-app-store',
+          partialize: (state: AppStore) => ({
+            config: state.config,
+            editor: {
+              code: state.editor.code,
+              lastSaved: state.editor.lastSaved,
+            },
+            openscadGlobals: state.openscadGlobals,
+            babylonRendering: {
+              camera: state.babylonRendering?.camera,
+              gizmo: state.babylonRendering?.gizmo,
+              axisOverlay: state.babylonRendering?.axisOverlay,
+            },
+          }),
         }),
-      })
-    : storeCreator;
-
-  // Create store with optimized DevTools configuration for large state
-  const store = create<AppStore>()(
-    options.enableDevtools
-      ? devtools(withPersistence, {
+        {
           enabled: true,
           name: 'OpenSCAD App Store',
           anonymousActionType: 'openscad/action',
@@ -776,129 +775,106 @@ export const createAppStore = (
           maxAge: 50, // Limit action history to reduce memory usage
           trace: false, // Disable stack traces for performance
           traceLimit: 0,
-        })
-      : withPersistence
-  );
-
-  // Enhanced DevTools connection debugging and manual registration
-  if (options.enableDevtools && typeof window !== 'undefined') {
-    const windowWithDevTools = window as WindowWithDevTools;
-    const hasExtension = !!windowWithDevTools.__REDUX_DEVTOOLS_EXTENSION__;
-    const extensionCompose = windowWithDevTools.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__;
-
-    logger.init('[DEVTOOLS] Redux DevTools configuration:', {
-      hasExtension,
-      hasCompose: !!extensionCompose,
-      storeName: 'OpenSCAD App Store',
-      middlewareOrder: 'devtools → persist → immer',
-    });
-
-    if (hasExtension) {
-      // Manual store registration for better detection
-      setTimeout(() => {
-        logger.init('[DEVTOOLS] Attempting manual store registration...');
-
-        try {
-          // Force store registration with optimized configuration
-          const devtoolsExtension = windowWithDevTools.__REDUX_DEVTOOLS_EXTENSION__;
-          if (devtoolsExtension && typeof devtoolsExtension.connect === 'function') {
-            const devtoolsConnection = devtoolsExtension.connect({
-              name: 'OpenSCAD App Store',
-              serialize: {
-                options: {
-                  undefined: true,
-                  function: false,
-                  symbol: false,
-                },
-                replacer: (key: string, value: unknown) => {
-                  // Optimize for performance - truncate large objects
-                  if (key === 'ast' && Array.isArray(value)) {
-                    return value.length > 10 ? `[AST with ${value.length} nodes]` : value;
-                  }
-                  if (key === 'code' && typeof value === 'string') {
-                    return value.length > 500 ? `${value.substring(0, 100)}...` : value;
-                  }
-                  return value;
-                },
-              },
-              maxAge: 30,
-              trace: false,
-            });
-
-            if (devtoolsConnection) {
-              logger.init('[DEVTOOLS] Manual connection established with optimized config');
-
-              // Send optimized initial state
-              const optimizedState = {
-                config: store.getState().config,
-                editor: { isDirty: store.getState().editor.isDirty },
-                parsing: { isLoading: store.getState().parsing.isLoading },
-                babylonRendering: {
-                  isInitialized: store.getState().babylonRendering.engine?.isInitialized || false,
-                  isRendering: store.getState().babylonRendering.isRendering,
-                },
-              };
-              devtoolsConnection.init(optimizedState);
-
-              // Subscribe to store changes with throttling
-              let lastUpdate = 0;
-              store.subscribe((state) => {
-                const now = Date.now();
-                if (now - lastUpdate > 100) {
-                  // Throttle updates to every 100ms
-                  lastUpdate = now;
-                  devtoolsConnection.send('store/update', {
-                    config: state.config,
-                    editor: { isDirty: state.editor.isDirty },
-                    parsing: { isLoading: state.parsing.isLoading },
-                    babylonRendering: {
-                      isInitialized: state.babylonRendering.engine?.isInitialized || false,
-                      isRendering: state.babylonRendering.isRendering,
-                    },
-                  });
-                }
-              });
-            }
-          }
-
-          // Test action dispatch
-          const currentTheme = store.getState().config.theme;
-          store.getState().updateConfig({ theme: currentTheme });
-          logger.init('[DEVTOOLS] Store connection test successful');
-        } catch (error) {
-          logger.error('[DEVTOOLS] Manual registration failed:', error);
         }
-      }, 300);
-    } else {
-      logger.warn(
-        '[DEVTOOLS] Redux DevTools extension not found. Please install the browser extension.'
-      );
-    }
+      )
+    );
+    return store;
+  } else if (options.enablePersistence) {
+    // Only persistence enabled
+    const store = create<AppStore>()(
+      persist(storeCreator, {
+        name: 'openscad-app-store',
+        partialize: (state: AppStore) => ({
+          config: state.config,
+          editor: {
+            code: state.editor.code,
+            lastSaved: state.editor.lastSaved,
+          },
+          openscadGlobals: state.openscadGlobals,
+          babylonRendering: {
+            camera: state.babylonRendering?.camera,
+            gizmo: state.babylonRendering?.gizmo,
+            axisOverlay: state.babylonRendering?.axisOverlay,
+          },
+        }),
+      })
+    );
+    return store;
+  } else if (options.enableDevtools) {
+    // Only devtools enabled
+    const store = create<AppStore>()(
+      devtools(storeCreator, {
+        enabled: true,
+        name: 'OpenSCAD App Store',
+        anonymousActionType: 'openscad/action',
+        serialize: {
+          options: {
+            undefined: true,
+            function: false,
+            symbol: false,
+          },
+          replacer: (key: string, value: unknown) => {
+            // Optimize large objects for DevTools
+            if (key === 'ast' && Array.isArray(value) && value.length > 10) {
+              return `[Array(${value.length}) - truncated for DevTools]`;
+            }
+            if (key === 'code' && typeof value === 'string' && value.length > 1000) {
+              return `${value.substring(0, 100)}... [${value.length} chars - truncated]`;
+            }
+            if (key === 'meshes' && Array.isArray(value) && value.length > 5) {
+              return `[${value.length} meshes - truncated for DevTools]`;
+            }
+            return value;
+          },
+        },
+        actionSanitizer: (action: { type?: string; payload?: unknown }) => ({
+          type: action.type || 'openscad/action',
+          timestamp: Date.now(),
+          // Don't include large payloads in action logs
+          payload: action.payload ? '[payload hidden for performance]' : undefined,
+        }),
+        stateSanitizer: (state: unknown) => {
+          try {
+            const typedState = state as AppState;
+            return {
+              // Only include essential state for DevTools to reduce memory usage
+              config: typedState?.config || {},
+              editor: {
+                isDirty: typedState?.editor?.isDirty || false,
+                cursorPosition: typedState?.editor?.cursorPosition || { line: 1, column: 1 },
+                codeLength: typedState?.editor?.code?.length || 0,
+              },
+              parsing: {
+                isLoading: typedState?.parsing?.isLoading || false,
+                errors: typedState?.parsing?.errors?.slice(0, 3) || [], // Limit errors shown
+                astNodeCount: typedState?.parsing?.ast?.length || 0,
+              },
+              babylonRendering: {
+                isInitialized: typedState?.babylonRendering?.engine?.isInitialized || false,
+                isRendering: typedState?.babylonRendering?.isRendering || false,
+                meshCount: typedState?.babylonRendering?.meshes?.length || 0,
+                camera: typedState?.babylonRendering?.camera || {},
+              },
+              openscadGlobals: typedState?.openscadGlobals || {},
+            };
+          } catch (error) {
+            console.warn('[DEVTOOLS] State sanitization error:', error);
+            return { error: 'State sanitization failed' };
+          }
+        },
+        maxAge: 50, // Limit action history to reduce memory usage
+        trace: false, // Disable stack traces for performance
+        traceLimit: 0,
+      })
+    );
+    return store;
+  } else {
+    // No middleware enabled
+    const store = create<AppStore>()(storeCreator);
+    return store;
   }
 
-  // Extend Window interface for DevTools
-  interface WindowWithDevTools extends Window {
-    __ZUSTAND_STORE__?: typeof store;
-    __OPENSCAD_STORE__?: typeof store;
-    __REDUX_STORES__?: Record<string, typeof store>;
-    __REDUX_DEVTOOLS_EXTENSION__?: unknown;
-    __REDUX_DEVTOOLS_EXTENSION_COMPOSE__?: unknown;
-  }
 
-  // Expose store globally for DevTools detection (critical for extension recognition)
-  if (options.enableDevtools && typeof window !== 'undefined') {
-    const windowWithDevTools = window as WindowWithDevTools;
-    windowWithDevTools.__ZUSTAND_STORE__ = store;
-    windowWithDevTools.__OPENSCAD_STORE__ = store;
-
-    // Also expose the store in a way that Redux DevTools can detect
-    if (!windowWithDevTools.__REDUX_STORES__) {
-      windowWithDevTools.__REDUX_STORES__ = {};
-    }
-    windowWithDevTools.__REDUX_STORES__['OpenSCAD App Store'] = store;
-  }
-
-  return store;
 };
 
 /**

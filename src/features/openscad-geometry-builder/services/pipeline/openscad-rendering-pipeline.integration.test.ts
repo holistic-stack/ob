@@ -24,6 +24,7 @@ import type {
   SphereNode,
   SquareNode,
 } from '@/features/openscad-parser';
+import { createSimpleSourceLocation } from '@/features/openscad-parser/services/test-utils';
 import { isError, isSuccess } from '@/shared';
 import { OpenSCADRenderingPipelineService } from './openscad-rendering-pipeline';
 
@@ -59,26 +60,36 @@ describe('OpenSCADRenderingPipeline Integration Tests', () => {
         {
           type: 'assign_statement',
           variable: '$fn',
-          value: 8,
-          location: { line: 1, column: 1 },
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 8,
+            location: createSimpleSourceLocation(1, 1),
+          },
+          location: createSimpleSourceLocation(1, 1),
         } as AssignStatementNode,
         {
           type: 'assign_statement',
           variable: '$fa',
-          value: 6,
-          location: { line: 2, column: 1 },
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 6,
+            location: createSimpleSourceLocation(2, 1),
+          },
+          location: createSimpleSourceLocation(2, 1),
         } as AssignStatementNode,
         {
           type: 'sphere',
           radius: 5,
           $fn: 12,
-          location: { line: 3, column: 1 },
+          location: createSimpleSourceLocation(3, 1),
         } as SphereNode,
         {
           type: 'cube',
           size: { x: 2, y: 4, z: 6 },
           center: true,
-          location: { line: 4, column: 1 },
+          location: createSimpleSourceLocation(4, 1),
         } as CubeNode,
         {
           type: 'cylinder',
@@ -86,19 +97,19 @@ describe('OpenSCADRenderingPipeline Integration Tests', () => {
           r: 3,
           center: false,
           $fn: 6,
-          location: { line: 5, column: 1 },
+          location: createSimpleSourceLocation(5, 1),
         } as CylinderNode,
         {
           type: 'circle',
           r: 4,
           $fn: 8,
-          location: { line: 6, column: 1 },
+          location: createSimpleSourceLocation(6, 1),
         } as CircleNode,
         {
           type: 'square',
           size: { x: 3, y: 5 },
           center: true,
-          location: { line: 7, column: 1 },
+          location: createSimpleSourceLocation(7, 1),
         } as SquareNode,
         {
           type: 'polygon',
@@ -108,7 +119,7 @@ describe('OpenSCADRenderingPipeline Integration Tests', () => {
             [5, 8.66],
           ],
           convexity: 1,
-          location: { line: 8, column: 1 },
+          location: createSimpleSourceLocation(8, 1),
         } as PolygonNode,
       ];
 
@@ -151,22 +162,22 @@ describe('OpenSCADRenderingPipeline Integration Tests', () => {
         {
           type: 'sphere',
           radius: 3,
-          location: { line: 1, column: 1 },
+          location: createSimpleSourceLocation(1, 1),
         } as SphereNode,
         {
           type: 'circle',
           r: 2,
-          location: { line: 2, column: 1 },
+          location: createSimpleSourceLocation(2, 1),
         } as CircleNode,
         {
           type: 'cube',
           size: 4,
-          location: { line: 3, column: 1 },
+          location: createSimpleSourceLocation(3, 1),
         } as CubeNode,
         {
           type: 'square',
           size: 3,
-          location: { line: 4, column: 1 },
+          location: createSimpleSourceLocation(4, 1),
         } as SquareNode,
       ];
 
@@ -194,26 +205,36 @@ describe('OpenSCADRenderingPipeline Integration Tests', () => {
         {
           type: 'assign_statement',
           variable: '$fn',
-          value: 16,
-          location: { line: 1, column: 1 },
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 16,
+            location: createSimpleSourceLocation(1, 1),
+          },
+          location: createSimpleSourceLocation(1, 1),
         } as AssignStatementNode,
         {
           type: 'assign_statement',
           variable: '$fa',
-          value: 3,
-          location: { line: 2, column: 1 },
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 3,
+            location: createSimpleSourceLocation(2, 1),
+          },
+          location: createSimpleSourceLocation(2, 1),
         } as AssignStatementNode,
         {
           type: 'sphere',
           radius: 5,
           // No $fn specified, should use global $fn=16
-          location: { line: 3, column: 1 },
+          location: createSimpleSourceLocation(3, 1),
         } as SphereNode,
         {
           type: 'circle',
           r: 3,
           // No $fn specified, should use global $fn=16
-          location: { line: 4, column: 1 },
+          location: createSimpleSourceLocation(4, 1),
         } as CircleNode,
       ];
 
@@ -243,11 +264,11 @@ describe('OpenSCADRenderingPipeline Integration Tests', () => {
         {
           type: 'sphere',
           radius: 5,
-          location: { line: 1, column: 1 },
+          location: createSimpleSourceLocation(1, 1),
         } as SphereNode,
         {
           type: 'unsupported_primitive',
-          location: { line: 2, column: 1 },
+          location: createSimpleSourceLocation(2, 1),
         } as any,
       ];
 
@@ -307,7 +328,7 @@ describe('OpenSCADRenderingPipeline Integration Tests', () => {
           type: 'sphere',
           radius: 1 + (i % 5),
           $fn: 6, // Low fragment count for performance
-          location: { line: i + 1, column: 1 },
+          location: createSimpleSourceLocation(i + 1, 1),
         } as SphereNode);
       }
 
@@ -334,14 +355,14 @@ describe('OpenSCADRenderingPipeline Integration Tests', () => {
           type: 'sphere',
           radius: 5,
           $fn: 64, // High detail
-          location: { line: 1, column: 1 },
+          location: createSimpleSourceLocation(1, 1),
         } as SphereNode,
         {
           type: 'cylinder',
           h: 10,
           r: 3,
           $fn: 64, // High detail
-          location: { line: 2, column: 1 },
+          location: createSimpleSourceLocation(2, 1),
         } as CylinderNode,
       ];
 
@@ -374,12 +395,12 @@ describe('OpenSCADRenderingPipeline Integration Tests', () => {
         {
           type: 'sphere',
           radius: 5,
-          location: { line: 1, column: 1 },
+          location: createSimpleSourceLocation(1, 1),
         } as SphereNode,
         {
           type: 'cube',
           size: 3,
-          location: { line: 2, column: 1 },
+          location: createSimpleSourceLocation(2, 1),
         } as CubeNode,
       ];
 

@@ -149,16 +149,24 @@ export class OFFImporterService {
       }
 
       // Check OFF header
-      if (lines[0] !== 'OFF') {
+      const headerLine = lines[0];
+      if (!headerLine || headerLine !== 'OFF') {
         return error({
           type: 'COMPUTATION_ERROR',
           message: 'invalid OFF header: expected "OFF"',
-          details: { header: lines[0] },
+          details: { header: headerLine },
         });
       }
 
       // Parse counts line
       const countsLine = lines[1];
+      if (!countsLine) {
+        return error({
+          type: 'COMPUTATION_ERROR',
+          message: 'missing OFF counts line',
+          details: { lineCount: lines.length },
+        });
+      }
       const counts = countsLine.split(/\s+/).map(Number);
 
       if (counts.length < 3 || counts.some(Number.isNaN)) {
@@ -184,6 +192,13 @@ export class OFFImporterService {
         }
 
         const vertexLine = lines[lineIndex];
+        if (!vertexLine) {
+          return error({
+            type: 'COMPUTATION_ERROR',
+            message: `missing vertex line at index ${lineIndex}`,
+            details: { lineIndex, vertexIndex: i },
+          });
+        }
         const coords = vertexLine.split(/\s+/).map(Number);
 
         // Check if this looks like a face line (starts with vertex count)
@@ -223,6 +238,13 @@ export class OFFImporterService {
         }
 
         const faceLine = lines[lineIndex];
+        if (!faceLine) {
+          return error({
+            type: 'COMPUTATION_ERROR',
+            message: `missing face line at index ${lineIndex}`,
+            details: { lineIndex, faceIndex: i },
+          });
+        }
         const faceData = faceLine.split(/\s+/).map(Number);
 
         if (faceData.length < 1 || Number.isNaN(faceData[0])) {

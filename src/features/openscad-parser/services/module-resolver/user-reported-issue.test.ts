@@ -2,8 +2,8 @@
  * @file User-reported issue with module parameter binding.
  */
 
-import { OpenscadParser } from '@openscad/parser';
-import { BabylonScene } from '../../../../babylon-renderer/babylon-scene';
+import { OpenscadParser } from '@/features/openscad-parser';
+import { BabylonScene } from '@/features/babylon-renderer';
 
 describe('Module Parameter Binding', () => {
   let parser: OpenscadParser;

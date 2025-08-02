@@ -87,10 +87,9 @@ describe('BooleanOperations3DService', () => {
         boundingBox: {
           min: { x: centerX - radius, y: centerY - radius, z: centerZ - radius },
           max: { x: centerX + radius, y: centerY + radius, z: centerZ + radius },
-          size: { x: 2 * radius, y: 2 * radius, z: 2 * radius },
         },
-        isValid: true,
-        generationTime: 1,
+        generatedAt: Date.now(),
+        isConvex: true,
       },
     };
   };
@@ -160,10 +159,9 @@ describe('BooleanOperations3DService', () => {
         boundingBox: {
           min: { x: centerX - halfSize, y: centerY - halfSize, z: centerZ - halfSize },
           max: { x: centerX + halfSize, y: centerY + halfSize, z: centerZ + halfSize },
-          size: { x: size, y: size, z: size },
         },
-        isValid: true,
-        generationTime: 1,
+        generatedAt: Date.now(),
+        isConvex: true,
       },
     };
   };

@@ -57,7 +57,7 @@ export interface FontMetrics {
  */
 export interface GlyphOutline {
   readonly character: string;
-  readonly outline: readonly Array<{ x: number; y: number }>;
+  readonly outline: readonly { x: number; y: number }[];
   readonly advance: number;
   readonly bounds: {
     readonly x: number;

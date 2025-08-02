@@ -471,6 +471,10 @@ export class STLImporterService {
     // Check for NaN or infinite values
     for (let i = 0; i < mesh.vertices.length; i++) {
       const vertex = mesh.vertices[i];
+      if (!vertex) {
+        errors.push(`Missing vertex at index ${i}`);
+        continue;
+      }
       if (!Number.isFinite(vertex.x) || !Number.isFinite(vertex.y) || !Number.isFinite(vertex.z)) {
         errors.push(`Invalid vertex at index ${i}: contains NaN or infinite values`);
       }
@@ -488,7 +492,7 @@ export class STLImporterService {
    */
   private meshToGeometry(mesh: STLMesh, params: ImportParameters): PolyhedronGeometryData {
     return {
-      vertices: mesh.vertices,
+      vertices: mesh.vertices || [],
       faces: mesh.faces.map((face) => Array.from(face)),
       normals: mesh.normals,
       metadata: {

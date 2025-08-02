@@ -315,6 +315,9 @@ export class ASTProcessingPipeline {
       if (!processingResult.success) {
         return error(new Error(`Pipeline processing failed: ${processingResult.error.message}`));
       }
+
+      // TypeScript now knows processingResult is successful
+      const processedNode = processingResult.data;
       stagesExecuted.push('processing');
 
       // Optimization stage
@@ -327,7 +330,7 @@ export class ASTProcessingPipeline {
       const memoryAfter = this.memoryMonitor.getCurrentUsageMB();
 
       const result: PipelineProcessingResult = {
-        processedNode: processingResult.data,
+        processedNode,
         pipelineMetadata: {
           stagesExecuted,
           totalProcessingTime,
@@ -364,10 +367,11 @@ export class ASTProcessingPipeline {
       for (const node of nodes) {
         // Process each node individually (this will use its own timer)
         const processingResult = this.processor.processNode(node);
-        if (!processingResult.success) {
+        if (processingResult.success) {
+          processedNodes.push(processingResult.data);
+        } else {
           return error(processingResult.error);
         }
-        processedNodes.push(processingResult.data);
       }
 
       stagesExecuted.push('batch_processing');

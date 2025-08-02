@@ -167,14 +167,14 @@ export class CylinderGeneratorService {
         });
       }
 
-      // Calculate fragments using fragment calculator
+      // Calculate fragments using fragment calculator with default values
       const maxRadius = Math.max(r1, r2);
       const fragmentResult = calculateFragmentsWithErrorHandling(
         this.fragmentCalculator,
         maxRadius,
-        params.fn,
-        params.fs,
-        params.fa
+        params.fn ?? 0, // Default to 0 (use fs/fa calculation)
+        params.fs ?? 2, // Default fragment size
+        params.fa ?? 12 // Default fragment angle
       );
 
       if (isError(fragmentResult)) {

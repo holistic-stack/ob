@@ -55,6 +55,10 @@ export type {
   CylinderParameters,
   PolyhedronParameters,
   SphereParameters,
+  // 2D primitive parameters
+  CircleParameters,
+  PolygonParameters,
+  SquareParameters,
 } from './types/primitive-parameters';
 
 // Note: TextParameters exported by text-primitives service to avoid conflicts

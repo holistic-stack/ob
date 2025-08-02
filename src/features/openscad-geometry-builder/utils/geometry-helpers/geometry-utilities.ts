@@ -203,8 +203,14 @@ export function calculateBoundingBox(vertices: readonly Vector3[]): {
     return { min: zero, max: zero };
   }
 
-  let min = vertices[0];
-  let max = vertices[0];
+  const firstVertex = vertices[0];
+  if (!firstVertex) {
+    const zero = Vector3Utils.zero();
+    return { min: zero, max: zero };
+  }
+
+  let min = firstVertex;
+  let max = firstVertex;
 
   for (const vertex of vertices) {
     min = Vector3Utils.min(min, vertex);

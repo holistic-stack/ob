@@ -859,7 +859,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
 
     // Extract points using regex from the raw node text
     const pointsMatch = nodeText.match(/points\s*=\s*(\[\s*\[[\d\s.,[\]-]+\]\s*\])/);
-    if (pointsMatch) {
+    if (pointsMatch && pointsMatch[1] && typeof pointsMatch[1] === 'string') {
       points = this.parsePolygonPointsFromText(pointsMatch[1]);
     } else {
       // Fallback to parameter extraction
@@ -1071,7 +1071,8 @@ export class PrimitiveVisitor extends BaseASTVisitor {
 
           for (const pointMatch of pointMatches) {
             const coords = pointMatch.match(/([\d.+-]+)/g);
-            if (coords && coords.length >= 2) {
+            if (coords && coords.length >= 2 && coords[0] && coords[1] &&
+                typeof coords[0] === 'string' && typeof coords[1] === 'string') {
               const x = parseFloat(coords[0]);
               const y = parseFloat(coords[1]);
               if (!Number.isNaN(x) && !Number.isNaN(y)) {
@@ -1104,7 +1105,9 @@ export class PrimitiveVisitor extends BaseASTVisitor {
         if (i + 1 < flatArray.length) {
           const x = flatArray[i];
           const y = flatArray[i + 1];
-          points.push([x, y]);
+          if (x !== undefined && y !== undefined && typeof x === 'number' && typeof y === 'number') {
+            points.push([x, y]);
+          }
           console.log('[DEBUG] extractPolygonPoints: reconstructed point:', [x, y]);
         }
       }
@@ -1181,7 +1184,8 @@ export class PrimitiveVisitor extends BaseASTVisitor {
 
         for (const pointMatch of pointMatches) {
           const coords = pointMatch.match(/([\d.+-]+)/g);
-          if (coords && coords.length >= 2) {
+          if (coords && coords.length >= 2 && coords[0] && coords[1] &&
+              typeof coords[0] === 'string' && typeof coords[1] === 'string') {
             const x = parseFloat(coords[0]);
             const y = parseFloat(coords[1]);
             if (!Number.isNaN(x) && !Number.isNaN(y)) {

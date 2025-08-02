@@ -152,37 +152,7 @@ export interface PolygonParameters {
   readonly convexity: number;
 }
 
-/**
- * Text primitive parameters (LOW PRIORITY)
- */
-export interface TextParameters {
-  /** Text string to render */
-  readonly text: string;
-
-  /** Font size in units */
-  readonly size: number;
-
-  /** Font family name */
-  readonly font: string;
-
-  /** Horizontal alignment */
-  readonly halign: 'left' | 'center' | 'right';
-
-  /** Vertical alignment */
-  readonly valign: 'top' | 'center' | 'baseline' | 'bottom';
-
-  /** Spacing between characters */
-  readonly spacing: number;
-
-  /** Text direction */
-  readonly direction: 'ltr' | 'rtl' | 'ttb' | 'btt';
-
-  /** Language for text shaping */
-  readonly language: string;
-
-  /** Script for text shaping */
-  readonly script: string;
-}
+// TextParameters is now defined in text-parameters.ts to avoid duplication
 
 /**
  * Import primitive parameters (LOW PRIORITY)
@@ -326,15 +296,15 @@ export namespace ParameterValidation {
   export function validateFragments(params: FragmentParameters): string[] {
     const errors: string[] = [];
 
-    if (params.fn < 0) {
+    if (params.fn !== undefined && params.fn < 0) {
       errors.push('$fn must be non-negative');
     }
 
-    if (params.fs <= 0) {
+    if (params.fs !== undefined && params.fs <= 0) {
       errors.push('$fs must be positive');
     }
 
-    if (params.fa <= 0 || params.fa > 180) {
+    if (params.fa !== undefined && (params.fa <= 0 || params.fa > 180)) {
       errors.push('$fa must be between 0 and 180 degrees');
     }
 

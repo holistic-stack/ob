@@ -259,8 +259,10 @@ export class PolygonValidator {
     for (let i = 0; i < outline.length; i++) {
       const i1 = outline[i];
       const i2 = outline[(i + 1) % outline.length];
+      if (i1 === undefined || i2 === undefined) continue;
       const p1 = vertices[i1];
       const p2 = vertices[i2];
+      if (p1 === undefined || p2 === undefined) continue;
 
       for (let j = i + 2; j < outline.length; j++) {
         // Skip the last edge when i = 0 to avoid checking edge 0-1 against edge (n-1)-0
@@ -268,8 +270,10 @@ export class PolygonValidator {
 
         const j1 = outline[j];
         const j2 = outline[(j + 1) % outline.length];
+        if (j1 === undefined || j2 === undefined) continue;
         const p3 = vertices[j1];
         const p4 = vertices[j2];
+        if (p3 === undefined || p4 === undefined) continue;
 
         const intersection = this.lineSegmentIntersection(p1, p2, p3, p4);
         if (intersection) {
@@ -399,10 +403,12 @@ export class PolygonValidator {
       for (let j = i + 1; j < holes.length; j++) {
         const hole1 = holes[i];
         const hole2 = holes[j];
+        if (hole1 === undefined || hole2 === undefined) continue;
 
         // Check if any vertex of hole1 is inside hole2
         for (const vertexIndex of hole1) {
           const point = vertices[vertexIndex];
+          if (!point) continue;
           if (this.isPointInPolygon(point, vertices, hole2)) {
             return true;
           }

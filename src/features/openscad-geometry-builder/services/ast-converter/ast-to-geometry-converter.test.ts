@@ -34,7 +34,7 @@ describe('ASTToGeometryConverterService', () => {
         type: 'sphere',
         radius: 5,
         $fn: 8,
-        location: { line: 1, column: 1 },
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
       };
 
       const result = converter.convertASTNodeToGeometry(sphereNode, defaultGlobals);
@@ -53,7 +53,7 @@ describe('ASTToGeometryConverterService', () => {
         type: 'cube',
         size: { x: 2, y: 4, z: 6 },
         center: true,
-        location: { line: 1, column: 1 },
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
       };
 
       const result = converter.convertASTNodeToGeometry(cubeNode, defaultGlobals);
@@ -74,7 +74,7 @@ describe('ASTToGeometryConverterService', () => {
         r: 3,
         center: false,
         $fn: 6,
-        location: { line: 1, column: 1 },
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
       };
 
       const result = converter.convertASTNodeToGeometry(cylinderNode, defaultGlobals);
@@ -93,7 +93,7 @@ describe('ASTToGeometryConverterService', () => {
         type: 'circle',
         r: 5,
         $fn: 8,
-        location: { line: 1, column: 1 },
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
       };
 
       const result = converter.convertASTNodeToGeometry(circleNode, defaultGlobals);
@@ -111,7 +111,7 @@ describe('ASTToGeometryConverterService', () => {
         type: 'square',
         size: { x: 4, y: 6 },
         center: true,
-        location: { line: 1, column: 1 },
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
       };
 
       const result = converter.convertASTNodeToGeometry(squareNode, defaultGlobals);
@@ -133,7 +133,7 @@ describe('ASTToGeometryConverterService', () => {
           [5, 8.66],
         ],
         convexity: 1,
-        location: { line: 1, column: 1 },
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
       };
 
       const result = converter.convertASTNodeToGeometry(polygonNode, defaultGlobals);
@@ -149,7 +149,7 @@ describe('ASTToGeometryConverterService', () => {
     test('should handle unsupported node type', () => {
       const unsupportedNode = {
         type: 'unsupported',
-        location: { line: 1, column: 1 },
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
       } as any;
 
       const result = converter.convertASTNodeToGeometry(unsupportedNode, defaultGlobals);
@@ -166,7 +166,7 @@ describe('ASTToGeometryConverterService', () => {
         type: 'sphere',
         radius: 5,
         // No $fn specified, should use global
-        location: { line: 1, column: 1 },
+        location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
       };
 
       const globalsWithFn: GlobalVariables = {
@@ -195,13 +195,13 @@ describe('ASTToGeometryConverterService', () => {
           type: 'sphere',
           radius: 3,
           $fn: 6,
-          location: { line: 1, column: 1 },
+          location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 10, offset: 9 } },
         } as SphereNode,
         {
           type: 'cube',
           size: 2,
           center: false,
-          location: { line: 2, column: 1 },
+          location: { start: { line: 2, column: 1, offset: 0 }, end: { line: 2, column: 10, offset: 9 } },
         } as CubeNode,
         {
           type: 'circle',

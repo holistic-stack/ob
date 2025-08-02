@@ -82,9 +82,17 @@ describe('GeometryCacheService', () => {
         [5, 4, 3],
         [5, 1, 4],
       ],
+      normals: [
+        { x: 0, y: 0, z: 1 },
+        { x: 1, y: 0, z: 0 },
+        { x: 0, y: 1, z: 0 },
+        { x: -1, y: 0, z: 0 },
+        { x: 0, y: -1, z: 0 },
+        { x: 0, y: 0, z: -1 },
+      ],
       metadata: {
         primitiveType: '3d-polyhedron',
-        parameters: { radius: 5, fn: 8 },
+        parameters: { pointCount: 6, faceCount: 8, convexity: 1 },
         fragmentCount: 8,
         generatedAt: Date.now(),
         isConvex: true,

@@ -101,7 +101,7 @@ export function formatFontString(family: string, style?: string): string {
  */
 export function parseFontString(fontString: string): { family: string; style?: string } {
   const match = fontString.match(/^(.+?):style=(.+)$/);
-  if (match) {
+  if (match && match[1] && match[2]) {
     return { family: match[1], style: match[2] };
   }
   return { family: fontString };

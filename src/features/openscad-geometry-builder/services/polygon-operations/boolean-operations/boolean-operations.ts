@@ -420,6 +420,7 @@ export class BooleanOperationsService {
 
     for (const index of outline) {
       const vertex = vertices[index];
+      if (vertex === undefined) continue;
       sumX += vertex.x;
       sumY += vertex.y;
     }
@@ -645,10 +646,15 @@ export class BooleanOperationsService {
       return { min: { x: 0, y: 0 }, max: { x: 0, y: 0 } };
     }
 
-    let minX = vertices[0].x;
-    let maxX = vertices[0].x;
-    let minY = vertices[0].y;
-    let maxY = vertices[0].y;
+    const firstVertex = vertices[0];
+    if (!firstVertex) {
+      return { min: { x: 0, y: 0 }, max: { x: 0, y: 0 } };
+    }
+
+    let minX = firstVertex.x;
+    let maxX = firstVertex.x;
+    let minY = firstVertex.y;
+    let maxY = firstVertex.y;
 
     for (const vertex of vertices) {
       minX = Math.min(minX, vertex.x);

@@ -71,8 +71,6 @@ describe('SphereGeneratorService Cache Performance Tests', () => {
       const params = {
         radius: 3,
         fn: 8,
-        fa: undefined,
-        fs: undefined,
       };
 
       const times: number[] = [];

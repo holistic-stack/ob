@@ -235,10 +235,11 @@ export class ModuleResolver implements ModuleResolverInterface {
       const resolvedNodes: ASTNode[] = [];
       for (const node of ast) {
         const resolvedResult = this.resolveNode(node, resolutionContext);
-        if (!resolvedResult.success) {
+        if (resolvedResult.success) {
+          resolvedNodes.push(...resolvedResult.data);
+        } else {
           return resolvedResult;
         }
-        resolvedNodes.push(...resolvedResult.data);
       }
 
       return { success: true, data: resolvedNodes };
@@ -329,11 +330,12 @@ export class ModuleResolver implements ModuleResolverInterface {
       for (const childNode of childNodes) {
         console.log(`[ModuleResolver] DEBUG - Resolving child node: ${childNode.type}`);
         const childResult = this.resolveNode(childNode, context);
-        if (!childResult.success) {
+        if (childResult.success) {
+          console.log(`[ModuleResolver] DEBUG - Child resolved to ${childResult.data.length} nodes`);
+          resolvedChildren.push(...childResult.data);
+        } else {
           return childResult;
         }
-        console.log(`[ModuleResolver] DEBUG - Child resolved to ${childResult.data.length} nodes`);
-        resolvedChildren.push(...childResult.data);
       }
 
       // Update the resolved node with the resolved children
@@ -543,10 +545,11 @@ export class ModuleResolver implements ModuleResolverInterface {
     const resolvedBody: ASTNode[] = [];
     for (const bodyNode of substitutedBody) {
       const resolvedResult = this.resolveNode(bodyNode, newContext);
-      if (!resolvedResult.success) {
+      if (resolvedResult.success) {
+        resolvedBody.push(...resolvedResult.data);
+      } else {
         return resolvedResult;
       }
-      resolvedBody.push(...resolvedResult.data);
     }
 
     return { success: true, data: resolvedBody };
