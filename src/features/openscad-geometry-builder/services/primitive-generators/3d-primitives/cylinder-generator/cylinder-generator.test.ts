@@ -111,9 +111,9 @@ describe('CylinderGeneratorService', () => {
 
           // Verify apex position (should be the last vertex)
           const apexVertex = cylinder.vertices[cylinder.vertices.length - 1];
-          expect(apexVertex.x).toBeCloseTo(0);
-          expect(apexVertex.y).toBeCloseTo(0);
-          expect(apexVertex.z).toBeCloseTo(10);
+          expect(apexVertex?.x).toBeCloseTo(0);
+          expect(apexVertex?.y).toBeCloseTo(0);
+          expect(apexVertex?.z).toBeCloseTo(10);
 
           // Should have faces: 8 side triangles + 8 bottom triangles = 16 faces
           expect(cylinder.faces).toHaveLength(16);
@@ -133,9 +133,9 @@ describe('CylinderGeneratorService', () => {
 
           // Verify apex position at bottom (should be the last vertex)
           const apexVertex = cylinder.vertices[cylinder.vertices.length - 1];
-          expect(apexVertex.x).toBeCloseTo(0);
-          expect(apexVertex.y).toBeCloseTo(0);
-          expect(apexVertex.z).toBeCloseTo(0);
+          expect(apexVertex?.x).toBeCloseTo(0);
+          expect(apexVertex?.y).toBeCloseTo(0);
+          expect(apexVertex?.z).toBeCloseTo(0);
 
           // Should have faces: 6 side triangles + 6 top triangles = 12 faces
           expect(cylinder.faces).toHaveLength(12);

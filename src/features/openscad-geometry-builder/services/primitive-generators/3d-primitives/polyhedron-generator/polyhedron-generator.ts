@@ -109,7 +109,7 @@ export class PolyhedronGeneratorService {
       const metadata = createGeometryMetadata(
         '3d-polyhedron',
         {
-          vertexCount: vertices.length,
+          pointCount: vertices.length,
           faceCount: faces.length,
           convexity: 1, // Default convexity
         },
@@ -141,8 +141,11 @@ export class PolyhedronGeneratorService {
    */
   generatePolyhedronFromParameters(params: PolyhedronParameters): PolyhedronResult {
     try {
+      // Convert Vector3 objects to number arrays
+      const vertexArrays = params.points.map(point => [point.x, point.y, point.z] as const);
+
       const result = this.generatePolyhedron(
-        params.points as readonly (readonly number[])[],
+        vertexArrays,
         params.faces
       );
 
@@ -189,9 +192,21 @@ export class PolyhedronGeneratorService {
 
     // Validate each vertex using validation helper
     for (let i = 0; i < vertices.length; i++) {
-      const vertexResult = validateVertexCoordinates(vertices[i], i);
+      const vertex = vertices[i];
+      if (!vertex) {
+        return error({
+          type: 'INVALID_PARAMETERS',
+          message: `Vertex at index ${i} is undefined`,
+          details: { vertexIndex: i },
+        });
+      }
+      const vertexResult = validateVertexCoordinates(vertex, i);
       if (!vertexResult.success) {
-        return vertexResult;
+        return error({
+          type: 'INVALID_PARAMETERS',
+          message: typeof vertexResult.error === 'string' ? vertexResult.error : vertexResult.error.message,
+          details: { vertexIndex: i },
+        });
       }
     }
 
@@ -206,9 +221,21 @@ export class PolyhedronGeneratorService {
 
     // Validate each face using validation helper
     for (let i = 0; i < faces.length; i++) {
-      const faceResult = validateFaceIndices(faces[i], i, vertices.length);
+      const face = faces[i];
+      if (!face) {
+        return error({
+          type: 'INVALID_PARAMETERS',
+          message: `Face at index ${i} is undefined`,
+          details: { faceIndex: i },
+        });
+      }
+      const faceResult = validateFaceIndices(face, i, vertices.length);
       if (!faceResult.success) {
-        return faceResult;
+        return error({
+          type: 'INVALID_PARAMETERS',
+          message: typeof faceResult.error === 'string' ? faceResult.error : faceResult.error.message,
+          details: { faceIndex: i, vertexCount: vertices.length },
+        });
       }
     }
 
@@ -285,17 +312,19 @@ export class PolyhedronGeneratorService {
           // Add to all vertices of this face
           for (const vertexIndex of face) {
             const accumulator = normalAccumulators[vertexIndex];
-            accumulator.x += normal.x;
-            accumulator.y += normal.y;
-            accumulator.z += normal.z;
-            accumulator.count++;
+            if (accumulator) {
+              accumulator.x += normal.x;
+              accumulator.y += normal.y;
+              accumulator.z += normal.z;
+              accumulator.count++;
+            }
           }
         }
       }
     }
 
     // Average and normalize vertex normals
-    return normalAccumulators.map((accumulator) => {
+    return Object.freeze(normalAccumulators.map((accumulator) => {
       if (accumulator.count === 0) {
         // Default normal if no faces reference this vertex
         return Object.freeze({ x: 0, y: 0, z: 1 });
@@ -321,7 +350,7 @@ export class PolyhedronGeneratorService {
       }
 
       return Object.freeze({ x: 0, y: 0, z: 1 });
-    });
+    }));
   }
 
   /**

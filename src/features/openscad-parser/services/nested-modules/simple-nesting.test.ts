@@ -87,7 +87,7 @@ describe('Simple Nested Module Support', () => {
         body: [
           {
             type: 'translate',
-            vector: [1, 2, 3],
+            v: [1, 2, 3],
             children: [
               {
                 type: 'cube',

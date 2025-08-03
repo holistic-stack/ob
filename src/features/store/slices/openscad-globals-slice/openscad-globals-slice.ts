@@ -551,7 +551,7 @@ export const createOpenSCADGlobalsSlice = (
       },
     }));
 
-    return createSuccess(undefined as void);
+    return createSuccess(undefined as undefined);
   },
 
   updateVariable: (variable, value) => {
@@ -590,7 +590,7 @@ export const createOpenSCADGlobalsSlice = (
       },
     }));
 
-    return createSuccess(undefined as void);
+    return createSuccess(undefined as undefined);
   },
 
   resetToDefaults: () => {

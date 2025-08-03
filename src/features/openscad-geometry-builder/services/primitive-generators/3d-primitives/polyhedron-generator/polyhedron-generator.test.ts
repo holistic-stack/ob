@@ -415,10 +415,10 @@ describe('PolyhedronGeneratorService', () => {
   describe('generatePolyhedronFromParameters', () => {
     it('should generate polyhedron from OpenSCAD parameters', () => {
       const vertices = [
-        [0, 0, 0],
-        [1, 0, 0],
-        [0.5, 1, 0],
-        [0.5, 0.5, 1],
+        { x: 0, y: 0, z: 0 },
+        { x: 1, y: 0, z: 0 },
+        { x: 0.5, y: 1, z: 0 },
+        { x: 0.5, y: 0.5, z: 1 },
       ];
       const faces = [
         [0, 1, 2],
@@ -430,6 +430,7 @@ describe('PolyhedronGeneratorService', () => {
       const result = polyhedronGenerator.generatePolyhedronFromParameters({
         points: vertices,
         faces: faces,
+        convexity: 1,
       });
 
       expect(isSuccess(result)).toBe(true);
@@ -442,9 +443,9 @@ describe('PolyhedronGeneratorService', () => {
 
     it('should handle convexity parameter', () => {
       const vertices = [
-        [0, 0, 0],
-        [1, 0, 0],
-        [0.5, 1, 0],
+        { x: 0, y: 0, z: 0 },
+        { x: 1, y: 0, z: 0 },
+        { x: 0.5, y: 1, z: 0 },
       ];
       const faces = [[0, 1, 2]];
 

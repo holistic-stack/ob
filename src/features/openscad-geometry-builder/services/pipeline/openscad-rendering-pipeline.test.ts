@@ -129,7 +129,15 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'assign_statement',
           variable: '$fa',
-          value: 6,
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 6,
+            location: {
+              start: { line: 2, column: 6, offset: 5 },
+              end: { line: 2, column: 7, offset: 6 },
+            },
+          },
           location: {
             start: { line: 2, column: 1, offset: 0 },
             end: { line: 2, column: 10, offset: 9 },
@@ -150,7 +158,15 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'assign_statement',
           variable: '$fn',
-          value: 8,
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 8,
+            location: {
+              start: { line: 1, column: 6, offset: 5 },
+              end: { line: 1, column: 7, offset: 6 },
+            },
+          },
           location: {
             start: { line: 1, column: 1, offset: 0 },
             end: { line: 1, column: 10, offset: 9 },
@@ -175,7 +191,15 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'assign_statement',
           variable: '$fa',
-          value: 12,
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 12,
+            location: {
+              start: { line: 4, column: 6, offset: 5 },
+              end: { line: 4, column: 8, offset: 7 },
+            },
+          },
           location: {
             start: { line: 4, column: 1, offset: 0 },
             end: { line: 4, column: 10, offset: 9 },
@@ -186,8 +210,12 @@ describe('OpenSCADRenderingPipelineService', () => {
       const geometryNodes = pipeline.filterGeometryNodes(ast);
 
       expect(geometryNodes.length).toBe(2);
-      expect(geometryNodes[0].type).toBe('sphere');
-      expect(geometryNodes[1].type).toBe('cube');
+
+      // Safe array access with validation
+      expect(geometryNodes[0]).toBeDefined();
+      expect(geometryNodes[1]).toBeDefined();
+      expect(geometryNodes[0]?.type).toBe('sphere');
+      expect(geometryNodes[1]?.type).toBe('cube');
     });
 
     test('should return empty array when no geometry nodes found', () => {
@@ -195,7 +223,15 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'assign_statement',
           variable: '$fn',
-          value: 8,
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 8,
+            location: {
+              start: { line: 1, column: 6, offset: 5 },
+              end: { line: 1, column: 7, offset: 6 },
+            },
+          },
           location: {
             start: { line: 1, column: 1, offset: 0 },
             end: { line: 1, column: 10, offset: 9 },
@@ -204,7 +240,15 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'assign_statement',
           variable: '$fa',
-          value: 12,
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 12,
+            location: {
+              start: { line: 2, column: 6, offset: 5 },
+              end: { line: 2, column: 8, offset: 7 },
+            },
+          },
           location: {
             start: { line: 2, column: 1, offset: 0 },
             end: { line: 2, column: 10, offset: 9 },
@@ -224,20 +268,25 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'assign_statement',
           variable: '$fn',
-          value: 8,
-          location: { line: 1, column: 1 },
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 8,
+            location: createSimpleSourceLocation(1, 6, 1),
+          },
+          location: createSimpleSourceLocation(1, 1, 10),
         } as AssignStatementNode,
         {
           type: 'sphere',
           radius: 5,
           $fn: 6,
-          location: { line: 2, column: 1 },
+          location: createSimpleSourceLocation(2, 1, 12),
         } as SphereNode,
         {
           type: 'cube',
           size: 2,
           center: true,
-          location: { line: 3, column: 1 },
+          location: createSimpleSourceLocation(3, 1, 15),
         } as CubeNode,
       ];
 
@@ -247,8 +296,12 @@ describe('OpenSCADRenderingPipelineService', () => {
       if (isSuccess(result)) {
         const meshes = result.data;
         expect(meshes.length).toBe(2); // sphere + cube
-        expect(meshes[0].name).toBe('test-0');
-        expect(meshes[1].name).toBe('test-1');
+
+        // Safe array access with validation
+        expect(meshes[0]).toBeDefined();
+        expect(meshes[1]).toBeDefined();
+        expect(meshes[0]?.name).toBe('test-0');
+        expect(meshes[1]?.name).toBe('test-1');
       }
     });
 
@@ -257,8 +310,13 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'assign_statement',
           variable: '$fn',
-          value: 8,
-          location: { line: 1, column: 1 },
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 8,
+            location: createSimpleSourceLocation(1, 6, 1),
+          },
+          location: createSimpleSourceLocation(1, 1, 10),
         } as AssignStatementNode,
       ];
 
@@ -275,7 +333,7 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'sphere',
           radius: 5,
-          location: { line: 1, column: 1 },
+          location: createSimpleSourceLocation(1, 1, 12),
         } as SphereNode,
       ];
 
@@ -318,12 +376,12 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'sphere',
           radius: 5,
-          location: { line: 1, column: 1 },
+          location: createSimpleSourceLocation(1, 1, 12),
         } as SphereNode,
         {
           type: 'cube',
           size: 2,
-          location: { line: 2, column: 1 },
+          location: createSimpleSourceLocation(2, 1, 10),
         } as CubeNode,
       ];
 
@@ -382,23 +440,28 @@ describe('OpenSCADRenderingPipelineService', () => {
         {
           type: 'assign_statement',
           variable: '$fn',
-          value: 8,
-          location: { line: 1, column: 1 },
+          value: {
+            type: 'expression',
+            expressionType: 'literal',
+            value: 8,
+            location: createSimpleSourceLocation(1, 6, 1),
+          },
+          location: createSimpleSourceLocation(1, 1, 10),
         } as AssignStatementNode,
         {
           type: 'sphere',
           radius: 5,
-          location: { line: 2, column: 1 },
+          location: createSimpleSourceLocation(2, 1, 12),
         } as SphereNode,
         {
           type: 'sphere',
           radius: 3,
-          location: { line: 3, column: 1 },
+          location: createSimpleSourceLocation(3, 1, 12),
         } as SphereNode,
         {
           type: 'cube',
           size: 2,
-          location: { line: 4, column: 1 },
+          location: createSimpleSourceLocation(4, 1, 10),
         } as CubeNode,
       ];
 

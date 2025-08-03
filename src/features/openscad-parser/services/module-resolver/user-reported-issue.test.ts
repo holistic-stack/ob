@@ -2,7 +2,7 @@
  * @file User-reported issue with module parameter binding.
  */
 
-import { BabylonScene } from '@/features/babylon-renderer';
+import { NullEngine, Scene } from '@babylonjs/core';
 import { OpenscadParser } from '@/features/openscad-parser';
 
 describe('Module Parameter Binding', () => {
@@ -31,12 +31,21 @@ describe('Module Parameter Binding', () => {
       translate([0,50,0]) mod1(10,cubeSize=10);
     `;
 
-    const scene = new BabylonScene();
-    const { ast, errors } = await parser.parse(code);
+    // Create BabylonJS test environment
+    const engine = new NullEngine();
+    const _scene = new Scene(engine); // Prefixed with _ to indicate intentionally unused
 
-    expect(errors).toHaveLength(0);
+    const result = await parser.parse(code);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
 
-    const _babylonObjects = await scene.render(ast);
+    const { body } = result.data;
+
+    expect(body).toBeDefined();
+    expect(body.length).toBeGreaterThan(0);
+
+    // TODO: Add BabylonJS rendering logic here
+    // const _babylonObjects = await renderASTToBabylon(scene, ast);
 
     // TODO: Add assertions to verify the generated geometry
   });

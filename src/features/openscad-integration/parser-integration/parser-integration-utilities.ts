@@ -367,9 +367,24 @@ export class OpenSCADIntegrationPipeline {
     // Handle complex code with both modules and for loops
     if (sourceCode.includes('for') && sourceCode.includes('module')) {
       return success([
-        { type: 'cube', parameters: [{ name: 'size', value: [5, 5, 5] }] },
-        { type: 'cube', parameters: [{ name: 'size', value: [5, 5, 5] }] },
-        { type: 'cube', parameters: [{ name: 'size', value: [5, 5, 5] }] },
+        {
+          type: 'cube',
+          size: [5, 5, 5],
+          center: false,
+          location: { start: { line: 1, column: 0, offset: 0 }, end: { line: 1, column: 10, offset: 10 }, text: 'cube([5,5,5])' }
+        },
+        {
+          type: 'cube',
+          size: [5, 5, 5],
+          center: false,
+          location: { start: { line: 2, column: 0, offset: 20 }, end: { line: 2, column: 10, offset: 30 }, text: 'cube([5,5,5])' }
+        },
+        {
+          type: 'cube',
+          size: [5, 5, 5],
+          center: false,
+          location: { start: { line: 3, column: 0, offset: 40 }, end: { line: 3, column: 10, offset: 50 }, text: 'cube([5,5,5])' }
+        },
       ] as ASTNode[]);
     }
 
@@ -404,9 +419,24 @@ export class OpenSCADIntegrationPipeline {
 
     if (sourceCode.includes('for')) {
       return success([
-        { type: 'cube', parameters: [{ name: 'size', value: [5, 5, 5] }] },
-        { type: 'cube', parameters: [{ name: 'size', value: [5, 5, 5] }] },
-        { type: 'cube', parameters: [{ name: 'size', value: [5, 5, 5] }] },
+        {
+          type: 'cube',
+          size: [5, 5, 5],
+          center: false,
+          location: { start: { line: 1, column: 0, offset: 0 }, end: { line: 1, column: 10, offset: 10 }, text: 'cube([5,5,5])' }
+        },
+        {
+          type: 'cube',
+          size: [5, 5, 5],
+          center: false,
+          location: { start: { line: 2, column: 0, offset: 20 }, end: { line: 2, column: 10, offset: 30 }, text: 'cube([5,5,5])' }
+        },
+        {
+          type: 'cube',
+          size: [5, 5, 5],
+          center: false,
+          location: { start: { line: 3, column: 0, offset: 40 }, end: { line: 3, column: 10, offset: 50 }, text: 'cube([5,5,5])' }
+        },
       ] as ASTNode[]);
     }
 

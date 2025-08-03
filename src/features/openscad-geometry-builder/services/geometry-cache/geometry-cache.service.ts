@@ -30,7 +30,13 @@
 import { createLogger } from '@/shared/services/logger.service';
 import type { Result } from '@/shared/types/result.types';
 import { error, success } from '@/shared/utils/functional/result';
-import type { Polygon2DGeometryData, PolyhedronGeometryData } from '../../types';
+import type {
+  CubeGeometryData,
+  CylinderGeometryData,
+  Polygon2DGeometryData,
+  PolyhedronGeometryData,
+  SphereGeometryData,
+} from '../../types';
 
 const logger = createLogger('GeometryCacheService');
 
@@ -39,7 +45,12 @@ const logger = createLogger('GeometryCacheService');
  */
 export interface GeometryCacheEntry {
   readonly cacheKey: string;
-  readonly geometry: PolyhedronGeometryData | Polygon2DGeometryData;
+  readonly geometry:
+    | PolyhedronGeometryData
+    | Polygon2DGeometryData
+    | SphereGeometryData
+    | CubeGeometryData
+    | CylinderGeometryData;
   readonly createdAt: number;
   readonly lastAccessed: number;
   readonly accessCount: number;
@@ -116,7 +127,14 @@ export class GeometryCacheService {
    */
   getCachedGeometry(
     cacheKey: string
-  ): Result<PolyhedronGeometryData | Polygon2DGeometryData, Error> {
+  ): Result<
+    | PolyhedronGeometryData
+    | Polygon2DGeometryData
+    | SphereGeometryData
+    | CubeGeometryData
+    | CylinderGeometryData,
+    Error
+  > {
     const entry = this.cache.get(cacheKey);
 
     if (!entry) {
@@ -153,7 +171,12 @@ export class GeometryCacheService {
    */
   cacheGeometry(
     cacheKey: string,
-    geometry: PolyhedronGeometryData | Polygon2DGeometryData
+    geometry:
+      | PolyhedronGeometryData
+      | Polygon2DGeometryData
+      | SphereGeometryData
+      | CubeGeometryData
+      | CylinderGeometryData
   ): Result<void, Error> {
     try {
       const now = Date.now();
@@ -280,7 +303,14 @@ export class GeometryCacheService {
   /**
    * Estimate memory size of geometry data
    */
-  private estimateMemorySize(geometry: PolyhedronGeometryData | Polygon2DGeometryData): number {
+  private estimateMemorySize(
+    geometry:
+      | PolyhedronGeometryData
+      | Polygon2DGeometryData
+      | SphereGeometryData
+      | CubeGeometryData
+      | CylinderGeometryData
+  ): number {
     // Rough estimation based on data structure
     const baseSize = 1000; // Base overhead
 

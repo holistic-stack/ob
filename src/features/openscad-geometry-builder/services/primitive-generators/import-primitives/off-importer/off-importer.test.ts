@@ -153,9 +153,21 @@ OFF
       expect(isSuccess(result)).toBe(true);
 
       if (isSuccess(result)) {
-        const mesh = result.data;
+        const polyhedronData = result.data;
+
+        // Create OFFMesh from polyhedron data for bounds calculation
+        const offMesh = {
+          vertices: Array.from(polyhedronData.vertices),
+          faces: Array.from(polyhedronData.faces),
+          metadata: {
+            vertexCount: polyhedronData.vertices.length,
+            faceCount: polyhedronData.faces.length,
+            edgeCount: 0, // Not needed for bounds calculation
+          },
+        };
+
         // Mesh should be centered around origin
-        const bounds = offImporter.calculateBounds(mesh);
+        const bounds = offImporter.calculateBounds(offMesh);
         const centerX = (bounds.min.x + bounds.max.x) / 2;
         const centerY = (bounds.min.y + bounds.max.y) / 2;
 

@@ -77,12 +77,15 @@ describe('GeometryToMeshConverterService', () => {
           { x: -1, y: 0 },
           { x: 0, y: -1 },
         ],
+        outline: [0, 1, 2, 3], // Main outline connecting all vertices
+        holes: [], // No holes for a simple circle
         metadata: {
           primitiveType: '2d-circle',
           parameters: { radius: 1, fragments: 4 },
           fragmentCount: 4,
           generatedAt: Date.now(),
           isConvex: true,
+          area: Math.PI, // Area of circle with radius 1
         },
       };
 
@@ -158,12 +161,15 @@ describe('GeometryToMeshConverterService', () => {
             { x: -1, y: 0 },
             { x: 0, y: -1 },
           ],
+          outline: [0, 1, 2, 3], // Main outline connecting all vertices
+          holes: [], // No holes for a simple circle
           metadata: {
             primitiveType: '2d-circle',
             parameters: { radius: 1, fragments: 4 },
             fragmentCount: 4,
             generatedAt: Date.now(),
             isConvex: true,
+            area: Math.PI, // Area of circle with radius 1
           },
         } as Circle2DGeometryData,
       ];
@@ -174,8 +180,12 @@ describe('GeometryToMeshConverterService', () => {
       if (isSuccess(result)) {
         const meshes = result.data;
         expect(meshes.length).toBe(2);
-        expect(meshes[0].name).toBe('batch-0');
-        expect(meshes[1].name).toBe('batch-1');
+
+        // Safe array access with validation
+        expect(meshes[0]).toBeDefined();
+        expect(meshes[1]).toBeDefined();
+        expect(meshes[0]?.name).toBe('batch-0');
+        expect(meshes[1]?.name).toBe('batch-1');
       }
     });
 

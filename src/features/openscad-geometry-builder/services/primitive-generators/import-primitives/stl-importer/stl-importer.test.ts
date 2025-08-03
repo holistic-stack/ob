@@ -237,9 +237,22 @@ endsolid test`;
       expect(isSuccess(result)).toBe(true);
 
       if (isSuccess(result)) {
-        const mesh = result.data;
+        const polyhedronData = result.data;
+
+        // Create STLMesh from polyhedron data for bounds calculation
+        const stlMesh = {
+          vertices: Array.from(polyhedronData.vertices),
+          faces: polyhedronData.faces.map(face => Array.from(face) as [number, number, number]),
+          normals: Array.from(polyhedronData.normals),
+          metadata: {
+            triangleCount: polyhedronData.faces.length,
+            vertexCount: polyhedronData.vertices.length,
+            format: 'ascii' as const,
+          },
+        };
+
         // Mesh should be centered around origin
-        const bounds = stlImporter.calculateBounds(mesh);
+        const bounds = stlImporter.calculateBounds(stlMesh);
         const centerX = (bounds.min.x + bounds.max.x) / 2;
         const centerY = (bounds.min.y + bounds.max.y) / 2;
 

@@ -40,7 +40,8 @@ export function expectValidGeometry(
     }
   }
 
-  if (options.hasFaces !== false) {
+  // Check faces only for 3D geometry
+  if (options.hasFaces !== false && 'faces' in geometry) {
     expect(geometry.faces).toBeDefined();
     expect(Array.isArray(geometry.faces)).toBe(true);
 
@@ -49,7 +50,8 @@ export function expectValidGeometry(
     }
   }
 
-  if (options.hasNormals !== false) {
+  // Check normals only for 3D geometry
+  if (options.hasNormals !== false && 'normals' in geometry) {
     expect(geometry.normals).toBeDefined();
     expect(Array.isArray(geometry.normals)).toBe(true);
   }
@@ -107,6 +109,10 @@ export function expectValidFaces(
 
   for (let faceIndex = 0; faceIndex < faces.length; faceIndex++) {
     const face = faces[faceIndex];
+    expect(face, `Face ${faceIndex} should be defined`).toBeDefined();
+
+    if (!face) continue; // Skip undefined faces
+
     expect(Array.isArray(face), `Face ${faceIndex} should be an array`).toBe(true);
     expect(face.length, `Face ${faceIndex} should have at least 3 vertices`).toBeGreaterThanOrEqual(
       3
@@ -157,6 +163,9 @@ export function expectValidNormals(
   for (let index = 0; index < normals.length; index++) {
     const normal = normals[index];
     expect(normal, `Normal at index ${index} should be defined`).toBeDefined();
+
+    if (!normal) continue; // Skip undefined normals
+
     expect(typeof normal.x, `Normal ${index}.x should be a number`).toBe('number');
     expect(typeof normal.y, `Normal ${index}.y should be a number`).toBe('number');
     expect(typeof normal.z, `Normal ${index}.z should be a number`).toBe('number');
@@ -232,11 +241,11 @@ export function expectGeometryProperties(
     expect(geometry.vertices).toHaveLength(expected.vertexCount);
   }
 
-  if (expected.faceCount !== undefined) {
+  if (expected.faceCount !== undefined && 'faces' in geometry) {
     expect(geometry.faces).toHaveLength(expected.faceCount);
   }
 
-  if (expected.normalCount !== undefined) {
+  if (expected.normalCount !== undefined && 'normals' in geometry) {
     expect(geometry.normals).toHaveLength(expected.normalCount);
   }
 
@@ -281,6 +290,16 @@ export function expectVerticestoBeCloseTo(
   expect(actual).toHaveLength(expected.length);
 
   for (let i = 0; i < actual.length; i++) {
-    expectVector3ToBeCloseTo(actual[i], expected[i], tolerance);
+    const actualVertex = actual[i];
+    const expectedVertex = expected[i];
+
+    if (!actualVertex) {
+      throw new Error(`Actual vertex at index ${i} is undefined`);
+    }
+    if (!expectedVertex) {
+      throw new Error(`Expected vertex at index ${i} is undefined`);
+    }
+
+    expectVector3ToBeCloseTo(actualVertex, expectedVertex, tolerance);
   }
 }

@@ -87,7 +87,7 @@ describe('OpenSCADRenderingPipeline Integration Tests', () => {
         } as SphereNode,
         {
           type: 'cube',
-          size: { x: 2, y: 4, z: 6 },
+          size: [2, 4, 6], // Vector3D tuple format
           center: true,
           location: createSimpleSourceLocation(4, 1),
         } as CubeNode,
@@ -107,7 +107,7 @@ describe('OpenSCADRenderingPipeline Integration Tests', () => {
         } as CircleNode,
         {
           type: 'square',
-          size: { x: 3, y: 5 },
+          size: [3, 5], // Vector2D tuple format
           center: true,
           location: createSimpleSourceLocation(7, 1),
         } as SquareNode,

@@ -133,10 +133,10 @@ describe('Primitive3DFactory', () => {
     describe('polyhedron generation', () => {
       it('should generate polyhedron using factory API', () => {
         const vertices = [
-          [0, 0, 0],
-          [1, 0, 0],
-          [0.5, 1, 0],
-          [0.5, 0.5, 1],
+          { x: 0, y: 0, z: 0 },
+          { x: 1, y: 0, z: 0 },
+          { x: 0.5, y: 1, z: 0 },
+          { x: 0.5, y: 0.5, z: 1 },
         ];
         const faces = [
           [0, 1, 2],
@@ -145,7 +145,7 @@ describe('Primitive3DFactory', () => {
           [2, 3, 0],
         ];
 
-        const result = factory.generatePrimitive('polyhedron', {
+        const result = factory.generatePrimitive('polyhedron' as const, {
           points: vertices,
           faces: faces,
           convexity: 1,
@@ -155,9 +155,13 @@ describe('Primitive3DFactory', () => {
         if (isSuccess(result)) {
           const polyhedron = result.data;
           expect(polyhedron.metadata.primitiveType).toBe('3d-polyhedron');
-          expect(polyhedron.metadata.parameters.vertexCount).toBe(4);
-          expect(polyhedron.metadata.parameters.faceCount).toBe(4);
-          expect(polyhedron.metadata.parameters.convexity).toBe(1);
+
+          // Type guard: check if this is a polyhedron geometry
+          if (polyhedron.metadata.primitiveType === '3d-polyhedron') {
+            expect(polyhedron.metadata.parameters.pointCount).toBe(4);
+            expect(polyhedron.metadata.parameters.faceCount).toBe(4);
+            expect(polyhedron.metadata.parameters.convexity).toBe(1);
+          }
         }
       });
     });
@@ -240,16 +244,25 @@ describe('Primitive3DFactory', () => {
       expect(results).toHaveLength(3);
 
       // Check first result (sphere)
-      expect(results[0].id).toBe('sphere1');
-      expect(isSuccess(results[0].result)).toBe(true);
+      expect(results[0]?.id).toBe('sphere1');
+      expect(results[0]?.result).toBeDefined();
+      if (results[0]?.result) {
+        expect(isSuccess(results[0].result)).toBe(true);
+      }
 
       // Check second result (cube)
-      expect(results[1].id).toBe('cube1');
-      expect(isSuccess(results[1].result)).toBe(true);
+      expect(results[1]?.id).toBe('cube1');
+      expect(results[1]?.result).toBeDefined();
+      if (results[1]?.result) {
+        expect(isSuccess(results[1].result)).toBe(true);
+      }
 
       // Check third result (cylinder, no id)
-      expect(results[2].id).toBeUndefined();
-      expect(isSuccess(results[2].result)).toBe(true);
+      expect(results[2]?.id).toBeUndefined();
+      expect(results[2]?.result).toBeDefined();
+      if (results[2]?.result) {
+        expect(isSuccess(results[2].result)).toBe(true);
+      }
     });
 
     it('should handle mixed success and failure in batch', () => {
@@ -269,8 +282,13 @@ describe('Primitive3DFactory', () => {
       const results = factory.generateBatch(requests);
 
       expect(results).toHaveLength(2);
-      expect(isSuccess(results[0].result)).toBe(true);
-      expect(isError(results[1].result)).toBe(true);
+      expect(results[0]?.result).toBeDefined();
+      expect(results[1]?.result).toBeDefined();
+
+      if (results[0]?.result && results[1]?.result) {
+        expect(isSuccess(results[0].result)).toBe(true);
+        expect(isError(results[1].result)).toBe(true);
+      }
     });
   });
 

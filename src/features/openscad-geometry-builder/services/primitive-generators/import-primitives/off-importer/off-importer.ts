@@ -179,6 +179,15 @@ export class OFFImporterService {
 
       const [vertexCount, faceCount, edgeCount] = counts;
 
+      // Ensure counts are defined (should be guaranteed by the checks above)
+      if (vertexCount === undefined || faceCount === undefined || edgeCount === undefined) {
+        return error({
+          type: 'COMPUTATION_ERROR',
+          message: 'invalid OFF counts: missing required values',
+          details: { counts },
+        });
+      }
+
       // Parse vertices
       const vertices: Array<{ x: number; y: number; z: number }> = [];
       for (let i = 0; i < vertexCount; i++) {
@@ -202,7 +211,8 @@ export class OFFImporterService {
         const coords = vertexLine.split(/\s+/).map(Number);
 
         // Check if this looks like a face line (starts with vertex count)
-        if (coords.length >= 4 && Number.isInteger(coords[0]) && coords[0] >= 3) {
+        const firstCoord = coords[0];
+        if (coords.length >= 4 && firstCoord !== undefined && Number.isInteger(firstCoord) && firstCoord >= 3) {
           return error({
             type: 'COMPUTATION_ERROR',
             message: `insufficient vertex data: expected ${vertexCount} vertices, got ${i}`,
@@ -219,9 +229,9 @@ export class OFFImporterService {
         }
 
         vertices.push({
-          x: coords[0],
-          y: coords[1],
-          z: coords[2],
+          x: coords[0] ?? 0,
+          y: coords[1] ?? 0,
+          z: coords[2] ?? 0,
         });
       }
 
@@ -256,7 +266,7 @@ export class OFFImporterService {
         }
 
         const faceVertexCount = faceData[0];
-        if (faceData.length < faceVertexCount + 1) {
+        if (faceVertexCount === undefined || faceData.length < faceVertexCount + 1) {
           return error({
             type: 'COMPUTATION_ERROR',
             message: `invalid face at line ${lineIndex + 1}: insufficient vertex indices`,
@@ -290,9 +300,9 @@ export class OFFImporterService {
         vertices,
         faces,
         metadata: {
-          vertexCount,
+          vertexCount: vertexCount ?? 0,
           faceCount: faces.length, // Use triangulated face count
-          edgeCount,
+          edgeCount: edgeCount ?? 0,
         },
       };
 
@@ -325,7 +335,7 @@ export class OFFImporterService {
     // Simple fan triangulation from first vertex
     const triangles: Array<readonly number[]> = [];
     for (let i = 1; i < faceIndices.length - 1; i++) {
-      triangles.push([faceIndices[0], faceIndices[i], faceIndices[i + 1]] as const);
+      triangles.push([faceIndices[0] ?? 0, faceIndices[i] ?? 0, faceIndices[i + 1] ?? 0] as const);
     }
 
     return triangles;
@@ -437,6 +447,10 @@ export class OFFImporterService {
     // Check for valid face indices
     for (let i = 0; i < mesh.faces.length; i++) {
       const face = mesh.faces[i];
+      if (!face) {
+        errors.push(`face at index ${i} is undefined`);
+        continue;
+      }
       for (const index of face) {
         if (index < 0 || index >= mesh.vertices.length) {
           errors.push(
@@ -449,6 +463,10 @@ export class OFFImporterService {
     // Check for NaN or infinite values
     for (let i = 0; i < mesh.vertices.length; i++) {
       const vertex = mesh.vertices[i];
+      if (!vertex) {
+        errors.push(`vertex at index ${i} is undefined`);
+        continue;
+      }
       if (!Number.isFinite(vertex.x) || !Number.isFinite(vertex.y) || !Number.isFinite(vertex.z)) {
         errors.push(`invalid vertex at index ${i}: contains NaN or infinite values`);
       }
@@ -464,11 +482,14 @@ export class OFFImporterService {
   /**
    * Convert OFF mesh to Polyhedron3DGeometryData
    */
-  private meshToGeometry(mesh: OFFMesh, params: ImportParameters): PolyhedronGeometryData {
+  private meshToGeometry(mesh: OFFMesh, _params: ImportParameters): PolyhedronGeometryData {
+    // Generate default normals (OFF format doesn't include normals)
+    const normals = mesh.vertices.map(() => ({ x: 0, y: 0, z: 1 }));
+
     return {
       vertices: mesh.vertices,
       faces: mesh.faces.map((face) => Array.from(face)),
-      normals: mesh.normals,
+      normals: normals,
       metadata: {
         primitiveType: '3d-polyhedron',
         parameters: {

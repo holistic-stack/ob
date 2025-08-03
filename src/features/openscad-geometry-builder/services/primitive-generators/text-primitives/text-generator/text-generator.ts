@@ -28,7 +28,7 @@ import type { Result } from '@/shared/types/result.types';
 import { error, success } from '@/shared/utils/functional/result';
 import type { Polygon2DGeometryData } from '../../../../types/2d-geometry-data';
 import type { GeometryGenerationError } from '../../../../types/geometry-data';
-import type { TextParameters } from '../../../../types/text-parameters';
+import type { FontSpecification, TextParameters } from '../../../../types/text-parameters';
 import { FontLoaderService } from '../font-loader/font-loader';
 
 const logger = createLogger('TextGeneratorService');
@@ -164,6 +164,22 @@ export class TextGeneratorService {
   }
 
   /**
+   * Convert FontSpecification to string format
+   */
+  private convertFontSpecificationToString(font: FontSpecification): string {
+    if (typeof font === 'string') {
+      return font;
+    }
+
+    // Convert object format to string format
+    if (font.style) {
+      return `${font.family}:style=${font.style}`;
+    }
+
+    return font.family;
+  }
+
+  /**
    * Normalize parameters with OpenSCAD defaults
    */
   private normalizeParameters(params: TextParameters): Required<TextParameters> {
@@ -191,7 +207,12 @@ export class TextGeneratorService {
       holes: [],
       metadata: {
         primitiveType: '2d-polygon',
-        parameters: params,
+        parameters: {
+          ...params,
+          pointCount: 0,
+          pathCount: 0,
+          hasHoles: false,
+        },
         fragmentCount: 0,
         generatedAt: Date.now(),
         isConvex: true,
@@ -208,7 +229,8 @@ export class TextGeneratorService {
   private async generateTextLayout(params: Required<TextParameters>): Promise<TextLayout> {
     try {
       // Load the font
-      const fontResult = await this.fontLoader.loadFont(params.font);
+      const fontString = this.convertFontSpecificationToString(params.font);
+      const fontResult = await this.fontLoader.loadFont(fontString);
       if (!fontResult.success) {
         logger.warn(`[FONT_FALLBACK] Failed to load font "${params.font}", using approximations`);
         return this.generateApproximateLayout(params);
@@ -312,7 +334,12 @@ export class TextGeneratorService {
       holes: [],
       metadata: {
         primitiveType: '2d-polygon',
-        parameters: params,
+        parameters: {
+          ...params,
+          pointCount: vertices.length,
+          pathCount: 1,
+          hasHoles: false,
+        },
         fragmentCount: vertices.length,
         generatedAt: Date.now(),
         isConvex: false, // Text is generally not convex
@@ -382,9 +409,11 @@ export class TextGeneratorService {
       height: charHeight,
     }));
 
+    const lastGlyph = glyphs[glyphs.length - 1];
+
     return {
       glyphs,
-      totalWidth: glyphs.length > 0 ? glyphs[glyphs.length - 1].x + charWidth : 0,
+      totalWidth: glyphs.length > 0 && lastGlyph ? lastGlyph.x + charWidth : 0,
       totalHeight: charHeight,
       baseline: charHeight * 0.2, // Approximate baseline
     };

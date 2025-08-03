@@ -163,9 +163,9 @@ export function convertVertexArraysToVector3(
 ): readonly Vector3[] {
   return vertexArrays.map((vertex) =>
     Object.freeze({
-      x: vertex[0],
-      y: vertex[1],
-      z: vertex[2],
+      x: vertex[0] ?? 0,
+      y: vertex[1] ?? 0,
+      z: vertex[2] ?? 0,
     })
   );
 }

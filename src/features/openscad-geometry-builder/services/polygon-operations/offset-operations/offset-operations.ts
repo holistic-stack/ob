@@ -254,9 +254,24 @@ export class OffsetOperationsService {
       const nextIndex = outline[(i + 1) % outline.length];
       const prevIndex = outline[(i - 1 + outline.length) % outline.length];
 
+      // Safe array access with validation
+      if (currentIndex === undefined || nextIndex === undefined || prevIndex === undefined) {
+        console.warn(
+          `[OffsetOperations] Invalid outline indices: current=${currentIndex}, next=${nextIndex}, prev=${prevIndex}`
+        );
+        continue;
+      }
+
       const currentVertex = vertices[currentIndex];
       const nextVertex = vertices[nextIndex];
       const prevVertex = vertices[prevIndex];
+
+      if (!currentVertex || !nextVertex || !prevVertex) {
+        console.warn(
+          `[OffsetOperations] Invalid vertices at indices: ${currentIndex}, ${nextIndex}, ${prevIndex}`
+        );
+        continue;
+      }
 
       // Calculate edge normals
       const prevEdge = {
@@ -321,7 +336,18 @@ export class OffsetOperationsService {
     let sumY = 0;
 
     for (const index of outline) {
+      // Safe array access with validation
+      if (index === undefined) {
+        console.warn(`[OffsetOperations] Invalid outline index: ${index}`);
+        continue;
+      }
+
       const vertex = vertices[index];
+      if (!vertex) {
+        console.warn(`[OffsetOperations] Invalid vertex at index: ${index}`);
+        continue;
+      }
+
       sumX += vertex.x;
       sumY += vertex.y;
     }
@@ -364,7 +390,18 @@ export class OffsetOperationsService {
 
     let totalDistance = 0;
     for (const index of outline) {
+      // Safe array access with validation
+      if (index === undefined) {
+        console.warn(`[OffsetOperations] Invalid outline index: ${index}`);
+        continue;
+      }
+
       const vertex = vertices[index];
+      if (!vertex) {
+        console.warn(`[OffsetOperations] Invalid vertex at index: ${index}`);
+        continue;
+      }
+
       const distance = Math.sqrt((vertex.x - centroid.x) ** 2 + (vertex.y - centroid.y) ** 2);
       totalDistance += distance;
     }
@@ -383,7 +420,18 @@ export class OffsetOperationsService {
 
     // Calculate distances from centroid to each vertex
     for (const index of outline) {
+      // Safe array access with validation
+      if (index === undefined) {
+        console.warn(`[OffsetOperations] Invalid outline index: ${index}`);
+        continue;
+      }
+
       const vertex = vertices[index];
+      if (!vertex) {
+        console.warn(`[OffsetOperations] Invalid vertex at index: ${index}`);
+        continue;
+      }
+
       const distance = Math.sqrt((vertex.x - centroid.x) ** 2 + (vertex.y - centroid.y) ** 2);
       distances.push(distance);
     }
@@ -398,7 +446,18 @@ export class OffsetOperationsService {
     if (isRegular) {
       const angles: number[] = [];
       for (const index of outline) {
+        // Safe array access with validation
+        if (index === undefined) {
+          console.warn(`[OffsetOperations] Invalid outline index: ${index}`);
+          continue;
+        }
+
         const vertex = vertices[index];
+        if (!vertex) {
+          console.warn(`[OffsetOperations] Invalid vertex at index: ${index}`);
+          continue;
+        }
+
         const angle = Math.atan2(vertex.y - centroid.y, vertex.x - centroid.x);
         angles.push(angle);
       }
@@ -410,7 +469,13 @@ export class OffsetOperationsService {
 
       for (let i = 0; i < angles.length; i++) {
         const nextIndex = (i + 1) % angles.length;
-        let angleDiff = angles[nextIndex] - angles[i];
+        const currentAngle = angles[i];
+        const nextAngle = angles[nextIndex];
+        if (currentAngle === undefined || nextAngle === undefined) {
+          isEvenlySpaced = false;
+          break;
+        }
+        let angleDiff = nextAngle - currentAngle;
         if (angleDiff < 0) angleDiff += 2 * Math.PI;
 
         if (Math.abs(angleDiff - expectedAngleStep) > expectedAngleStep * 0.2) {
@@ -439,7 +504,17 @@ export class OffsetOperationsService {
     const offsetVertices: Vector2[] = [];
 
     for (const index of outline) {
+      // Safe array access with validation
+      if (index === undefined) {
+        console.warn(`[OffsetOperations] Invalid outline index: ${index}`);
+        continue;
+      }
+
       const vertex = vertices[index];
+      if (!vertex) {
+        console.warn(`[OffsetOperations] Invalid vertex at index: ${index}`);
+        continue;
+      }
 
       // Calculate vector from centroid to vertex
       const toVertex = {
@@ -496,7 +571,14 @@ export class OffsetOperationsService {
     let area = 0;
     for (let i = 0; i < vertices.length; i++) {
       const j = (i + 1) % vertices.length;
-      area += vertices[i].x * vertices[j].y - vertices[j].x * vertices[i].y;
+      const currentVertex = vertices[i];
+      const nextVertex = vertices[j];
+
+      if (!currentVertex || !nextVertex) {
+        continue; // Skip invalid vertices
+      }
+
+      area += currentVertex.x * nextVertex.y - nextVertex.x * currentVertex.y;
     }
     return area / 2;
   }

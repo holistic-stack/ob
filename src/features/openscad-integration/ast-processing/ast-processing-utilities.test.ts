@@ -29,10 +29,8 @@ const createMockCubeNode = (): ASTNode => ({
     end: { line: 1, column: 10, offset: 10 },
     text: 'cube([1,2,3])',
   },
-  parameters: [
-    { name: 'size', value: [1, 2, 3] },
-    { name: 'center', value: false },
-  ],
+  size: [1, 2, 3],
+  center: false,
 });
 
 const createMockTranslateNode = (): ASTNode => ({
@@ -42,7 +40,7 @@ const createMockTranslateNode = (): ASTNode => ({
     end: { line: 2, column: 15, offset: 35 },
     text: 'translate([1,0,0])',
   },
-  parameters: [{ name: 'v', value: [1, 0, 0] }],
+  v: [1, 0, 0],
   children: [createMockCubeNode()],
 });
 
@@ -62,7 +60,7 @@ const createMockUnionNode = (): ASTNode => ({
         end: { line: 4, column: 12, offset: 70 },
         text: 'sphere(r=2)',
       },
-      parameters: [{ name: 'r', value: 2 }],
+      radius: 2,
     },
   ],
 });
@@ -312,7 +310,7 @@ describe('ASTAnalyzer', () => {
     it('should find nodes by predicate', () => {
       const unionNode = createMockUnionNode();
       const nodesWithRadius = analyzer.findNodesByPredicate(unionNode, (node) =>
-        node.parameters?.some((p) => p.name === 'r')
+        'radius' in node && typeof node.radius === 'number'
       );
 
       expect(nodesWithRadius).toHaveLength(1); // sphere with radius

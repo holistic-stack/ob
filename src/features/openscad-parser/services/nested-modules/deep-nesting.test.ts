@@ -227,8 +227,8 @@ describe('Deep Nested Module Support', () => {
           // Leaf level: add a primitive
           body.push({
             type: 'cylinder',
-            height: level,
-            radius: level,
+            h: level,
+            r: level,
             center: false,
             location: {
               start: { line: level * 2, column: level * 2 + 1, offset: 0 },

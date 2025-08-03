@@ -24,7 +24,7 @@ import * as BABYLON from '@babylonjs/core';
 import type { Result } from '@/shared';
 import { error, success } from '@/shared';
 import type { Geometry2DData } from '../../../types/2d-geometry-data';
-import type { BaseGeometryData, Geometry3DData } from '../../../types/geometry-data';
+import type { BaseGeometryData, Geometry3DData, Vector2 } from '../../../types/geometry-data';
 
 /**
  * Error types for mesh creation
@@ -264,15 +264,15 @@ export class BabylonMeshBuilderService {
       for (const face of geometryData.faces) {
         if (face.length === 3) {
           // Triangle - add directly
-          indices.push(face[0], face[1], face[2]);
+          indices.push(face[0] ?? 0, face[1] ?? 0, face[2] ?? 0);
         } else if (face.length === 4) {
           // Quad - triangulate as two triangles
-          indices.push(face[0], face[1], face[2]);
-          indices.push(face[0], face[2], face[3]);
+          indices.push(face[0] ?? 0, face[1] ?? 0, face[2] ?? 0);
+          indices.push(face[0] ?? 0, face[2] ?? 0, face[3] ?? 0);
         } else {
           // Polygon with more than 4 vertices - fan triangulation
           for (let i = 1; i < face.length - 1; i++) {
-            indices.push(face[0], face[i], face[i + 1]);
+            indices.push(face[0] ?? 0, face[i] ?? 0, face[i + 1] ?? 0);
           }
         }
       }

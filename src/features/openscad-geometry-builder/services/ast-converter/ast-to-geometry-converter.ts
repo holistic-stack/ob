@@ -38,13 +38,14 @@ import type {
   CircleNode,
   CubeNode,
   CylinderNode,
+  ParameterValue,
   PolygonNode,
   SphereNode,
   SquareNode,
 } from '@/features/openscad-parser';
 import type { Result } from '@/shared';
 import { createLogger, error, success } from '@/shared';
-import type { BaseGeometryData, Vector2 } from '../../types/geometry-data';
+import type { GeometryData, Vector2, Vector3 } from '../../types/geometry-data';
 
 const logger = createLogger('ASTToGeometryConverterService');
 
@@ -73,8 +74,8 @@ export interface ConversionError {
 /**
  * AST to geometry conversion result type
  */
-export type ConversionResult = Result<BaseGeometryData, ConversionError>;
-export type BatchConversionResult = Result<BaseGeometryData[], ConversionError>;
+export type ConversionResult = Result<GeometryData, ConversionError>;
+export type BatchConversionResult = Result<GeometryData[], ConversionError>;
 
 /**
  * AST to Geometry Converter Service
@@ -154,7 +155,7 @@ export class ASTToGeometryConverterService {
     try {
       logger.debug(`[CONVERT_BATCH] Converting ${nodes.length} AST nodes to geometry`);
 
-      const geometries: BaseGeometryData[] = [];
+      const geometries: GeometryData[] = [];
 
       for (const node of nodes) {
         const result = this.convertASTNodeToGeometry(node, globals);
@@ -191,9 +192,9 @@ export class ASTToGeometryConverterService {
     try {
       // Extract parameters with proper fallbacks
       const radius = typeof node.radius === 'number' ? node.radius : 1;
-      const fn = node.$fn || globals.$fn;
-      const fa = node.$fa || globals.$fa;
-      const fs = node.$fs || globals.$fs;
+      const fn = node.$fn || globals.$fn || 0;
+      const fa = node.$fa || globals.$fa || 12;
+      const fs = node.$fs || globals.$fs || 2;
 
       // Calculate fragments
       const fragmentResult = this.fragmentCalculator.calculateFragments(radius, fn, fs, fa);
@@ -230,8 +231,8 @@ export class ASTToGeometryConverterService {
    */
   private convertCubeNode(node: CubeNode, _globals: GlobalVariables): ConversionResult {
     try {
-      // Extract parameters with proper fallbacks
-      const size = node.size || 1;
+      // Extract parameters with proper fallbacks and type conversion
+      const size = this.convertParameterValueToSize(node.size) || 1;
       const center = node.center || false;
 
       // Generate cube geometry
@@ -259,14 +260,14 @@ export class ASTToGeometryConverterService {
    */
   private convertCylinderNode(node: CylinderNode, globals: GlobalVariables): ConversionResult {
     try {
-      // Extract parameters with proper fallbacks
-      const height = node.h || 1;
-      const r1 = node.r1 || node.r || 1;
-      const r2 = node.r2 || node.r || 1;
+      // Extract parameters with proper fallbacks and type conversion
+      const height = this.convertParameterValueToNumber(node.h) || 1;
+      const r1 = this.convertParameterValueToNumber(node.r1 || node.r) || 1;
+      const r2 = this.convertParameterValueToNumber(node.r2 || node.r) || 1;
       const center = node.center || false;
-      const fn = node.$fn || globals.$fn;
-      const fa = node.$fa || globals.$fa;
-      const fs = node.$fs || globals.$fs;
+      const fn = node.$fn || globals.$fn || 0;
+      const fa = node.$fa || globals.$fa || 12;
+      const fs = node.$fs || globals.$fs || 2;
 
       // Calculate fragments using the larger radius
       const maxRadius = Math.max(r1, r2);
@@ -312,9 +313,9 @@ export class ASTToGeometryConverterService {
     try {
       // Extract parameters with proper fallbacks
       const radius = typeof node.r === 'number' ? node.r : 1;
-      const fn = node.$fn || globals.$fn;
-      const fa = node.$fa || globals.$fa;
-      const fs = node.$fs || globals.$fs;
+      const fn = node.$fn || globals.$fn || 0;
+      const fa = node.$fa || globals.$fa || 12;
+      const fs = node.$fs || globals.$fs || 2;
 
       // Calculate fragments
       const fragmentResult = this.fragmentCalculator.calculateFragments(radius, fn, fs, fa);
@@ -354,8 +355,8 @@ export class ASTToGeometryConverterService {
    */
   private convertSquareNode(node: SquareNode, _globals: GlobalVariables): ConversionResult {
     try {
-      // Extract parameters with proper fallbacks
-      const size = node.size || 1;
+      // Extract parameters with proper fallbacks and type conversion
+      const size = this.convertParameterValueToSize2D(node.size) || 1;
       const center = node.center || false;
 
       // Generate square geometry using SquareParameters interface
@@ -431,5 +432,60 @@ export class ASTToGeometryConverterService {
         details: { node },
       });
     }
+  }
+
+  /**
+   * Convert ParameterValue to size type (Vector3 | number)
+   */
+  private convertParameterValueToSize(value: ParameterValue): Vector3 | number | null {
+    if (typeof value === 'number') {
+      return value;
+    }
+
+    if (value && typeof value === 'object' && 'x' in value && 'y' in value && 'z' in value) {
+      return value as Vector3;
+    }
+
+    if (Array.isArray(value) && value.length >= 3) {
+      const [x, y, z] = value;
+      if (typeof x === 'number' && typeof y === 'number' && typeof z === 'number') {
+        return { x, y, z };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Convert ParameterValue to number
+   */
+  private convertParameterValueToNumber(value: ParameterValue): number | null {
+    if (typeof value === 'number') {
+      return value;
+    }
+
+    return null;
+  }
+
+  /**
+   * Convert ParameterValue to 2D size type (Vector2 | number)
+   */
+  private convertParameterValueToSize2D(value: ParameterValue): Vector2 | number | null {
+    if (typeof value === 'number') {
+      return value;
+    }
+
+    if (value && typeof value === 'object' && 'x' in value && 'y' in value) {
+      return value as Vector2;
+    }
+
+    if (Array.isArray(value) && value.length >= 2) {
+      const [x, y] = value;
+      if (typeof x === 'number' && typeof y === 'number') {
+        return { x, y };
+      }
+    }
+
+    return null;
   }
 }

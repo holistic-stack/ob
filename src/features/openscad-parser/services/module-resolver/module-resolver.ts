@@ -494,7 +494,7 @@ export class ModuleResolver implements ModuleResolverInterface {
       resolutionStack: [...context.resolutionStack, moduleName],
       variableScope: new Map<string, unknown>(context.variableScope), // Copy parent scope
       scopedRegistry: localRegistry, // Use local registry for nested modules
-      sourceCode: context.sourceCode ?? undefined, // Pass through the source code
+      ...(context.sourceCode && { sourceCode: context.sourceCode }), // Only include if defined
     };
 
     // Bind parameters from instantiation.args to moduleDefinition.parameters
@@ -712,12 +712,17 @@ export class ModuleResolver implements ModuleResolverInterface {
     // This must be done before checking for identifier nodes to ensure
     // that nodes like cube, sphere, etc. have their properties substituted
     // Only process nodes that have a valid type field (not expression elements)
-    if (node.type && node.type !== 'expression') {
+    if (this.isRecordObject(node) && node.type && node.type !== 'expression') {
       this.substituteParametersInPrimitiveProperties(node, bindings);
     }
 
     // Handle identifier nodes that might be parameter references
-    if (node.type === 'identifier' && typeof node.name === 'string' && bindings.has(node.name)) {
+    if (
+      this.isRecordObject(node) &&
+      node.type === 'identifier' &&
+      typeof node.name === 'string' &&
+      bindings.has(node.name)
+    ) {
       // Replace the identifier with the bound value
       const value = bindings.get(node.name);
       if (value !== undefined) {
@@ -727,25 +732,34 @@ export class ModuleResolver implements ModuleResolverInterface {
     }
 
     // Recursively process all properties
-    for (const key in node) {
-      if (Object.hasOwn(node, key) && key !== 'type') {
-        const value = node[key];
+    if (this.isRecordObject(node)) {
+      for (const key in node) {
+        if (Object.hasOwn(node, key) && key !== 'type') {
+          const value = node[key];
 
-        // Skip properties that are handled by substituteParametersInPrimitiveProperties
-        const primitiveProperties = ['size', 'radius', 'height', 'diameter', 'r', 'h', 'd', 'v'];
-        if (primitiveProperties.includes(key)) {
-          // Skip - already handled by substituteParametersInPrimitiveProperties
-          continue;
-        }
+          // Skip properties that are handled by substituteParametersInPrimitiveProperties
+          const primitiveProperties = ['size', 'radius', 'height', 'diameter', 'r', 'h', 'd', 'v'];
+          if (primitiveProperties.includes(key)) {
+            // Skip - already handled by substituteParametersInPrimitiveProperties
+            continue;
+          }
 
-        if (typeof value === 'string' && bindings.has(value)) {
-          // Direct string parameter reference in property
-          node[key] = bindings.get(value);
-        } else {
-          this.substituteParametersRecursive(value, bindings);
+          if (typeof value === 'string' && bindings.has(value)) {
+            // Direct string parameter reference in property
+            node[key] = bindings.get(value);
+          } else {
+            this.substituteParametersRecursive(value, bindings);
+          }
         }
       }
     }
+  }
+
+  /**
+   * Type guard to check if a value is a Record<string, unknown>
+   */
+  private isRecordObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 
   /**
@@ -786,20 +800,22 @@ export class ModuleResolver implements ModuleResolverInterface {
         } else if (
           typeof node[prop] === 'object' &&
           node[prop] !== null &&
-          node[prop].type === 'expression' &&
-          node[prop].expressionType === 'vector'
+          'type' in node[prop] &&
+          'expressionType' in node[prop] &&
+          (node[prop] as unknown as Record<string, unknown>).type === 'expression' &&
+          (node[prop] as unknown as Record<string, unknown>).expressionType === 'vector'
         ) {
           // Handle VectorExpressionNode with elements array
-          const vectorExpr = node[prop];
+          const vectorExpr = node[prop] as unknown as Record<string, unknown>;
           console.log(
-            `[ModuleResolver] DEBUG - Processing VectorExpressionNode '${prop}' with ${vectorExpr.elements?.length || 0} elements`
+            `[ModuleResolver] DEBUG - Processing VectorExpressionNode '${prop}' with ${(vectorExpr.elements as unknown[])?.length || 0} elements`
           );
           console.log(
             `[ModuleResolver] DEBUG - VectorExpr structure:`,
             JSON.stringify(vectorExpr, null, 2)
           );
 
-          if (vectorExpr.elements && Array.isArray(vectorExpr.elements)) {
+          if ('elements' in vectorExpr && vectorExpr.elements && Array.isArray(vectorExpr.elements)) {
             const resolvedElements: number[] = [];
 
             for (let i = 0; i < vectorExpr.elements.length; i++) {
@@ -847,23 +863,27 @@ export class ModuleResolver implements ModuleResolverInterface {
           }
         } else if (typeof node[prop] === 'object' && node[prop] !== null) {
           // Handle different types of object references
-          if (node[prop].type === 'identifier' && bindings.has(node[prop].name)) {
+          const propObj = node[prop] as unknown as Record<string, unknown>;
+          if ('type' in propObj && 'name' in propObj && propObj.type === 'identifier' && bindings.has(propObj.name as string)) {
             // Identifier node reference
-            const boundValue = bindings.get(node[prop].name);
+            const boundValue = bindings.get(propObj.name as string);
             console.log(
-              `[ModuleResolver] DEBUG - Replacing identifier '${node[prop].name}' with:`,
+              `[ModuleResolver] DEBUG - Replacing identifier '${propObj.name}' with:`,
               boundValue
             );
             node[prop] = this.extractActualValue(boundValue);
           } else if (
-            node[prop].type === 'expression' &&
-            node[prop].expressionType === 'identifier' &&
-            bindings.has(node[prop].name)
+            'type' in propObj &&
+            'expressionType' in propObj &&
+            'name' in propObj &&
+            propObj.type === 'expression' &&
+            propObj.expressionType === 'identifier' &&
+            bindings.has(propObj.name as string)
           ) {
             // Expression identifier reference
-            const boundValue = bindings.get(node[prop].name);
+            const boundValue = bindings.get(propObj.name as string);
             console.log(
-              `[ModuleResolver] DEBUG - Replacing expression identifier '${node[prop].name}' with:`,
+              `[ModuleResolver] DEBUG - Replacing expression identifier '${propObj.name as string}' with:`,
               boundValue
             );
             node[prop] = this.extractActualValue(boundValue);
@@ -933,9 +953,11 @@ export class ModuleResolver implements ModuleResolverInterface {
     if (
       typeof value === 'object' &&
       value !== null &&
-      (value as Record<string, unknown>).type === 'expression'
+      !Array.isArray(value) &&
+      'type' in value &&
+      value.type === 'expression'
     ) {
-      const expr = value as Record<string, unknown>;
+      const expr = value as unknown as Record<string, unknown>;
       if (expr.expressionType === 'literal') {
         // Extract the actual value from the literal expression
         const actualValue = expr.value;
@@ -1018,9 +1040,11 @@ export class ModuleResolver implements ModuleResolverInterface {
     if (
       typeof boundValue === 'object' &&
       boundValue !== null &&
-      (boundValue as Record<string, unknown>).type === 'expression'
+      !Array.isArray(boundValue) &&
+      'type' in boundValue &&
+      boundValue.type === 'expression'
     ) {
-      const expr = boundValue as Record<string, unknown>;
+      const expr = boundValue as unknown as Record<string, unknown>;
       if (expr.expressionType === 'literal') {
         // Extract the actual value from the literal expression
         const actualValue = expr.value;
@@ -1033,13 +1057,32 @@ export class ModuleResolver implements ModuleResolverInterface {
           // Return as string if not a number
           return actualValue;
         }
-        return actualValue;
+        // Handle other types of actual values
+        if (typeof actualValue === 'number' || typeof actualValue === 'boolean') {
+          return actualValue;
+        }
+        // Default to null for unsupported types
+        return null;
       }
-      // For other expression types, return the expression object
-      return boundValue;
+      // For other expression types, return null as fallback
+      return null;
     }
 
-    // For primitive values, return as-is
+    // For primitive values, return as-is (filter out undefined)
+    if (boundValue === undefined) {
+      return null;
+    }
+
+    // Handle arrays (Vector2D, Vector3D)
+    if (Array.isArray(boundValue)) {
+      return null; // Arrays are not supported as simple values
+    }
+
+    // Handle other complex types
+    if (typeof boundValue === 'object' && boundValue !== null) {
+      return null; // Complex objects are not supported as simple values
+    }
+
     return boundValue;
   }
 
@@ -1061,15 +1104,23 @@ export class ModuleResolver implements ModuleResolverInterface {
         return (node as { value?: boolean }).value || false;
       case 'string':
         return (node as { value?: string }).value || '';
-      case 'vector':
-        return (node as { elements?: unknown[] }).elements || [];
+      case 'vector': {
+        const elements = (node as { elements?: unknown[] }).elements || [];
+        // Cast to Vector3D if it has 3 elements, Vector2D if 2, otherwise return empty Vector3D
+        if (elements.length === 3) {
+          return elements as [number, number, number];
+        } else if (elements.length === 2) {
+          return elements as [number, number];
+        }
+        return [0, 0, 0] as [number, number, number];
+      }
       case 'identifier':
         // For identifiers in default values, return the name as a string
         // This will be resolved later if it's a variable reference
         return (node as { name?: string }).name || '';
       case 'expression': {
         // Handle expression nodes - check if it's a literal expression
-        const expr = node as Record<string, unknown>;
+        const expr = node as unknown as Record<string, unknown>;
         if (expr.expressionType === 'literal') {
           // Try to parse the literal value
           const value = expr.value;
@@ -1082,7 +1133,12 @@ export class ModuleResolver implements ModuleResolverInterface {
             // Return as string if not a number
             return value;
           }
-          return value;
+          // Handle other types of values
+          if (typeof value === 'number' || typeof value === 'boolean') {
+            return value;
+          }
+          // Default to null for unsupported types
+          return null;
         }
         // For other expression types, return the node itself
         return node as ParameterValue;

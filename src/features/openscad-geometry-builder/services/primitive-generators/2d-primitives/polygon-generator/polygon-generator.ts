@@ -130,6 +130,15 @@ export class PolygonGeneratorService {
     for (let pathIndex = 0; pathIndex < paths.length; pathIndex++) {
       const path = paths[pathIndex];
 
+      // Validate path exists
+      if (!path) {
+        return error({
+          type: 'INVALID_PARAMETERS',
+          message: `Path at index ${pathIndex} is undefined`,
+          details: { pathIndex },
+        });
+      }
+
       // Check minimum path length
       if (path.length < 3) {
         return error({
@@ -142,6 +151,16 @@ export class PolygonGeneratorService {
       // Check that all indices are valid
       for (let i = 0; i < path.length; i++) {
         const index = path[i];
+
+        // Validate index exists and is a number
+        if (index === undefined || typeof index !== 'number') {
+          return error({
+            type: 'INVALID_PARAMETERS',
+            message: `Invalid index at position ${i} in path ${pathIndex}`,
+            details: { pathIndex, position: i, index },
+          });
+        }
+
         if (index < 0 || index >= points.length) {
           return error({
             type: 'INVALID_PARAMETERS',
@@ -170,7 +189,11 @@ export class PolygonGeneratorService {
 
     if (paths && paths.length > 0) {
       // Use paths: first path is outline, rest are holes
-      outline = [...paths[0]];
+      const firstPath = paths[0];
+      if (!firstPath) {
+        throw new Error('[PolygonGenerator] First path is undefined');
+      }
+      outline = [...firstPath];
       holes = paths.slice(1).map((path) => [...path]);
     } else {
       // No paths: use all points in order as outline
@@ -235,8 +258,24 @@ export class PolygonGeneratorService {
     let area = 0;
     for (let i = 0; i < path.length; i++) {
       const j = (i + 1) % path.length;
-      const vi = vertices[path[i]];
-      const vj = vertices[path[j]];
+
+      // Safe array access with validation
+      const pathI = path[i];
+      const pathJ = path[j];
+
+      if (pathI === undefined || pathJ === undefined) {
+        console.warn(`[PolygonGenerator] Invalid path indices: i=${pathI}, j=${pathJ}`);
+        continue;
+      }
+
+      const vi = vertices[pathI];
+      const vj = vertices[pathJ];
+
+      if (!vi || !vj) {
+        console.warn(`[PolygonGenerator] Invalid vertices at indices: ${pathI}, ${pathJ}`);
+        continue;
+      }
+
       area += vi.x * vj.y - vj.x * vi.y;
     }
     return area / 2;
@@ -250,9 +289,24 @@ export class PolygonGeneratorService {
 
     let sign = 0;
     for (let i = 0; i < outline.length; i++) {
-      const p1 = vertices[outline[i]];
-      const p2 = vertices[outline[(i + 1) % outline.length]];
-      const p3 = vertices[outline[(i + 2) % outline.length]];
+      // Safe array access with validation
+      const idx1 = outline[i];
+      const idx2 = outline[(i + 1) % outline.length];
+      const idx3 = outline[(i + 2) % outline.length];
+
+      if (idx1 === undefined || idx2 === undefined || idx3 === undefined) {
+        console.warn(`[PolygonGenerator] Invalid outline indices: ${idx1}, ${idx2}, ${idx3}`);
+        continue;
+      }
+
+      const p1 = vertices[idx1];
+      const p2 = vertices[idx2];
+      const p3 = vertices[idx3];
+
+      if (!p1 || !p2 || !p3) {
+        console.warn(`[PolygonGenerator] Invalid vertices at indices: ${idx1}, ${idx2}, ${idx3}`);
+        continue;
+      }
 
       // Calculate cross product
       const cross = (p2.x - p1.x) * (p3.y - p2.y) - (p2.y - p1.y) * (p3.x - p2.x);

@@ -137,7 +137,7 @@ describe('Geometry Utilities', () => {
         customField: 'test',
       });
 
-      expect(metadata.customField).toBe('test');
+      expect((metadata as any).customField).toBe('test');
     });
   });
 
@@ -151,9 +151,11 @@ describe('Geometry Utilities', () => {
       const normals = generateNormalsFromPositions(vertices);
 
       expect(normals).toHaveLength(2);
-      expect(normals[0].x).toBeCloseTo(0.6);
-      expect(normals[0].y).toBeCloseTo(0.8);
-      expect(normals[1].z).toBeCloseTo(1);
+      expect(normals[0]).toBeDefined();
+      expect(normals[1]).toBeDefined();
+      expect(normals[0]?.x).toBeCloseTo(0.6);
+      expect(normals[0]?.y).toBeCloseTo(0.8);
+      expect(normals[1]?.z).toBeCloseTo(1);
     });
 
     it('should handle empty array', () => {

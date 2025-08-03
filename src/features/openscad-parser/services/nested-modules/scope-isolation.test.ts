@@ -204,8 +204,8 @@ describe('Scope Isolation in Nested Modules', () => {
         body: [
           {
             type: 'cylinder',
-            height: 10,
-            radius: 3,
+            h: 10,
+            r: 3,
             center: false,
             location: {
               start: { line: 2, column: 30, offset: 0 },
@@ -334,7 +334,7 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'helper',
-          location: { line: 4, column: 11 },
+          location: createSourceLocation(4, 11, 11, 4, 17, 17),
         },
         parameters: [],
         body: [
@@ -342,10 +342,10 @@ describe('Scope Isolation in Nested Modules', () => {
             type: 'cube',
             size: 5, // This SHOULD be used (shadows global)
             center: false,
-            location: { line: 4, column: 25 },
+            location: createSourceLocation(4, 25, 25, 4, 35, 35),
           },
         ],
-        location: { line: 4, column: 3 },
+        location: createSourceLocation(4, 3, 3, 4, 40, 40),
       };
 
       const testModule: ModuleDefinitionNode = {
@@ -354,7 +354,7 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'testModule',
-          location: { line: 3, column: 8 },
+          location: createSourceLocation(3, 8, 8, 3, 18, 18),
         },
         parameters: [],
         body: [
@@ -363,10 +363,10 @@ describe('Scope Isolation in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'helper', // Should call local helper, not global
             args: [],
-            location: { line: 5, column: 3 },
+            location: createSourceLocation(5, 3, 3, 5, 13, 13),
           },
         ],
-        location: { line: 3, column: 1 },
+        location: createSourceLocation(3, 1, 1, 3, 20, 20),
       };
 
       const inputAST: ASTNode[] = [
@@ -376,7 +376,7 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'module_instantiation',
           name: 'testModule',
           args: [],
-          location: { line: 7, column: 1 },
+          location: createSourceLocation(7, 1, 1, 7, 11, 11),
         },
       ];
 
@@ -402,7 +402,7 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'level3',
-          location: { line: 4, column: 13 },
+          location: createSourceLocation(4, 13, 13, 4, 19, 19),
         },
         parameters: [],
         body: [
@@ -410,10 +410,10 @@ describe('Scope Isolation in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'sharedHelper', // Should find this in level1 scope
             args: [],
-            location: { line: 5, column: 7 },
+            location: createSourceLocation(5, 7, 7, 5, 19, 19),
           },
         ],
-        location: { line: 4, column: 5 },
+        location: createSourceLocation(4, 5, 5, 4, 25, 25),
       };
 
       const level2Module: ModuleDefinitionNode = {
@@ -422,7 +422,7 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'level2',
-          location: { line: 3, column: 11 },
+          location: createSourceLocation(3, 11, 11, 3, 17, 17),
         },
         parameters: [],
         body: [
@@ -431,10 +431,10 @@ describe('Scope Isolation in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'level3',
             args: [],
-            location: { line: 7, column: 5 },
+            location: createSourceLocation(7, 5, 5, 7, 11, 11),
           },
         ],
-        location: { line: 3, column: 3 },
+        location: createSourceLocation(3, 3, 3, 3, 20, 20),
       };
 
       const sharedHelper: ModuleDefinitionNode = {
@@ -443,17 +443,17 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'sharedHelper',
-          location: { line: 2, column: 11 },
+          location: createSourceLocation(2, 11, 11, 2, 23, 23),
         },
         parameters: [],
         body: [
           {
             type: 'sphere',
             radius: 7,
-            location: { line: 2, column: 30 },
+            location: createSourceLocation(2, 30, 30, 2, 40, 40),
           },
         ],
-        location: { line: 2, column: 3 },
+        location: createSourceLocation(2, 3, 3, 2, 45, 45),
       };
 
       const level1Module: ModuleDefinitionNode = {
@@ -462,7 +462,7 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'expression',
           expressionType: 'identifier',
           name: 'level1',
-          location: { line: 1, column: 8 },
+          location: createSourceLocation(1, 8, 8, 1, 14, 14),
         },
         parameters: [],
         body: [
@@ -472,10 +472,10 @@ describe('Scope Isolation in Nested Modules', () => {
             type: 'module_instantiation',
             name: 'level2',
             args: [],
-            location: { line: 9, column: 3 },
+            location: createSourceLocation(9, 3, 3, 9, 9, 9),
           },
         ],
-        location: { line: 1, column: 1 },
+        location: createSourceLocation(1, 1, 1, 1, 20, 20),
       };
 
       const inputAST: ASTNode[] = [
@@ -484,7 +484,7 @@ describe('Scope Isolation in Nested Modules', () => {
           type: 'module_instantiation',
           name: 'level1',
           args: [],
-          location: { line: 11, column: 1 },
+          location: createSourceLocation(11, 1, 1, 11, 7, 7),
         },
       ];
 

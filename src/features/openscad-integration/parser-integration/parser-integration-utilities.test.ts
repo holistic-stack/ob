@@ -294,7 +294,11 @@ describe('ParserPerformanceTracker', () => {
 
       const metrics = tracker.getPerformanceMetrics();
       expect(metrics.slowestOperations).toHaveLength(2);
-      expect(metrics.slowestOperations[0].operationName).toBe('slow-op');
+      expect(metrics.slowestOperations[0]).toBeDefined();
+
+      if (metrics.slowestOperations[0]) {
+        expect(metrics.slowestOperations[0].operationName).toBe('slow-op');
+      }
     });
   });
 });

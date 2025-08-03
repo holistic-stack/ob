@@ -859,7 +859,7 @@ export class PrimitiveVisitor extends BaseASTVisitor {
 
     // Extract points using regex from the raw node text
     const pointsMatch = nodeText.match(/points\s*=\s*(\[\s*\[[\d\s.,[\]-]+\]\s*\])/);
-    if (pointsMatch && pointsMatch[1] && typeof pointsMatch[1] === 'string') {
+    if (pointsMatch?.[1] && typeof pointsMatch[1] === 'string') {
       points = this.parsePolygonPointsFromText(pointsMatch[1]);
     } else {
       // Fallback to parameter extraction

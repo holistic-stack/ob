@@ -28,7 +28,8 @@ import type { AbstractMesh, Scene as BabylonScene } from '@babylonjs/core';
 import { BabylonMeshBuilderService } from '@/features/openscad-geometry-builder';
 import type { Result } from '@/shared';
 import { createLogger, error, success } from '@/shared';
-import type { Geometry2DData, Geometry3DData, GeometryData } from '../../types/geometry-data';
+import type { Geometry2DData } from '../../types/2d-geometry-data';
+import type { Geometry3DData, GeometryData } from '../../types/geometry-data';
 
 const logger = createLogger('GeometryToMeshConverterService');
 
@@ -117,6 +118,17 @@ export class GeometryToMeshConverterService {
 
       for (let i = 0; i < geometries.length; i++) {
         const geometry = geometries[i];
+        if (!geometry) {
+          return error({
+            type: 'BATCH_CONVERSION_ERROR',
+            message: `Geometry at index ${i} is undefined`,
+            details: {
+              failedGeometryIndex: i,
+              processedCount: meshes.length,
+              totalCount: geometries.length,
+            },
+          });
+        }
         const meshName = namePrefix ? `${namePrefix}-${i}` : undefined;
 
         const result = this.convertGeometryToMesh(geometry, scene, meshName);
@@ -267,7 +279,7 @@ export class GeometryToMeshConverterService {
   private extractMeshTypeFromName(name: string): string {
     // Extract primitive type from generated names like "openscad-3d-sphere-123456-1"
     const match = name.match(/openscad-(.+?)-\d+-\d+$/);
-    if (match) {
+    if (match?.[1]) {
       return match[1];
     }
 

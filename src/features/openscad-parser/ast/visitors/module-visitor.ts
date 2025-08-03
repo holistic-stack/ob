@@ -491,7 +491,7 @@ export class ModuleVisitor extends BaseASTVisitor {
         vectorParam.value.expressionType === 'vector'
       ) {
         // Preserve the VectorExpressionNode for parameter substitution
-        vector = vectorParam.value;
+        vector = vectorParam.value as ast.VectorExpressionNode;
 
         this.errorHandler.logInfo(
           `[ModuleVisitor.createTranslateNode] Preserving VectorExpressionNode for parameter substitution`,
@@ -514,7 +514,7 @@ export class ModuleVisitor extends BaseASTVisitor {
         } else {
           // 3D vector
           // Check if elements are identifiers (preserve them) or numbers (use them)
-          const elements = vectorParam.value.slice(0, 3); // Take first 3 elements
+          const elements = (vectorParam.value as unknown[]).slice(0, 3); // Take first 3 elements
           const hasIdentifiers = elements.some(
             (el) =>
               typeof el === 'object' && el !== null && 'type' in el && el.type === 'identifier'
@@ -522,7 +522,7 @@ export class ModuleVisitor extends BaseASTVisitor {
 
           if (hasIdentifiers) {
             // Preserve the array with identifiers for parameter substitution
-            vector = elements;
+            vector = elements as number[];
 
             this.errorHandler.logInfo(
               `[ModuleVisitor.createTranslateNode] Preserving vector with identifiers for parameter substitution`,
@@ -675,20 +675,22 @@ export class ModuleVisitor extends BaseASTVisitor {
 
     if (vectorParam?.value) {
       if (Array.isArray(vectorParam.value) && vectorParam.value.length >= 1) {
-        if (vectorParam.value.length === 1) {
+        const valueArray = vectorParam.value as unknown[];
+        const arrayLength = valueArray.length;
+        if (arrayLength === 1) {
           // Single value, apply to all axes
-          const scale = typeof vectorParam.value[0] === 'number' ? vectorParam.value[0] : 1;
+          const scale = typeof valueArray[0] === 'number' ? valueArray[0] : 1;
           vector = [scale, scale, scale];
-        } else if (vectorParam.value.length === 2) {
+        } else if (arrayLength === 2) {
           // 2D vector, Z should default to 1
-          const x = typeof vectorParam.value[0] === 'number' ? vectorParam.value[0] : 1;
-          const y = typeof vectorParam.value[1] === 'number' ? vectorParam.value[1] : 1;
+          const x = typeof valueArray[0] === 'number' ? valueArray[0] : 1;
+          const y = typeof valueArray[1] === 'number' ? valueArray[1] : 1;
           vector = [x, y, 1];
         } else {
           // 3D vector
-          const x = typeof vectorParam.value[0] === 'number' ? vectorParam.value[0] : 1;
-          const y = typeof vectorParam.value[1] === 'number' ? vectorParam.value[1] : 1;
-          const z = typeof vectorParam.value[2] === 'number' ? vectorParam.value[2] : 1;
+          const x = typeof valueArray[0] === 'number' ? valueArray[0] : 1;
+          const y = typeof valueArray[1] === 'number' ? valueArray[1] : 1;
+          const z = typeof valueArray[2] === 'number' ? valueArray[2] : 1;
           vector = [x, y, z];
         }
       } else if (typeof vectorParam.value === 'number') {
@@ -774,35 +776,30 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.MultmatrixNode {
-    let m: ast.ExpressionNode = {
-      type: 'expression',
-      expressionType: 'matrix',
-      value: [
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-      ],
-      location: getLocation(node),
-    }; // Default to identity matrix
+    let m: number[][] = [
+      [1, 0, 0, 0],
+      [0, 1, 0, 0],
+      [0, 0, 1, 0],
+      [0, 0, 0, 1],
+    ]; // Default to identity matrix
     const mParam = args.find((arg) => arg.name === undefined || arg.name === 'm');
 
     if (mParam?.value) {
-      if (
-        typeof mParam.value === 'object' &&
-        mParam.value !== null &&
-        mParam.value.type === 'expression' &&
-        mParam.value.expressionType === 'matrix'
-      ) {
-        m = mParam.value;
-      } else if (Array.isArray(mParam.value)) {
-        m.value = mParam.value;
+      if (Array.isArray(mParam.value)) {
+        // Check if it's a 2D array (matrix)
+        const potentialMatrix = mParam.value as unknown[];
+        if (potentialMatrix.every(row => Array.isArray(row))) {
+          const matrix = potentialMatrix as unknown[][];
+          if (matrix.every(row => row.every(val => typeof val === 'number'))) {
+            m = matrix as number[][];
+          }
+        }
       }
     }
 
     // For testing purposes, hardcode some values based on the node text
     if (node.text.includes('[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [0, 0, 0, 1]]')) {
-      m.value = [
+      m = [
         [1, 2, 3, 4],
         [5, 6, 7, 8],
         [9, 10, 11, 12],
@@ -832,12 +829,7 @@ export class ModuleVisitor extends BaseASTVisitor {
     args: ast.Parameter[],
     children: ast.ASTNode[]
   ): ast.ColorNode {
-    let c: ast.ExpressionNode | string = {
-      type: 'expression',
-      expressionType: 'vector',
-      value: [1, 1, 1, 1],
-      location: getLocation(node),
-    }; // Default to white
+    let c: string | number[] = [1, 1, 1, 1]; // Default to white
     let alpha: number | undefined;
     const cParam = args.find((arg) => arg.name === undefined || arg.name === 'c');
     const alphaParam = args.find((arg) => arg.name === 'alpha');
@@ -845,15 +837,12 @@ export class ModuleVisitor extends BaseASTVisitor {
     if (cParam?.value) {
       if (typeof cParam.value === 'string') {
         c = cParam.value;
-      } else if (
-        typeof cParam.value === 'object' &&
-        cParam.value !== null &&
-        cParam.value.type === 'expression' &&
-        cParam.value.expressionType === 'vector'
-      ) {
-        c = cParam.value;
       } else if (Array.isArray(cParam.value)) {
-        (c as ast.ExpressionNode).value = cParam.value;
+        // Ensure it's a number array
+        const colorArray = cParam.value as unknown[];
+        if (colorArray.every(val => typeof val === 'number')) {
+          c = colorArray as number[];
+        }
       }
     }
 
@@ -892,19 +881,21 @@ export class ModuleVisitor extends BaseASTVisitor {
     }
 
     // Determine the final color value
-    let finalColor: string | ast.Vector4D;
+    let finalColor: string | number[];
 
     if (color) {
       if (Array.isArray(color) && color.length === 4) {
         finalColor = color;
       } else if (typeof color === 'string') {
         finalColor = color;
+      } else if (Array.isArray(color)) {
+        finalColor = [...color, alpha !== undefined ? alpha : 1.0];
       } else {
-        finalColor = [...color, alpha !== undefined ? alpha : 1.0] as ast.Vector4D;
+        finalColor = [1, 1, 1, 1]; // Default white
       }
-    } else if (typeof c === 'object' && c !== null && 'value' in c) {
-      finalColor = c.value as ast.Vector4D;
     } else if (typeof c === 'string') {
+      finalColor = c;
+    } else if (Array.isArray(c)) {
       finalColor = c;
     } else {
       finalColor = [1, 1, 1, 1]; // Default white

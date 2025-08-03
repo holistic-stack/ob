@@ -62,14 +62,14 @@ describe('SphereGeneratorService', () => {
         // Ring Z = 5 * cos(135°) = -3.535534
 
         // Verify ring 0 vertices (first 3 vertices)
-        expect(sphere.vertices[0].z).toBeCloseTo(3.535534, 5);
-        expect(sphere.vertices[1].z).toBeCloseTo(3.535534, 5);
-        expect(sphere.vertices[2].z).toBeCloseTo(3.535534, 5);
+        expect(sphere.vertices[0]?.z).toBeCloseTo(3.535534, 5);
+        expect(sphere.vertices[1]?.z).toBeCloseTo(3.535534, 5);
+        expect(sphere.vertices[2]?.z).toBeCloseTo(3.535534, 5);
 
         // Verify ring 1 vertices (last 3 vertices)
-        expect(sphere.vertices[3].z).toBeCloseTo(-3.535534, 5);
-        expect(sphere.vertices[4].z).toBeCloseTo(-3.535534, 5);
-        expect(sphere.vertices[5].z).toBeCloseTo(-3.535534, 5);
+        expect(sphere.vertices[3]?.z).toBeCloseTo(-3.535534, 5);
+        expect(sphere.vertices[4]?.z).toBeCloseTo(-3.535534, 5);
+        expect(sphere.vertices[5]?.z).toBeCloseTo(-3.535534, 5);
 
         // Verify ring radius for all vertices
         const ringRadius = 3.535534;

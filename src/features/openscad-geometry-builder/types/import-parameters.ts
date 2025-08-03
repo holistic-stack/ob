@@ -188,6 +188,9 @@ export function detectFileFormat(filename: string): FileFormatInfo | null {
   }
 
   const format = FILE_FORMAT_MAP[extension];
+  if (!format) {
+    return null;
+  }
   const is3D = ['stl', 'off', 'obj', 'amf', '3mf', 'csg'].includes(format);
   const is2D = ['dxf', 'svg'].includes(format);
   const isImage = ['png'].includes(format);
@@ -287,21 +290,12 @@ export function normalizeImportParameters(params: ImportParameters): NormalizedI
     fn: params.$fn ?? DEFAULT_IMPORT_PARAMETERS.$fn,
     fa: params.$fa ?? DEFAULT_IMPORT_PARAMETERS.$fa,
     fs: params.$fs ?? DEFAULT_IMPORT_PARAMETERS.$fs,
+    // Include optional properties only if defined
+    ...(params.width !== undefined && { width: params.width }),
+    ...(params.height !== undefined && { height: params.height }),
+    ...(params.id !== undefined && { id: params.id }),
+    ...(params.layer !== undefined && { layer: params.layer }),
   };
-
-  // Only include optional properties if they are defined
-  if (params.width !== undefined) {
-    (normalized as any).width = params.width;
-  }
-  if (params.height !== undefined) {
-    (normalized as any).height = params.height;
-  }
-  if (params.id !== undefined) {
-    (normalized as any).id = params.id;
-  }
-  if (params.layer !== undefined) {
-    (normalized as any).layer = params.layer;
-  }
 
   return normalized;
 }

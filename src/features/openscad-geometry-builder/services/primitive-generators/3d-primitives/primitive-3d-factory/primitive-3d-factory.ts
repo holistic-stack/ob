@@ -237,7 +237,7 @@ export class Primitive3DFactory {
       }
 
       return {
-        id: request.id,
+        ...(request.id !== undefined && { id: request.id }),
         result,
       };
     });

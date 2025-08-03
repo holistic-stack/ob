@@ -152,12 +152,12 @@ describe('CircleGeneratorService', () => {
           expect(vertices).toHaveLength(6);
 
           // Check first vertex (0°)
-          expect(vertices[0].x).toBeCloseTo(5, 5);
-          expect(vertices[0].y).toBeCloseTo(0, 5);
+          expect(vertices[0]?.x).toBeCloseTo(5, 5);
+          expect(vertices[0]?.y).toBeCloseTo(0, 5);
 
           // Check second vertex (60°)
-          expect(vertices[1].x).toBeCloseTo(2.5, 5);
-          expect(vertices[1].y).toBeCloseTo(4.33, 2);
+          expect(vertices[1]?.x).toBeCloseTo(2.5, 5);
+          expect(vertices[1]?.y).toBeCloseTo(4.33, 2);
         }
       });
 

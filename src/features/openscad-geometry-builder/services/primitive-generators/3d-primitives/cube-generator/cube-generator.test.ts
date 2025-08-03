@@ -56,9 +56,9 @@ describe('CubeGeneratorService', () => {
           ];
 
           for (let i = 0; i < 8; i++) {
-            expect(cube.vertices[i].x).toBeCloseTo(expectedVertices[i].x);
-            expect(cube.vertices[i].y).toBeCloseTo(expectedVertices[i].y);
-            expect(cube.vertices[i].z).toBeCloseTo(expectedVertices[i].z);
+            expect(cube.vertices[i]?.x).toBeCloseTo(expectedVertices[i]?.x ?? 0);
+            expect(cube.vertices[i]?.y).toBeCloseTo(expectedVertices[i]?.y ?? 0);
+            expect(cube.vertices[i]?.z).toBeCloseTo(expectedVertices[i]?.z ?? 0);
           }
         }
       });
@@ -109,9 +109,9 @@ describe('CubeGeneratorService', () => {
           ];
 
           for (let i = 0; i < 8; i++) {
-            expect(cube.vertices[i].x).toBeCloseTo(expectedVertices[i].x);
-            expect(cube.vertices[i].y).toBeCloseTo(expectedVertices[i].y);
-            expect(cube.vertices[i].z).toBeCloseTo(expectedVertices[i].z);
+            expect(cube.vertices[i]?.x).toBeCloseTo(expectedVertices[i]?.x ?? 0);
+            expect(cube.vertices[i]?.y).toBeCloseTo(expectedVertices[i]?.y ?? 0);
+            expect(cube.vertices[i]?.z).toBeCloseTo(expectedVertices[i]?.z ?? 0);
           }
         }
       });
@@ -207,6 +207,9 @@ describe('CubeGeneratorService', () => {
           for (let i = 0; i < cube.vertices.length; i++) {
             const vertex = cube.vertices[i];
             const normal = cube.normals[i];
+
+            // Skip if vertex or normal is undefined
+            if (!vertex || !normal) continue;
 
             // Normal should point in same general direction as vertex from center
             const dot = vertex.x * normal.x + vertex.y * normal.y + vertex.z * normal.z;

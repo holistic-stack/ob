@@ -127,6 +127,16 @@ export class PolygonValidator {
     // Check outline indices
     for (let i = 0; i < outline.length; i++) {
       const index = outline[i];
+
+      // Validate index exists and is a number
+      if (index === undefined || typeof index !== 'number') {
+        return error({
+          type: 'INVALID_PARAMETERS',
+          message: `Invalid index at position ${i} in outline`,
+          details: { polygonData, position: i, index },
+        });
+      }
+
       if (index < 0 || index >= vertices.length) {
         return error({
           type: 'INVALID_PARAMETERS',
@@ -139,8 +149,28 @@ export class PolygonValidator {
     // Check hole indices
     for (let holeIndex = 0; holeIndex < holes.length; holeIndex++) {
       const hole = holes[holeIndex];
+
+      // Validate hole exists
+      if (!hole) {
+        return error({
+          type: 'INVALID_PARAMETERS',
+          message: `Hole at index ${holeIndex} is undefined`,
+          details: { polygonData, holeIndex },
+        });
+      }
+
       for (let i = 0; i < hole.length; i++) {
         const index = hole[i];
+
+        // Validate index exists and is a number
+        if (index === undefined || typeof index !== 'number') {
+          return error({
+            type: 'INVALID_PARAMETERS',
+            message: `Invalid index at position ${i} in hole ${holeIndex}`,
+            details: { polygonData, holeIndex, position: i, index },
+          });
+        }
+
         if (index < 0 || index >= vertices.length) {
           return error({
             type: 'INVALID_PARAMETERS',
@@ -208,8 +238,28 @@ export class PolygonValidator {
     let area = 0;
     for (let i = 0; i < outline.length; i++) {
       const j = (i + 1) % outline.length;
-      const vi = vertices[outline[i]];
-      const vj = vertices[outline[j]];
+
+      // Safe array access with validation
+      const currentIndex = outline[i];
+      const nextIndex = outline[j];
+
+      if (currentIndex === undefined || nextIndex === undefined) {
+        console.warn(
+          `[PolygonValidator] Invalid outline indices: current=${currentIndex}, next=${nextIndex}`
+        );
+        continue;
+      }
+
+      const vi = vertices[currentIndex];
+      const vj = vertices[nextIndex];
+
+      if (!vi || !vj) {
+        console.warn(
+          `[PolygonValidator] Invalid vertices at indices: ${currentIndex}, ${nextIndex}`
+        );
+        continue;
+      }
+
       area += vi.x * vj.y - vj.x * vi.y;
     }
     return area / 2;
@@ -232,8 +282,27 @@ export class PolygonValidator {
   ): boolean {
     for (let i = 0; i < outline.length; i++) {
       const j = (i + 1) % outline.length;
-      const vi = vertices[outline[i]];
-      const vj = vertices[outline[j]];
+
+      // Safe array access with validation
+      const currentIndex = outline[i];
+      const nextIndex = outline[j];
+
+      if (currentIndex === undefined || nextIndex === undefined) {
+        console.warn(
+          `[PolygonValidator] Invalid outline indices in duplicate check: current=${currentIndex}, next=${nextIndex}`
+        );
+        continue;
+      }
+
+      const vi = vertices[currentIndex];
+      const vj = vertices[nextIndex];
+
+      if (!vi || !vj) {
+        console.warn(
+          `[PolygonValidator] Invalid vertices in duplicate check at indices: ${currentIndex}, ${nextIndex}`
+        );
+        continue;
+      }
 
       const dx = vi.x - vj.x;
       const dy = vi.y - vj.y;
@@ -359,6 +428,9 @@ export class PolygonValidator {
     // Test if all vertices of inner polygon are inside outer polygon
     for (const vertexIndex of innerPath) {
       const point = vertices[vertexIndex];
+      if (!point) {
+        return false; // Invalid vertex index
+      }
       if (!this.isPointInPolygon(point, vertices, outerPath)) {
         return false;
       }
@@ -377,8 +449,26 @@ export class PolygonValidator {
     let inside = false;
 
     for (let i = 0, j = path.length - 1; i < path.length; j = i++) {
-      const vi = vertices[path[i]];
-      const vj = vertices[path[j]];
+      // Safe array access with validation
+      const currentIndex = path[i];
+      const previousIndex = path[j];
+
+      if (currentIndex === undefined || previousIndex === undefined) {
+        console.warn(
+          `[PolygonValidator] Invalid path indices in point-in-polygon: current=${currentIndex}, previous=${previousIndex}`
+        );
+        continue;
+      }
+
+      const vi = vertices[currentIndex];
+      const vj = vertices[previousIndex];
+
+      if (!vi || !vj) {
+        console.warn(
+          `[PolygonValidator] Invalid vertices in point-in-polygon at indices: ${currentIndex}, ${previousIndex}`
+        );
+        continue;
+      }
 
       if (
         vi.y > point.y !== vj.y > point.y &&

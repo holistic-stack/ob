@@ -119,7 +119,7 @@ export class CameraGizmoSyncService {
   private camera: ArcRotateCamera | null = null;
   private gizmoService: OrientationGizmoService | null = null;
   private easingFunction: EasingFunction | null = null;
-  private updateThrottleId: any | null = null;
+  private updateThrottleId: number | null = null;
   private animationGroup: Animatable[] = [];
   private storeUnsubscribe: (() => void) | null = null;
 

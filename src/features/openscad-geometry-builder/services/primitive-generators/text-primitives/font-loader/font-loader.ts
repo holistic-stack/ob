@@ -383,15 +383,15 @@ export class FontLoaderService {
    */
   private parseFontSpec(fontSpec: string): { family: string; style: string } {
     const parts = fontSpec.split(':');
-    const family = parts[0].trim();
+    const family = (parts[0] ?? '').trim() || 'Arial';
 
     if (parts.length === 1) {
       return { family, style: 'Regular' };
     }
 
     // Parse style parameter
-    const styleMatch = parts[1].match(/style=(.+)/);
-    const style = styleMatch ? styleMatch[1].trim() : 'Regular';
+    const styleMatch = parts[1]?.match(/style=(.+)/);
+    const style = styleMatch?.[1]?.trim() || 'Regular';
 
     return { family, style };
   }

@@ -228,8 +228,14 @@ describe('TextGeneratorService', () => {
 
       // Different alignments should produce different positioning
       expect(results.length).toBe(3);
-      expect(results[0].bounds.x).not.toBe(results[1].bounds.x);
-      expect(results[1].bounds.x).not.toBe(results[2].bounds.x);
+      expect(results[0]).toBeDefined();
+      expect(results[1]).toBeDefined();
+      expect(results[2]).toBeDefined();
+
+      if (results[0] && results[1] && results[2]) {
+        expect(results[0].bounds.x).not.toBe(results[1].bounds.x);
+        expect(results[1].bounds.x).not.toBe(results[2].bounds.x);
+      }
     });
 
     it('should handle vertical alignment', async () => {

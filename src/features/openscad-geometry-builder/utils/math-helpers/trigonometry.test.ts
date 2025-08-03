@@ -180,16 +180,19 @@ describe('Trigonometry Utilities', () => {
       }
 
       // Vertex 0: 0°
-      expect(vertices[0].x).toBeCloseTo(5);
-      expect(vertices[0].y).toBeCloseTo(0, 10);
+      expect(vertices[0]).toBeDefined();
+      expect(vertices[0]?.x).toBeCloseTo(5);
+      expect(vertices[0]?.y).toBeCloseTo(0, 10);
 
       // Vertex 1: 120°
-      expect(vertices[1].x).toBeCloseTo(-2.5);
-      expect(vertices[1].y).toBeCloseTo(4.330127, 5);
+      expect(vertices[1]).toBeDefined();
+      expect(vertices[1]?.x).toBeCloseTo(-2.5);
+      expect(vertices[1]?.y).toBeCloseTo(4.330127, 5);
 
       // Vertex 2: 240°
-      expect(vertices[2].x).toBeCloseTo(-2.5);
-      expect(vertices[2].y).toBeCloseTo(-4.330127, 5);
+      expect(vertices[2]).toBeDefined();
+      expect(vertices[2]?.x).toBeCloseTo(-2.5);
+      expect(vertices[2]?.y).toBeCloseTo(-4.330127, 5);
     });
 
     it('should generate correct sphere ring vertices for $fn=3', () => {
@@ -208,14 +211,16 @@ describe('Trigonometry Utilities', () => {
       }
 
       // Ring 0: phi = 45°
-      expect(rings[0].phi).toBeCloseTo(45);
-      expect(rings[0].ringRadius).toBeCloseTo(3.535534, 5);
-      expect(rings[0].z).toBeCloseTo(3.535534, 5);
+      expect(rings[0]).toBeDefined();
+      expect(rings[0]?.phi).toBeCloseTo(45);
+      expect(rings[0]?.ringRadius).toBeCloseTo(3.535534, 5);
+      expect(rings[0]?.z).toBeCloseTo(3.535534, 5);
 
       // Ring 1: phi = 135°
-      expect(rings[1].phi).toBeCloseTo(135);
-      expect(rings[1].ringRadius).toBeCloseTo(3.535534, 5);
-      expect(rings[1].z).toBeCloseTo(-3.535534, 5);
+      expect(rings[1]).toBeDefined();
+      expect(rings[1]?.phi).toBeCloseTo(135);
+      expect(rings[1]?.ringRadius).toBeCloseTo(3.535534, 5);
+      expect(rings[1]?.z).toBeCloseTo(-3.535534, 5);
     });
 
     it('should handle edge cases that OpenSCAD encounters', () => {

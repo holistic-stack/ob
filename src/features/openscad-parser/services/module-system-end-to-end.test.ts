@@ -48,9 +48,11 @@ describe('Module System End-to-End', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
+
       expect(result.data).toHaveLength(1);
-      expect(result.data?.[0]?.type).toBe('sphere');
-      expect((result.data?.[0] as any)?.radius).toBe(10);
+      expect(result.data[0]?.type).toBe('sphere');
+      expect((result.data[0] as any)?.radius).toBe(10);
     });
   });
 
@@ -172,9 +174,11 @@ describe('Module System End-to-End', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
+
       expect(result.data).toHaveLength(3); // 2 translates + 1 intersection
 
-      const nodeTypes = result.data?.map((node) => node.type) || [];
+      const nodeTypes = result.data.map((node) => node.type);
       expect(nodeTypes.filter((type) => type === 'translate')).toHaveLength(2);
       expect(nodeTypes.filter((type) => type === 'intersection')).toHaveLength(1);
     });
@@ -232,9 +236,11 @@ describe('Module System End-to-End', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
+
       expect(result.data).toHaveLength(3); // 3 cubes
 
-      result.data?.forEach((node) => {
+      result.data.forEach((node) => {
         expect(node.type).toBe('cube');
       });
     });
@@ -304,9 +310,11 @@ describe('Module System End-to-End', () => {
       const result = resolver.resolveAST(inputAST);
 
       expect(result.success).toBe(true);
+      if (!result.success) return; // Type guard for TypeScript
+
       expect(result.data).toHaveLength(2); // 2 cubes from doubleCube
 
-      result.data?.forEach((node) => {
+      result.data.forEach((node) => {
         expect(node.type).toBe('cube');
       });
     });

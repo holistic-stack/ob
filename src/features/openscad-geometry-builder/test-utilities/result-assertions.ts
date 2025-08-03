@@ -159,6 +159,9 @@ export function expectAllSuccessful<T, E>(results: Array<Result<T, E>>): T[] {
 
   for (let index = 0; index < results.length; index++) {
     const result = results[index];
+    if (!result) {
+      throw new Error(`Result at index ${index} is undefined`);
+    }
     expect(isSuccess(result), `Result at index ${index} should be successful`).toBe(true);
 
     if (isSuccess(result)) {
@@ -180,6 +183,9 @@ export function expectAllErrors<T, E>(results: Array<Result<T, E>>): E[] {
 
   for (let index = 0; index < results.length; index++) {
     const result = results[index];
+    if (!result) {
+      throw new Error(`Result at index ${index} is undefined`);
+    }
     expect(isError(result), `Result at index ${index} should be an error`).toBe(true);
 
     if (isError(result)) {

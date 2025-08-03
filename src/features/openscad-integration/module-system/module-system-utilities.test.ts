@@ -30,7 +30,8 @@ import {
 const createMockModuleDefinition = (): ModuleDefinitionNode => ({
   type: 'module_definition',
   name: {
-    type: 'identifier',
+    type: 'expression',
+    expressionType: 'identifier',
     name: 'test_module',
     location: {
       start: { line: 1, column: 0, offset: 0 },
@@ -39,8 +40,44 @@ const createMockModuleDefinition = (): ModuleDefinitionNode => ({
     },
   },
   parameters: [
-    { name: 'size', defaultValue: 10 },
-    { name: 'center', defaultValue: false },
+    {
+      type: 'module_parameter',
+      name: 'size',
+      defaultValue: {
+        type: 'expression',
+        expressionType: 'literal',
+        value: 10,
+        location: {
+          start: { line: 1, column: 20, offset: 20 },
+          end: { line: 1, column: 22, offset: 22 },
+          text: '10',
+        },
+      },
+      location: {
+        start: { line: 1, column: 15, offset: 15 },
+        end: { line: 1, column: 22, offset: 22 },
+        text: 'size=10',
+      },
+    },
+    {
+      type: 'module_parameter',
+      name: 'center',
+      defaultValue: {
+        type: 'expression',
+        expressionType: 'literal',
+        value: false,
+        location: {
+          start: { line: 1, column: 30, offset: 30 },
+          end: { line: 1, column: 35, offset: 35 },
+          text: 'false',
+        },
+      },
+      location: {
+        start: { line: 1, column: 24, offset: 24 },
+        end: { line: 1, column: 35, offset: 35 },
+        text: 'center=false',
+      },
+    },
   ],
   body: [
     {
@@ -50,7 +87,17 @@ const createMockModuleDefinition = (): ModuleDefinitionNode => ({
         end: { line: 2, column: 12, offset: 30 },
         text: 'cube(size)',
       },
-      parameters: [{ name: 'size', value: 'size' }],
+      size: {
+        type: 'expression',
+        expressionType: 'identifier',
+        name: 'size',
+        location: {
+          start: { line: 2, column: 7, offset: 25 },
+          end: { line: 2, column: 11, offset: 29 },
+          text: 'size',
+        },
+      },
+      center: false,
     },
   ],
   location: {
@@ -77,29 +124,62 @@ const createMockModuleCall = (): ModuleInstantiationNode => ({
 
 // Mock conditional statement for testing
 const createMockConditionalStatement = (): ASTNode => ({
-  type: 'if_statement',
+  type: 'if',
   condition: {
-    type: 'binary_expression',
+    type: 'expression',
+    expressionType: 'binary',
     operator: '>',
-    left: { type: 'identifier', name: 'size' },
-    right: { type: 'number', value: 10 },
+    left: {
+      type: 'expression',
+      expressionType: 'identifier',
+      name: 'size',
+      location: {
+        start: { line: 1, column: 4, offset: 4 },
+        end: { line: 1, column: 8, offset: 8 },
+        text: 'size',
+      },
+    },
+    right: {
+      type: 'expression',
+      expressionType: 'literal',
+      value: 10,
+      location: {
+        start: { line: 1, column: 11, offset: 11 },
+        end: { line: 1, column: 13, offset: 13 },
+        text: '10',
+      },
+    },
+    location: {
+      start: { line: 1, column: 4, offset: 4 },
+      end: { line: 1, column: 13, offset: 13 },
+      text: 'size > 10',
+    },
   },
-  then_body: [
+  children: [
     {
       type: 'cube',
-      parameters: [{ name: 'size', value: 'size' }],
-    },
-  ],
-  else_body: [
-    {
-      type: 'sphere',
-      parameters: [{ name: 'r', value: 5 }],
+      size: {
+        type: 'expression',
+        expressionType: 'identifier',
+        name: 'size',
+        location: {
+          start: { line: 1, column: 20, offset: 20 },
+          end: { line: 1, column: 24, offset: 24 },
+          text: 'size',
+        },
+      },
+      center: false,
+      location: {
+        start: { line: 1, column: 15, offset: 15 },
+        end: { line: 1, column: 29, offset: 29 },
+        text: 'cube(size)',
+      },
     },
   ],
   location: {
     start: { line: 1, column: 0, offset: 0 },
     end: { line: 5, column: 1, offset: 50 },
-    text: 'if (size > 10) { cube(size); } else { sphere(r=5); }',
+    text: 'if (size > 10) { cube(size); }',
   },
 });
 
@@ -138,10 +218,17 @@ describe('ModuleProcessingPipeline', () => {
 
       expect(result.success).toBe(true);
       if (!result.success) return; // Type guard for TypeScript
-      expect(result.data.parameters[0].name).toBe('size');
-      expect(result.data.parameters[0].defaultValue).toBe(10);
-      expect(result.data.parameters[1].name).toBe('center');
-      expect(result.data.parameters[1].defaultValue).toBe(false);
+
+      expect(result.data.parameters).toHaveLength(2);
+      expect(result.data.parameters[0]).toBeDefined();
+      expect(result.data.parameters[1]).toBeDefined();
+
+      if (result.data.parameters[0] && result.data.parameters[1]) {
+        expect(result.data.parameters[0].name).toBe('size');
+        expect(result.data.parameters[0].defaultValue).toBe(10);
+        expect(result.data.parameters[1].name).toBe('center');
+        expect(result.data.parameters[1].defaultValue).toBe(false);
+      }
     });
   });
 
@@ -163,10 +250,17 @@ describe('ModuleProcessingPipeline', () => {
 
       expect(result.success).toBe(true);
       if (!result.success) return; // Type guard for TypeScript
-      expect(result.data.arguments[0].name).toBe('size');
-      expect(result.data.arguments[0].value).toBe(20);
-      expect(result.data.arguments[1].name).toBe('center');
-      expect(result.data.arguments[1].value).toBe(true);
+
+      expect(result.data.arguments).toHaveLength(2);
+      expect(result.data.arguments[0]).toBeDefined();
+      expect(result.data.arguments[1]).toBeDefined();
+
+      if (result.data.arguments[0] && result.data.arguments[1]) {
+        expect(result.data.arguments[0].name).toBe('size');
+        expect(result.data.arguments[0].value).toBe(20);
+        expect(result.data.arguments[1].name).toBe('center');
+        expect(result.data.arguments[1].value).toBe(true);
+      }
     });
 
     it('should handle module call without arguments', async () => {
@@ -285,7 +379,11 @@ describe('ConditionalProcessor', () => {
       expect(result.data.conditionResult).toBe(true); // size (15) > 10
       expect(result.data.executedBranch).toBe('then');
       expect(result.data.resultingNodes).toHaveLength(1);
-      expect(result.data.resultingNodes[0].type).toBe('cube');
+      expect(result.data.resultingNodes[0]).toBeDefined();
+
+      if (result.data.resultingNodes[0]) {
+        expect(result.data.resultingNodes[0].type).toBe('cube');
+      }
     });
 
     it('should process else branch when condition is false', async () => {
@@ -299,7 +397,11 @@ describe('ConditionalProcessor', () => {
       expect(result.data.conditionResult).toBe(false); // size (5) > 10
       expect(result.data.executedBranch).toBe('else');
       expect(result.data.resultingNodes).toHaveLength(1);
-      expect(result.data.resultingNodes[0].type).toBe('sphere');
+      expect(result.data.resultingNodes[0]).toBeDefined();
+
+      if (result.data.resultingNodes[0]) {
+        expect(result.data.resultingNodes[0].type).toBe('sphere');
+      }
     });
 
     it('should handle missing variables in condition', async () => {
@@ -415,7 +517,11 @@ describe('ModulePerformanceTracker', () => {
 
       const metrics = tracker.getPerformanceMetrics();
       expect(metrics.slowestOperations).toHaveLength(2);
-      expect(metrics.slowestOperations[0].moduleName).toBe('slow_module');
+      expect(metrics.slowestOperations[0]).toBeDefined();
+
+      if (metrics.slowestOperations[0]) {
+        expect(metrics.slowestOperations[0].moduleName).toBe('slow_module');
+      }
     });
   });
 });

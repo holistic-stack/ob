@@ -93,13 +93,18 @@ describe('SphereGeneratorService Cache Performance Tests', () => {
       const firstTime = times[0];
       const subsequentTimes = times.slice(1);
 
+      // Ensure we have valid timing data
+      expect(firstTime).toBeDefined();
+      expect(firstTime).toBeGreaterThan(0);
+
       // All subsequent generations should be faster or equal due to caching
-      subsequentTimes.forEach((time, index) => {
-        if (firstTime > 0.1) {
-          expect(time).toBeLessThanOrEqual(firstTime);
-          console.log(
-            `Generation ${index + 2} is ${(firstTime / time).toFixed(1)}x faster than first`
-          );
+      if (firstTime !== undefined) {
+        subsequentTimes.forEach((time, index) => {
+          if (firstTime > 0.1) {
+            expect(time).toBeLessThanOrEqual(firstTime);
+            console.log(
+              `Generation ${index + 2} is ${(firstTime / time).toFixed(1)}x faster than first`
+            );
         } else {
           // For very fast operations, just ensure they complete successfully
           expect(time).toBeGreaterThan(0);
@@ -108,6 +113,7 @@ describe('SphereGeneratorService Cache Performance Tests', () => {
           );
         }
       });
+      }
     });
   });
 

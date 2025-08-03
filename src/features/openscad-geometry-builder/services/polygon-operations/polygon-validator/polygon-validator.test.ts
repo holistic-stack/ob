@@ -244,7 +244,7 @@ describe('PolygonValidator', () => {
           expect(result.data.isValid).toBe(true);
           expect(result.data.hasValidHoles).toBe(true);
           expect(result.data.holeValidation).toHaveLength(1);
-          expect(result.data.holeValidation[0].isInsideOutline).toBe(true);
+          expect(result.data.holeValidation[0]?.isInsideOutline).toBe(true);
         }
       });
 
@@ -272,7 +272,7 @@ describe('PolygonValidator', () => {
         if (isSuccess(result)) {
           expect(result.data.isValid).toBe(false);
           expect(result.data.hasValidHoles).toBe(false);
-          expect(result.data.holeValidation[0].isInsideOutline).toBe(false);
+          expect(result.data.holeValidation[0]?.isInsideOutline).toBe(false);
         }
       });
 

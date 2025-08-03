@@ -30,6 +30,7 @@
 
 import type {
   ASTNode,
+  BaseNode,
   ModuleDefinitionNode,
   ModuleInstantiationNode,
 } from '@/features/openscad-parser';
@@ -145,7 +146,7 @@ export interface ExpressionNode {
 /**
  * Conditional AST node with typed condition
  */
-export interface ConditionalNode extends ASTNode {
+export interface ConditionalNode extends BaseNode {
   readonly condition?: ExpressionNode;
   readonly then_body?: readonly ASTNode[];
   readonly else_body?: readonly ASTNode[];
@@ -259,7 +260,9 @@ export class ModuleProcessingPipeline {
       const moduleName =
         typeof moduleCall.name === 'string'
           ? moduleCall.name
-          : moduleCall.name.name || moduleCall.name;
+          : (typeof moduleCall.name === 'object' && 'name' in moduleCall.name)
+          ? moduleCall.name.name
+          : 'unknown';
 
       // Extract arguments
       const moduleArguments = this.extractModuleArguments(moduleCall);
@@ -273,7 +276,7 @@ export class ModuleProcessingPipeline {
       const result: ProcessedModuleCall = {
         moduleName,
         arguments: moduleArguments,
-        children,
+        children: children || [],
         processingMetadata: {
           processingTime,
           memoryUsage: memoryAfter - memoryBefore,
@@ -319,7 +322,7 @@ export class ModuleProcessingPipeline {
       moduleCall &&
       typeof moduleCall === 'object' &&
       moduleCall.type === 'module_instantiation' &&
-      moduleCall.name
+      Boolean(moduleCall.name)
     );
   }
 
@@ -347,7 +350,7 @@ export class ModuleProcessingPipeline {
     }
 
     return moduleCall.args.map((arg) => ({
-      name: arg.name,
+      name: arg.name || 'unnamed',
       value: arg.value,
     }));
   }
@@ -368,12 +371,9 @@ export class VariableScopeManager {
     const scope: VariableScope = {
       scopeId,
       variables: new Map<string, unknown>(),
+      // Include parentScope only if defined
+      ...(parentScope !== undefined && { parentScope }),
     };
-
-    // Only include parentScope if it's defined
-    if (parentScope !== undefined) {
-      (scope as any).parentScope = parentScope;
-    }
 
     return scope;
   }

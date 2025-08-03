@@ -271,9 +271,21 @@ describe('Primitive2DFactory', () => {
       const results = factory.generateMultiplePrimitives(requests);
 
       expect(results).toHaveLength(3);
-      expect(isSuccess(results[0])).toBe(true);
-      expect(isSuccess(results[1])).toBe(true);
-      expect(isSuccess(results[2])).toBe(true);
+      expect(results[0]).toBeDefined();
+      expect(results[1]).toBeDefined();
+      expect(results[2]).toBeDefined();
+
+      // Type-safe access after checking defined
+      const [result0, result1, result2] = results;
+      expect(result0).toBeDefined();
+      expect(result1).toBeDefined();
+      expect(result2).toBeDefined();
+
+      if (result0 && result1 && result2) {
+        expect(isSuccess(result0)).toBe(true);
+        expect(isSuccess(result1)).toBe(true);
+        expect(isSuccess(result2)).toBe(true);
+      }
     });
 
     it('should handle mixed success and error results', () => {
@@ -296,9 +308,21 @@ describe('Primitive2DFactory', () => {
       const results = factory.generateMultiplePrimitives(requests);
 
       expect(results).toHaveLength(3);
-      expect(isSuccess(results[0])).toBe(true);
-      expect(isError(results[1])).toBe(true);
-      expect(isSuccess(results[2])).toBe(true);
+      expect(results[0]).toBeDefined();
+      expect(results[1]).toBeDefined();
+      expect(results[2]).toBeDefined();
+
+      // Type-safe access after checking defined
+      const [result0, result1, result2] = results;
+      expect(result0).toBeDefined();
+      expect(result1).toBeDefined();
+      expect(result2).toBeDefined();
+
+      if (result0 && result1 && result2) {
+        expect(isSuccess(result0)).toBe(true);
+        expect(isError(result1)).toBe(true);
+        expect(isSuccess(result2)).toBe(true);
+      }
     });
   });
 

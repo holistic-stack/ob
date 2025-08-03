@@ -173,12 +173,9 @@ export class ASTNodeProcessor {
           memoryUsage: memoryAfter - memoryBefore,
           validationPassed: true,
         },
+        // Include children only if they exist
+        ...(children !== undefined && { children }),
       };
-
-      // Only include children if they exist
-      if (children !== undefined) {
-        (processedNode as any).children = children;
-      }
 
       return success(processedNode);
     } catch (err) {
@@ -433,7 +430,7 @@ export class ASTAnalyzer {
 
     const _processor = new ASTNodeProcessor();
 
-    this.traverseDepthFirst(node, (currentNode, depth) => {
+    this.traverseDepthFirst(node, (currentNode, depth = 1) => {
       nodeCount++;
       nodeTypes.add(currentNode.type);
       maxDepth = Math.max(maxDepth, depth);

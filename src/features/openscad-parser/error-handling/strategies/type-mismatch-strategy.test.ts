@@ -26,10 +26,8 @@ describe('TypeMismatchStrategy', () => {
       const error = new ParserError('Type mismatch', ErrorCode.TYPE_MISMATCH, Severity.ERROR, {
         expected: ['number'],
         found: 'string',
-        location: {
-          start: { line: 1, column: 10, offset: 0 },
-          end: { line: 1, column: 20, offset: 10 },
-        },
+        line: 1,
+        column: 10,
       });
       expect(strategy.canHandle(error)).toBe(true);
     });
@@ -43,10 +41,8 @@ describe('TypeMismatchStrategy', () => {
           operation: '+',
           leftType: 'string',
           rightType: 'number',
-          location: {
-            start: { line: 1, column: 10, offset: 0 },
-            end: { line: 1, column: 20, offset: 10 },
-          },
+          line: 1,
+          column: 10,
         }
       );
       expect(strategy.canHandle(error)).toBe(true);
@@ -64,10 +60,8 @@ describe('TypeMismatchStrategy', () => {
         expected: ['number'],
         found: 'string',
         value: '"42"',
-        location: {
-          start: { line: 1, column: 5, offset: 0 },
-          end: { line: 1, column: 15, offset: 10 },
-        },
+        line: 1,
+        column: 5,
       });
 
       const code = 'x = "42"; y = x + 10;';
@@ -82,10 +76,8 @@ describe('TypeMismatchStrategy', () => {
         expected: ['string'],
         found: 'number',
         value: '42',
-        location: {
-          start: { line: 1, column: 5, offset: 0 },
-          end: { line: 1, column: 15, offset: 10 },
-        },
+        line: 1,
+        column: 5,
       });
 
       const code = 'x = 42; y = "Value: " + x;';
@@ -107,10 +99,8 @@ describe('TypeMismatchStrategy', () => {
           rightType: 'string',
           leftValue: '10',
           rightValue: '"20"',
-          location: {
-            start: { line: 1, column: 5, offset: 0 },
-            end: { line: 1, column: 15, offset: 10 },
-          },
+          line: 1,
+          column: 5,
         }
       );
 
@@ -136,10 +126,8 @@ describe('TypeMismatchStrategy', () => {
           rightType: 'string',
           leftValue: '10',
           rightValue: '"10"',
-          location: {
-            start: { line: 1, column: 10, offset: 0 },
-            end: { line: 1, column: 20, offset: 10 },
-          },
+          line: 1,
+          column: 10,
         }
       );
 
@@ -169,10 +157,8 @@ describe('TypeMismatchStrategy', () => {
           expected: ['number'],
           found: 'string',
           value: '"16"',
-          location: {
-            start: { line: 1, column: 10, offset: 0 },
-            end: { line: 1, column: 20, offset: 10 },
-          },
+          line: 1,
+          column: 10,
         }
       );
 
@@ -194,10 +180,8 @@ describe('TypeMismatchStrategy', () => {
         expected: ['number'],
         found: 'string',
         value: '"42"',
-        location: {
-          start: { line: 1, column: 10, offset: 0 },
-          end: { line: 1, column: 20, offset: 10 },
-        },
+        line: 1,
+        column: 10,
       });
 
       const suggestion = strategy.getRecoverySuggestion(error);
@@ -213,10 +197,8 @@ describe('TypeMismatchStrategy', () => {
           operation: '+',
           leftType: 'number',
           rightType: 'string',
-          location: {
-            start: { line: 1, column: 10, offset: 0 },
-            end: { line: 1, column: 20, offset: 10 },
-          },
+          line: 1,
+          column: 10,
         }
       );
 

@@ -17,28 +17,14 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { create } from 'zustand';
-import { createOpenSCADGlobalsSlice, OPENSCAD_DEFAULTS } from './openscad-globals-slice.js';
-import type {
-  OpenSCADGlobalsActions,
-  OpenSCADGlobalsState,
-} from './openscad-globals-slice.types.js';
-
-// Mock store state structure
-interface MockStoreState {
-  openscadGlobals: OpenSCADGlobalsState;
-}
-
-type MockStore = MockStoreState & OpenSCADGlobalsActions;
+import { createAppStore } from '../../app-store.js';
+import { OPENSCAD_DEFAULTS } from './openscad-globals-slice.js';
 
 describe('OpenSCADGlobalsSlice', () => {
-  let store: ReturnType<typeof create<MockStore>>;
+  let store: ReturnType<typeof createAppStore>;
 
   beforeEach(() => {
-    store = create<MockStore>((set, get) => ({
-      openscadGlobals: { ...OPENSCAD_DEFAULTS },
-      ...createOpenSCADGlobalsSlice(set, get),
-    }));
+    store = createAppStore();
   });
 
   describe('Initial State', () => {
@@ -85,8 +71,8 @@ describe('OpenSCADGlobalsSlice', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toHaveLength(1);
-        expect(result.error[0].variable).toBe('$fn');
-        expect(result.error[0].message).toContain('non-negative number');
+        expect(result.error[0]?.variable).toBe('$fn');
+        expect(result.error[0]?.message).toContain('non-negative number');
       }
     });
 

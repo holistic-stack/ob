@@ -165,6 +165,7 @@ export class STLImporterService {
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
+        if (!line) continue; // Skip undefined lines
 
         if (line.startsWith('solid ')) {
           header = line.substring(6).trim() || undefined;
@@ -172,18 +173,18 @@ export class STLImporterService {
           const parts = line.split(/\s+/);
           if (parts.length >= 4) {
             currentNormal = {
-              x: parseFloat(parts[2]),
-              y: parseFloat(parts[3]),
-              z: parseFloat(parts[4]),
+              x: parseFloat(parts[2] ?? '0'),
+              y: parseFloat(parts[3] ?? '0'),
+              z: parseFloat(parts[4] ?? '0'),
             };
           }
         } else if (line.startsWith('vertex ')) {
           const parts = line.split(/\s+/);
           if (parts.length >= 4) {
             currentVertices.push({
-              x: parseFloat(parts[1]),
-              y: parseFloat(parts[2]),
-              z: parseFloat(parts[3]),
+              x: parseFloat(parts[1] ?? '0'),
+              y: parseFloat(parts[2] ?? '0'),
+              z: parseFloat(parts[3] ?? '0'),
             });
           }
         } else if (line === 'endfacet') {
@@ -213,23 +214,15 @@ export class STLImporterService {
       const metadata: STLMesh['metadata'] = {
         format: 'ascii',
         triangleCount,
+        ...(header !== undefined && { header }),
       };
-
-      // Only include header if it's defined
-      if (header !== undefined) {
-        (metadata as any).header = header;
-      }
 
       const mesh: STLMesh = {
         vertices,
         faces,
         metadata,
+        ...(normals.length > 0 && { normals }),
       };
-
-      // Only include normals if the array has elements
-      if (normals.length > 0) {
-        (mesh as any).normals = normals;
-      }
 
       return success(mesh);
     } catch (err) {
@@ -436,12 +429,20 @@ export class STLImporterService {
       };
     }
 
-    let minX = vertices[0].x,
-      maxX = vertices[0].x;
-    let minY = vertices[0].y,
-      maxY = vertices[0].y;
-    let minZ = vertices[0].z,
-      maxZ = vertices[0].z;
+    const firstVertex = vertices[0];
+    if (!firstVertex) {
+      return {
+        min: { x: 0, y: 0, z: 0 },
+        max: { x: 0, y: 0, z: 0 },
+      };
+    }
+
+    let minX = firstVertex.x,
+      maxX = firstVertex.x;
+    let minY = firstVertex.y,
+      maxY = firstVertex.y;
+    let minZ = firstVertex.z,
+      maxZ = firstVertex.z;
 
     for (const vertex of vertices) {
       minX = Math.min(minX, vertex.x);
@@ -468,9 +469,19 @@ export class STLImporterService {
     // Check for degenerate triangles
     for (let i = 0; i < mesh.faces.length; i++) {
       const face = mesh.faces[i];
+      if (!face) {
+        errors.push(`face at index ${i} is undefined`);
+        continue;
+      }
+
       const v1 = mesh.vertices[face[0]];
       const v2 = mesh.vertices[face[1]];
       const v3 = mesh.vertices[face[2]];
+
+      if (!v1 || !v2 || !v3) {
+        errors.push(`invalid vertex indices in face ${i}`);
+        continue;
+      }
 
       // Check if any two vertices are the same (degenerate triangle)
       if (this.verticesEqual(v1, v2) || this.verticesEqual(v2, v3) || this.verticesEqual(v1, v3)) {
@@ -500,11 +511,11 @@ export class STLImporterService {
   /**
    * Convert STL mesh to Polyhedron3DGeometryData
    */
-  private meshToGeometry(mesh: STLMesh, params: ImportParameters): PolyhedronGeometryData {
+  private meshToGeometry(mesh: STLMesh, _params: ImportParameters): PolyhedronGeometryData {
     return {
       vertices: mesh.vertices || [],
       faces: mesh.faces.map((face) => Array.from(face)),
-      normals: mesh.normals,
+      normals: mesh.normals || [],
       metadata: {
         primitiveType: '3d-polyhedron',
         parameters: {

@@ -95,7 +95,7 @@ export class MemoryManagerService {
   private renderCache: RenderCacheService;
   private memoryPool: MemoryPoolService;
   private config: MemoryManagerConfig;
-  private optimizationTimer?: any;
+  private optimizationTimer: number | undefined = undefined;
   private isInitialized = false;
 
   constructor(config: Partial<MemoryManagerConfig> = {}) {
@@ -140,7 +140,7 @@ export class MemoryManagerService {
    */
   async shutdown(): Promise<void> {
     if (this.optimizationTimer) {
-      clearInterval(this.optimizationTimer);
+      window.clearInterval(this.optimizationTimer);
       this.optimizationTimer = undefined;
     }
 
@@ -295,10 +295,10 @@ export class MemoryManagerService {
    */
   private startAutomaticOptimization(): void {
     if (this.optimizationTimer) {
-      clearInterval(this.optimizationTimer);
+      window.clearInterval(this.optimizationTimer);
     }
 
-    this.optimizationTimer = setInterval(async () => {
+    this.optimizationTimer = window.setInterval(async () => {
       const stats = this.getComprehensiveStatistics();
 
       // Only optimize if memory usage exceeds threshold or pressure is high
@@ -388,6 +388,6 @@ export class MemoryManagerService {
 }
 
 // Helper function to check if result is error (for internal use)
-function isError<T, E>(result: Result<T, E>): result is { success: false; error: E } {
+function _isError<T, E>(result: Result<T, E>): result is { success: false; error: E } {
   return !result.success;
 }

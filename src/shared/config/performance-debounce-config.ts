@@ -19,6 +19,14 @@
  * @since 2025-07-30
  */
 
+/**
+ * Extended Screen interface to include refresh rate property
+ * This property is not standard but available on some browsers
+ */
+interface ExtendedScreen extends Screen {
+  readonly refreshRate?: number;
+}
+
 import type { DebounceConfig } from '@/shared';
 
 /**
@@ -107,8 +115,8 @@ export const PERFORMANCE_TARGETS = Object.freeze({
 export const getOptimalPerformanceConfig = (): Readonly<DebounceConfig> => {
   // Check for high-refresh display
   if (typeof window !== 'undefined' && window.screen) {
-    const refreshRate = (window.screen as any).refreshRate;
-    if (refreshRate && refreshRate >= 120) {
+    const screen = window.screen as ExtendedScreen;
+    if (screen.refreshRate && screen.refreshRate >= 120) {
       return ULTRA_PERFORMANCE_DEBOUNCE_CONFIG;
     }
   }
