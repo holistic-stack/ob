@@ -252,7 +252,7 @@ export const AxisColorUtils = {
   /**
    * Dim a color by reducing its brightness
    */
-  dimColor: (rgb: RGBColor, factor: number = 0.7): RGBColor => {
+  dimColor: (rgb: RGBColor, factor: number = 0.5): RGBColor => {
     const clampedFactor = Math.max(0, Math.min(1, factor));
     return [rgb[0] * clampedFactor, rgb[1] * clampedFactor, rgb[2] * clampedFactor] as const;
   },
@@ -260,7 +260,7 @@ export const AxisColorUtils = {
   /**
    * Brighten a color by increasing its brightness
    */
-  brightenColor: (rgb: RGBColor, factor: number = 1.3): RGBColor => {
+  brightenColor: (rgb: RGBColor, factor: number = 1.5): RGBColor => {
     const clampedFactor = Math.max(1, factor);
     return [
       Math.min(1, rgb[0] * clampedFactor),

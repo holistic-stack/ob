@@ -5,6 +5,7 @@
  * Following TDD principles with real implementations where possible.
  */
 
+import { NullEngine, Scene } from '@babylonjs/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { InspectorConfig } from './babylon-inspector-service';
 import {
@@ -13,54 +14,38 @@ import {
   InspectorTab,
 } from './babylon-inspector-service';
 
-// Mock Scene for testing
-const createMockScene = () =>
-  ({
-    dispose: vi.fn(),
-    render: vi.fn(),
-    registerBeforeRender: vi.fn(),
-    unregisterBeforeRender: vi.fn(),
-    // Add other Scene properties as needed
-  }) as any;
-
-// Mock BabylonJS Inspector
-const mockInspector = {
-  Show: vi.fn().mockResolvedValue(undefined),
-  Hide: vi.fn(),
-  IsVisible: vi.fn().mockReturnValue(false),
-};
-
-// Mock the inspector import
-vi.mock('@babylonjs/inspector', () => ({
-  Inspector: mockInspector,
-}));
+// JSDOM compatibility: minimal ResizeObserver stub required by Inspector UI
+class TestResizeObserver {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+;(globalThis as any).ResizeObserver = (globalThis as any).ResizeObserver || TestResizeObserver;
 
 describe('BabylonInspectorService', () => {
   let inspectorService: BabylonInspectorService;
-  let mockScene: any;
+  let engine: NullEngine;
+  let scene: Scene;
 
   beforeEach(() => {
-    // Create fresh instances for each test
     inspectorService = new BabylonInspectorService();
-    mockScene = createMockScene();
-
-    // Reset mocks
-    vi.clearAllMocks();
-
-    // Mock window object for browser environment
-    Object.defineProperty(global, 'window', {
-      value: {
-        document: {
-          body: document.body,
-        },
-      },
-      writable: true,
+    engine = new NullEngine({
+      renderHeight: 600,
+      renderWidth: 800,
+      textureSize: 512,
+      deterministicLockstep: false,
+      lockstepMaxSteps: 1,
     });
+    scene = new Scene(engine);
+
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    // Clean up after each test
     inspectorService.dispose();
+    scene.dispose();
+    engine.dispose();
   });
 
   describe('constructor', () => {
@@ -90,16 +75,18 @@ describe('BabylonInspectorService', () => {
 
   describe('show', () => {
     it('should show inspector with valid scene', async () => {
-      const result = await inspectorService.show(mockScene);
+      const result = await inspectorService.show(scene, {
+        enableEmbedded: false,
+        enablePopup: true,
+        showExplorer: false,
+      });
 
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.isVisible).toBe(true);
-        expect(result.data.scene).toBe(mockScene);
+        expect(result.data.scene).toBe(scene);
         expect(result.data.currentTab).toBe(InspectorTab.SCENE);
       }
-
-      expect(mockInspector.Show).toHaveBeenCalledWith(mockScene, expect.any(Object));
     });
 
     it('should handle null scene gracefully', async () => {
@@ -118,23 +105,19 @@ describe('BabylonInspectorService', () => {
         showExplorer: false,
       };
 
-      const result = await inspectorService.show(mockScene, customConfig);
+      const result = await inspectorService.show(scene, customConfig);
 
       expect(result.success).toBe(true);
-      expect(mockInspector.Show).toHaveBeenCalledWith(
-        mockScene,
-        expect.objectContaining({
-          enablePopup: true,
-          showExplorer: false,
-        })
-      );
+      if (result.success) {
+        expect(result.data.isVisible).toBe(true);
+      }
     });
   });
 
   describe('hide', () => {
     it('should hide visible inspector', async () => {
       // First show the inspector
-      await inspectorService.show(mockScene);
+      await inspectorService.show(scene, { enableEmbedded: false, enablePopup: true });
 
       const hideResult = inspectorService.hide();
 
@@ -153,7 +136,7 @@ describe('BabylonInspectorService', () => {
   describe('switchTab', () => {
     it('should switch tab when inspector is visible', async () => {
       // First show the inspector
-      await inspectorService.show(mockScene);
+      await inspectorService.show(scene, { enableEmbedded: false, enablePopup: true });
 
       const result = await inspectorService.switchTab(InspectorTab.DEBUG);
 
@@ -176,7 +159,7 @@ describe('BabylonInspectorService', () => {
 
   describe('toggle', () => {
     it('should show inspector when hidden', async () => {
-      const result = await inspectorService.toggle(mockScene);
+      const result = await inspectorService.toggle(scene);
 
       expect(result.success).toBe(true);
       expect(inspectorService.isInspectorVisible()).toBe(true);
@@ -184,7 +167,7 @@ describe('BabylonInspectorService', () => {
 
     it('should hide inspector when visible', async () => {
       // First show the inspector
-      await inspectorService.show(mockScene);
+      await inspectorService.show(scene, { enableEmbedded: false, enablePopup: true });
 
       const result = await inspectorService.toggle();
 
@@ -214,11 +197,11 @@ describe('BabylonInspectorService', () => {
     });
 
     it('should return correct state after showing inspector', async () => {
-      await inspectorService.show(mockScene);
+      await inspectorService.show(scene, { enableEmbedded: false, enablePopup: true });
       const state = inspectorService.getState();
 
       expect(state.isVisible).toBe(true);
-      expect(state.scene).toBe(mockScene);
+      expect(state.scene).toBe(scene);
     });
   });
 
@@ -228,12 +211,12 @@ describe('BabylonInspectorService', () => {
     });
 
     it('should return true after showing inspector', async () => {
-      await inspectorService.show(mockScene);
+      await inspectorService.show(scene, { enableEmbedded: false, enablePopup: true });
       expect(inspectorService.isInspectorVisible()).toBe(true);
     });
 
     it('should return false after hiding inspector', async () => {
-      await inspectorService.show(mockScene);
+      await inspectorService.show(scene, { enableEmbedded: false, enablePopup: true });
       inspectorService.hide();
       expect(inspectorService.isInspectorVisible()).toBe(false);
     });
@@ -241,7 +224,7 @@ describe('BabylonInspectorService', () => {
 
   describe('dispose', () => {
     it('should dispose service cleanly', async () => {
-      await inspectorService.show(mockScene);
+      await inspectorService.show(scene, { enableEmbedded: false, enablePopup: true });
 
       inspectorService.dispose();
 

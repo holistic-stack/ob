@@ -202,14 +202,34 @@ export class OpenSCADRenderingPipelineService {
           const assignNode = node as AssignStatementNode;
 
           // Extract special variables
-          if (assignNode.variable === '$fn' && typeof assignNode.value === 'number') {
-            globals.$fn = assignNode.value;
-          } else if (assignNode.variable === '$fa' && typeof assignNode.value === 'number') {
-            globals.$fa = assignNode.value;
-          } else if (assignNode.variable === '$fs' && typeof assignNode.value === 'number') {
-            globals.$fs = assignNode.value;
-          } else if (assignNode.variable === '$t' && typeof assignNode.value === 'number') {
-            globals.$t = assignNode.value;
+          // Values may be raw numbers or Expression Literal nodes depending on the extractor
+          const resolveNumeric = (v: unknown): number | undefined => {
+            if (typeof v === 'number') return v;
+            if (
+              v &&
+              typeof v === 'object' &&
+              'type' in (v as any) &&
+              (v as any).type === 'expression' &&
+              'expressionType' in (v as any) &&
+              (v as any).expressionType === 'literal' &&
+              'value' in (v as any) &&
+              typeof (v as any).value === 'number'
+            ) {
+              return (v as any).value as number;
+            }
+            return undefined;
+          };
+
+          const numericValue = resolveNumeric((assignNode as any).value);
+
+          if (assignNode.variable === '$fn' && typeof numericValue === 'number') {
+            globals.$fn = numericValue;
+          } else if (assignNode.variable === '$fa' && typeof numericValue === 'number') {
+            globals.$fa = numericValue;
+          } else if (assignNode.variable === '$fs' && typeof numericValue === 'number') {
+            globals.$fs = numericValue;
+          } else if (assignNode.variable === '$t' && typeof numericValue === 'number') {
+            globals.$t = numericValue;
           }
         }
       }

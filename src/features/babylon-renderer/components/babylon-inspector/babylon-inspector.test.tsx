@@ -8,8 +8,8 @@
 import { NullEngine, Scene } from '@babylonjs/core';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { InspectorTab, useBabylonInspector } from '@/features/babylon-renderer';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { InspectorTab } from '@/features/babylon-renderer';
 import { BabylonInspector, type BabylonInspectorProps } from './babylon-inspector';
 
 // Mock ResizeObserver for tests
@@ -19,20 +19,7 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
-// Mock BabylonJS Inspector
-vi.mock('@babylonjs/inspector', () => ({
-  Inspector: {
-    Show: vi.fn().mockResolvedValue(undefined),
-    Hide: vi.fn(),
-  },
-}));
-
-// Mock useBabylonInspector hook
-vi.mock('../../hooks/use-babylon-inspector', () => ({
-  useBabylonInspector: vi.fn(),
-}));
-
-describe.skip('BabylonInspector', () => {
+describe('BabylonInspector', () => {
   let engine: NullEngine;
   let scene: Scene;
   let user: ReturnType<typeof userEvent.setup>;
@@ -48,31 +35,6 @@ describe.skip('BabylonInspector', () => {
     });
     scene = new Scene(engine);
     user = userEvent.setup();
-
-    // Setup useBabylonInspector mock
-    vi.mocked(useBabylonInspector).mockReturnValue({
-      inspectorService: null,
-      inspectorState: {
-        isVisible: false,
-        isEmbedded: false,
-        currentTab: InspectorTab.SCENE,
-        scene: null,
-        lastUpdated: new Date(),
-      },
-      deferredInspectorState: {
-        isVisible: false,
-        isEmbedded: false,
-        currentTab: InspectorTab.SCENE,
-        scene: null,
-        lastUpdated: new Date(),
-      },
-      showInspector: vi.fn().mockResolvedValue({ success: true }),
-      hideInspector: vi.fn().mockReturnValue({ success: true }),
-      switchTab: vi.fn().mockResolvedValue({ success: true }),
-      isInspectorAvailable: true,
-      isPending: false,
-      startTransition: vi.fn((callback) => callback()),
-    });
   });
 
   afterEach(() => {
@@ -80,32 +42,6 @@ describe.skip('BabylonInspector', () => {
     scene.dispose();
     engine.dispose();
   });
-
-  const setupMockForVisibility = (isVisible: boolean) => {
-    vi.mocked(useBabylonInspector).mockReturnValue({
-      inspectorService: null,
-      inspectorState: {
-        isVisible,
-        isEmbedded: false,
-        currentTab: InspectorTab.SCENE,
-        scene: null,
-        lastUpdated: new Date(),
-      },
-      deferredInspectorState: {
-        isVisible,
-        isEmbedded: false,
-        currentTab: InspectorTab.SCENE,
-        scene: null,
-        lastUpdated: new Date(),
-      },
-      showInspector: vi.fn().mockResolvedValue({ success: true }),
-      hideInspector: vi.fn().mockReturnValue({ success: true }),
-      switchTab: vi.fn().mockResolvedValue({ success: true }),
-      isInspectorAvailable: true,
-      isPending: false,
-      startTransition: vi.fn((callback) => callback()),
-    });
-  };
 
   const renderInspector = (props: Partial<BabylonInspectorProps> = {}) => {
     const defaultProps: BabylonInspectorProps = {
@@ -115,10 +51,6 @@ describe.skip('BabylonInspector', () => {
       enablePopup: false,
       ...props,
     };
-
-    // Setup mock based on isVisible prop
-    setupMockForVisibility(defaultProps.isVisible || false);
-
     return render(<BabylonInspector {...defaultProps} />);
   };
 
@@ -167,8 +99,12 @@ describe.skip('BabylonInspector', () => {
       expect(toggleButton).toBeInTheDocument();
     });
 
-    it('should show tab buttons when inspector is visible', async () => {
-      renderInspector({ isVisible: true });
+    it('should show tab buttons after toggling inspector visible', async () => {
+      renderInspector();
+      const toggleButton = screen.getByRole('button', { name: /show inspector/i });
+      await act(async () => {
+        await user.click(toggleButton);
+      });
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /scene/i })).toBeInTheDocument();
@@ -177,14 +113,13 @@ describe.skip('BabylonInspector', () => {
     });
 
     it('should handle tab switching', async () => {
-      renderInspector({ isVisible: true });
-
-      await waitFor(() => {
-        const sceneButton = screen.getByRole('button', { name: /scene/i });
-        expect(sceneButton).toBeInTheDocument();
+      renderInspector();
+      const toggleButton = screen.getByRole('button', { name: /show inspector/i });
+      await act(async () => {
+        await user.click(toggleButton);
       });
 
-      const sceneButton = screen.getByRole('button', { name: /scene/i });
+      const sceneButton = await screen.findByRole('button', { name: /scene/i });
 
       await act(async () => {
         await user.click(sceneButton);
@@ -282,8 +217,7 @@ describe.skip('BabylonInspector', () => {
         await user.click(toggleButton);
       });
 
-      // Callback might be called depending on mock implementation
-      // Test passes if no errors are thrown
+      // Callback may be invoked by real inspector; at minimum no errors
       expect(toggleButton).toBeInTheDocument();
     });
 

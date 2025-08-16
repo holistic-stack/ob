@@ -109,7 +109,7 @@ export class PolyhedronGeneratorService {
       const metadata = createGeometryMetadata(
         '3d-polyhedron',
         {
-          pointCount: vertices.length,
+          vertexCount: vertices.length,
           faceCount: faces.length,
           convexity: 1, // Default convexity
         },

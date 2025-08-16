@@ -194,14 +194,34 @@ export class ASTNodeProcessor {
    * @returns Parameters object
    */
   extractParameters(node: ASTNode): Record<string, unknown> {
-    if (!('parameters' in node) || !Array.isArray(node.parameters)) {
-      return {};
+    const parameters: Record<string, unknown> = {};
+
+    // 1) If node has canonical parameters array, use it first
+    if ('parameters' in node && Array.isArray((node as any).parameters)) {
+      for (const param of (node as any).parameters as Array<{ name?: string; value?: unknown }>) {
+        if (param && typeof param === 'object' && 'name' in param && 'value' in param && param.name) {
+          parameters[param.name as string] = (param as any).value;
+        }
+      }
     }
 
-    const parameters: Record<string, unknown> = {};
-    for (const param of node.parameters) {
-      if (param && typeof param === 'object' && 'name' in param && 'value' in param) {
-        parameters[param.name as string] = param.value;
+    // 2) Fallback: also extract direct properties present on concrete AST nodes (e.g., cube.size, translate.v)
+    //    Exclude structural/meta keys
+    const excludeKeys = new Set([
+      'type',
+      'location',
+      'children',
+      'body',
+      'args',
+      'parameters',
+      'name',
+    ]);
+
+    for (const key of Object.keys(node as Record<string, unknown>)) {
+      if (excludeKeys.has(key)) continue;
+      const value = (node as any)[key];
+      if (value !== undefined && !(key in parameters)) {
+        parameters[key] = value;
       }
     }
 

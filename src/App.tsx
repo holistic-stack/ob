@@ -38,7 +38,8 @@ import { ErrorBoundary } from '@/shared/components';
 import { AxisOverlayControls } from './features/babylon-renderer/components/axis-overlay-controls';
 import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
 
-const logger = createLogger('App');
+
+const looger = createLogger('App');
 
 /**
  * @component App
@@ -55,7 +56,7 @@ const logger = createLogger('App');
  * ```
  */
 export function App(): React.JSX.Element {
-  logger.init('Rendering OpenSCAD 3D Visualization Application v2.0.0');
+  looger.init('Rendering OpenSCAD 3D Visualization Application v2.0.0');
 
   // Store selectors for application state
   /**
@@ -97,7 +98,7 @@ export function App(): React.JSX.Element {
    * // When a rendering error occurs, this effect logs the error messages.
    * // For instance, if `renderErrors` contains:
    * // [{ message: "Invalid AST node" }, { message: "Failed to create mesh" }]
-   * // The logger will output:
+   * // The looger will output:
    * // [ERROR][App] Render errors detected: ["Invalid AST node", "Failed to create mesh"]
    * ```
    *
@@ -108,7 +109,7 @@ export function App(): React.JSX.Element {
    */
   useEffect(() => {
     if (renderErrors.length > 0) {
-      logger.error(
+      looger.error(
         'Render errors detected:',
         renderErrors.map((e) => e.message)
       );
@@ -121,7 +122,7 @@ export function App(): React.JSX.Element {
    * Removed AST and mesh dependencies to prevent expensive logging on every change.
    */
   useEffect(() => {
-    logger.debug('[DEBUG][App] App component mounted and ready');
+    looger.debug('[DEBUG][App] App component mounted and ready');
   }, []); // Empty dependency array - runs only on mount
 
   // Removed expensive AST change logging to prevent performance issues during typing
@@ -163,12 +164,12 @@ export function App(): React.JSX.Element {
    *
    * @example
    * ```typescript
-   * // When the application first loads, the logger will output:
+   * // When the application first loads, the looger will output:
    * // [INIT][App] Application mounted and ready
    * ```
    */
   useEffect(() => {
-    logger.init('Application mounted and ready');
+    looger.init('Application mounted and ready');
   }, []);
 
   // Removed expensive application state logging to prevent performance issues during typing
@@ -185,11 +186,11 @@ export function App(): React.JSX.Element {
    * when passing callbacks to child components that depend on reference equality.
    */
   const handleRenderComplete = useCallback((meshCount: number) => {
-    logger.debug(`[DEBUG][App] Render completed with ${meshCount} meshes`);
+    looger.debug(`[DEBUG][App] Render completed with ${meshCount} meshes`);
   }, []);
 
   const handleRenderError = useCallback((error: Error) => {
-    logger.error(`[ERROR][App] Render error: ${error.message}`);
+    looger.error(`[ERROR][App] Render error: ${error.message}`);
   }, []);
 
   /**
@@ -324,7 +325,7 @@ export function App(): React.JSX.Element {
             <ErrorBoundary
               componentName="StoreConnectedRenderer"
               onError={(error, errorInfo) => {
-                logger.error('[ERROR][App] StoreConnectedRenderer crashed:', {
+                looger.error('[ERROR][App] StoreConnectedRenderer crashed:', {
                   error: error.message,
                   stack: error.stack,
                   componentStack: errorInfo.componentStack,

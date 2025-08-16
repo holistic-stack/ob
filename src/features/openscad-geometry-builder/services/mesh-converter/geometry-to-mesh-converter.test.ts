@@ -10,7 +10,7 @@ import type { Circle2DGeometryData } from '../../types/2d-geometry-data';
 import type { SphereGeometryData } from '../../types/geometry-data';
 import { GeometryToMeshConverterService } from './geometry-to-mesh-converter';
 
-// Mock BabylonJS for testing
+// Mock BabylonJS for testing (provide required classes used by services)
 vi.mock('@babylonjs/core', () => ({
   Engine: vi.fn().mockImplementation(() => ({
     dispose: vi.fn(),
@@ -19,12 +19,37 @@ vi.mock('@babylonjs/core', () => ({
     dispose: vi.fn(),
     meshes: [],
   })),
-  Mesh: vi.fn().mockImplementation(() => ({
-    name: 'test-mesh',
+  Mesh: vi.fn().mockImplementation((name?: string) => ({
+    name: name ?? 'test-mesh',
     getTotalVertices: vi.fn().mockReturnValue(8),
     getTotalIndices: vi.fn().mockReturnValue(12),
     dispose: vi.fn(),
+    createNormals: vi.fn(),
+    refreshBoundingInfo: vi.fn(),
+    isDisposed: vi.fn().mockReturnValue(false),
+    getBoundingInfo: vi.fn().mockReturnValue({ minimum: {}, maximum: {} }),
   })),
+  // Minimal VertexData stub with applyToMesh API used by service
+  VertexData: vi.fn().mockImplementation(function () {
+    return {
+      positions: undefined as any,
+      indices: undefined as any,
+      normals: undefined as any,
+      applyToMesh: vi.fn(),
+    };
+  }),
+  // MeshBuilder with CreatePolygon used for 2D shapes
+  MeshBuilder: {
+    CreatePolygon: vi.fn().mockImplementation((name: string, _options: any, _scene: any) => ({
+      name,
+      refreshBoundingInfo: vi.fn(),
+      getTotalVertices: vi.fn().mockReturnValue(4),
+      getTotalIndices: vi.fn().mockReturnValue(6),
+      material: {},
+    })),
+  },
+  // Vector3 used to build polygon shapes
+  Vector3: vi.fn().mockImplementation((x: number, y: number, z: number) => ({ x, y, z })),
 }));
 
 describe('GeometryToMeshConverterService', () => {

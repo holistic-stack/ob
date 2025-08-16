@@ -14,12 +14,12 @@ import type {
   InspectorShowResult,
   InspectorState,
   InspectorTabSwitchResult,
-} from '@/features/babylon-renderer';
+} from '@/features/babylon-renderer/services';
 import {
   BabylonInspectorService,
   InspectorErrorCode,
   InspectorTab,
-} from '@/features/babylon-renderer';
+} from '@/features/babylon-renderer/services';
 import { createLogger } from '@/shared';
 
 const logger = createLogger('useBabylonInspector');

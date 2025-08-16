@@ -842,6 +842,7 @@ export function extractValue(
 
     case 'vector_literal': // Fallthrough
     case 'array_literal':
+    case 'array_expression': // Support array_expression as vector literal
     case 'vector_expression': // Add support for vector_expression
       return extractVectorLiteral(valueNode, sourceCode, variableScope);
 

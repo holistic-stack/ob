@@ -165,29 +165,14 @@ function convertValueToParameterValue(value: ast.Value | ast.ErrorNode): ast.Par
       return null;
     }
 
-    const result = {
-      type: 'expression',
-      expressionType: 'literal',
-      value: parsedValue,
-    } as ast.LiteralNode;
-
     console.log(
-      `[value-extractor convertValueToParameterValue] DEBUG - Returning literal node:`,
-      JSON.stringify(result, null, 2)
+      `[value-extractor convertValueToParameterValue] DEBUG - Returning primitive number: ${parsedValue}`
     );
-    return result;
+    return parsedValue;
   } else if (value.type === 'boolean') {
-    return {
-      type: 'expression',
-      expressionType: 'literal',
-      value: value.value === 'true',
-    } as ast.LiteralNode;
+    return value.value === 'true';
   } else if (value.type === 'string') {
-    return {
-      type: 'expression',
-      expressionType: 'literal',
-      value: value.value as string,
-    } as ast.LiteralNode;
+    return value.value as string;
   } else if (value.type === 'identifier') {
     // For identifiers, we might want to create a VariableNode or IdentifierNode
     // For now, returning as string to match previous behavior, but this might need refinement
@@ -899,6 +884,7 @@ export function extractValue(
 
     case 'vector_literal': // Fallthrough
     case 'array_literal':
+    case 'array_expression': // Support array_expression as vector literal
     case 'vector_expression': // Add support for vector_expression
       return extractVectorLiteral(valueNode, sourceCode, variableScope);
 
