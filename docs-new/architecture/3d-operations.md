@@ -1,5 +1,7 @@
 # 3D Operations (from src)
 
+Breadcrumbs: Architecture > Geometry Builder > 3D Operations
+
 Location
 - src/features/openscad-geometry-builder/services/3d-operations/
 - src/features/openscad-geometry-builder/services/primitive-generators/3d-primitives/vertex-operations/
@@ -7,6 +9,15 @@ Location
 Modules
 - boolean-operations-3d: union, difference, intersection
 - vertex-operations: vertex-deduplication (spatial hashing), helpers
+
+Diagram
+```mermaid
+graph LR
+  A[Geometry A] --> C[Boolean Ops 3D]
+  B[Geometry B] --> C
+  C --> D[Union/Diff/Intersect]
+  D --> E[Vertex Deduplication]
+```
 
 Usage
 ```ts
@@ -29,3 +40,7 @@ Best practices
 - Deduplicate vertices before/after boolean ops for robust topology.
 - Use bounding boxes for quick pre-checks before heavy operations.
 - Keep tolerance small (e.g., 1e-6) to avoid collapsing distinct vertices.
+
+See also
+- architecture/geometry-builder.md
+- architecture/polygon-operations.md

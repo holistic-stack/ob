@@ -158,7 +158,7 @@ describe('Primitive3DFactory', () => {
 
           // Type guard: check if this is a polyhedron geometry
           if (polyhedron.metadata.primitiveType === '3d-polyhedron') {
-            expect(polyhedron.metadata.parameters.pointCount).toBe(4);
+            expect(polyhedron.metadata.parameters.vertexCount).toBe(4);
             expect(polyhedron.metadata.parameters.faceCount).toBe(4);
             expect(polyhedron.metadata.parameters.convexity).toBe(1);
           }

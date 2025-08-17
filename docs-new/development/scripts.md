@@ -1,5 +1,8 @@
 # Scripts
 
+Docs quality (optional)
+- docs:check: npx markdownlint "docs-new/**/*.md"
+
 Core commands (from package.json)
 - dev: vite
 - build: tsc --project tsconfig.lib.json && vite build

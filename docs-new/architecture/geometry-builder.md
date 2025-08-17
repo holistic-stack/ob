@@ -1,5 +1,7 @@
 # OpenSCAD Geometry Builder (from src)
 
+Breadcrumbs: Architecture > Geometry Builder
+
 Scope
 - Location: src/features/openscad-geometry-builder/
 - Purpose: Convert OpenSCAD AST constructs into precise geometry data and Babylon meshes using OpenSCAD-compatible tessellation.
@@ -26,6 +28,17 @@ Pipeline
 
 Test utilities
 - result and geometry assertions, performance utilities, data generators
+
+Diagram
+```mermaid
+graph TD
+  A[OpenSCAD AST] --> B[AST→Geometry]
+  B --> C[Geometry→Meshes]
+  C --> D[Babylon Scene]
+  B --> E[Polygon Ops]
+  B --> F[3D Ops]
+  B --> G[Geometry Cache]
+```
 
 Examples
 
@@ -92,3 +105,9 @@ Best practices
 - Cache geometry (geometry-cache) for repeated shapes.
 - Validate polygons with polygon-validator before operations.
 - Prefer readonly arrays and immutable data structures.
+
+See also
+- architecture/polygon-operations.md
+- architecture/3d-operations.md
+- architecture/babylon-renderer.md
+- architecture/workflow.md
