@@ -26,3 +26,4 @@ Guidelines
 - Define new global constants centrally.
 - Import constants where needed; avoid magic numbers.
 - Keep config pure and typed; prefer readonly structures.
+- No OPENSCAD_FALLBACK: do not reintroduce fallback constants or behaviors.

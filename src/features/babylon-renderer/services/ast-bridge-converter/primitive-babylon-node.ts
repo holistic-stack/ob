@@ -20,21 +20,19 @@
  */
 
 import type { AbstractMesh, Scene, Vector3 } from '@babylonjs/core';
-import {
-  Vector3 as BabylonVector3,
-  Color3,
-  Mesh,
-  MeshBuilder,
-  StandardMaterial,
-  VertexData,
-} from '@babylonjs/core';
-import earcut from 'earcut';
+import { Color3, Mesh, StandardMaterial, VertexData } from '@babylonjs/core';
+
 import type {
   BabylonJSError,
   NodeGenerationResult,
   NodeValidationResult,
 } from '@/features/babylon-renderer/types';
 import { BabylonJSNode, BabylonJSNodeType } from '@/features/babylon-renderer/types';
+import { FragmentCalculatorService } from '@/features/openscad-geometry-builder/services/fragment-calculator';
+import { BabylonMeshBuilderService } from '@/features/openscad-geometry-builder/services/geometry-bridge/babylon-mesh-builder';
+import { CircleGeneratorService } from '@/features/openscad-geometry-builder/services/primitive-generators/2d-primitives/circle-generator';
+import { PolygonGeneratorService } from '@/features/openscad-geometry-builder/services/primitive-generators/2d-primitives/polygon-generator';
+import { SquareGeneratorService } from '@/features/openscad-geometry-builder/services/primitive-generators/2d-primitives/square-generator';
 import type {
   ASTNode,
   CircleNode,
@@ -225,7 +223,9 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       return meshResult.data;
     } catch (error) {
       // Per error handling policy: do not fallback; surface the error for visibility
-      throw new Error(`Cube mesh generation failed without fallback: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Cube mesh generation failed without fallback: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -298,7 +298,9 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       return meshResult.data;
     } catch (error) {
       // Per error handling policy: do not fallback; surface the error for visibility
-      throw new Error(`Sphere mesh generation failed without fallback: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Sphere mesh generation failed without fallback: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -367,7 +369,9 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       return meshResult.data;
     } catch (error) {
       // Per error handling policy: do not fallback; surface the error for visibility
-      throw new Error(`Cylinder mesh generation failed without fallback: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Cylinder mesh generation failed without fallback: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -382,7 +386,9 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
    */
   private createPolyhedronMesh(_scene: Scene): AbstractMesh {
     // Per policy, do not create placeholder meshes. Surface explicit error.
-    throw new Error('Polyhedron mesh generation via PrimitiveBabylonNode is not implemented. Use OpenSCAD Geometry Builder polyhedron service.');
+    throw new Error(
+      'Polyhedron mesh generation via PrimitiveBabylonNode is not implemented. Use OpenSCAD Geometry Builder polyhedron service.'
+    );
   }
 
   /**
@@ -405,8 +411,8 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     const segments = this.extractCircleSegments();
 
     // Use OpenSCAD Geometry Builder for circle -> polygon mesh
-    const shapeGenerator = new (require('@/features/openscad-geometry-builder/services/primitive-generators/2d-primitives/circle-generator').CircleGeneratorService)();
-    const meshBuilder = new (require('@/features/openscad-geometry-builder/services/geometry-bridge/babylon-mesh-builder').BabylonMeshBuilderService)();
+    const shapeGenerator = new CircleGeneratorService();
+    const meshBuilder = new BabylonMeshBuilderService();
 
     const circleResult = shapeGenerator.generateCircle({ radius, fn: segments });
     if (!circleResult.success) {
@@ -418,6 +424,8 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       throw new Error(`Circle mesh creation failed: ${meshResult.error.message}`);
     }
 
+    // Position at Z=0 (2D shape in 3D space)
+    meshResult.data.position.z = 0;
     return meshResult.data;
   }
 
@@ -441,8 +449,8 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     const center = this.extractSquareCenter();
 
     // Use OpenSCAD Geometry Builder for square -> polygon mesh
-    const shapeGenerator = new (require('@/features/openscad-geometry-builder/services/primitive-generators/2d-primitives/square-generator').SquareGeneratorService)();
-    const meshBuilder = new (require('@/features/openscad-geometry-builder/services/geometry-bridge/babylon-mesh-builder').BabylonMeshBuilderService)();
+    const shapeGenerator = new SquareGeneratorService();
+    const meshBuilder = new BabylonMeshBuilderService();
 
     const squareResult = shapeGenerator.generateSquare({ size: { x: size.x, y: size.y }, center });
     if (!squareResult.success) {
@@ -454,6 +462,7 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       throw new Error(`Square mesh creation failed: ${meshResult.error.message}`);
     }
 
+    meshResult.data.position.z = 0;
     return meshResult.data;
   }
 
@@ -480,9 +489,6 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     }
 
     // Use OpenSCAD Geometry Builder for polygon -> polygon mesh
-    const { PolygonGeneratorService } = require('@/features/openscad-geometry-builder/services/primitive-generators/2d-primitives/polygon-generator');
-    const { BabylonMeshBuilderService } = require('@/features/openscad-geometry-builder/services/geometry-bridge/babylon-mesh-builder');
-
     // Convert points (number[][]) to Vector2[] expected by generator
     const vertices = points.map((p: number[]) => ({ x: p[0] || 0, y: p[1] || 0 }));
 
@@ -609,8 +615,16 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     // Resolve parameters using OpenSCAD inheritance rules
     const { fn, fa, fs } = this.resolveTessellationParameters(localFn, localFa, localFs);
 
-    // Use the centralized fragment calculation function
-    const finalFragments = calculateFragments(radius, fn, fa, fs);
+    // Use the centralized fragment calculator service
+    const fragmentCalculator = new FragmentCalculatorService();
+    const fragmentResult = fragmentCalculator.calculateFragments(radius, fn, fs, fa);
+    if (!fragmentResult.success) {
+      throw this.createError(
+        'TESSELLATION_ERROR',
+        `Failed to calculate sphere fragments: ${fragmentResult.error?.message ?? 'Unknown error'}`
+      );
+    }
+    const finalFragments = fragmentResult.data;
 
     logger.debug(
       `[EXTRACT_SPHERE_SEGMENTS] Sphere segments calculated: ${finalFragments} ` +
@@ -688,8 +702,16 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     // Resolve parameters using OpenSCAD inheritance rules
     const { fn, fa, fs } = this.resolveTessellationParameters(localFn, localFa, localFs);
 
-    // Use the centralized fragment calculation function
-    const finalFragments = calculateFragments(radius, fn, fa, fs);
+    // Use the centralized fragment calculator service
+    const fragmentCalculator = new FragmentCalculatorService();
+    const fragmentResult = fragmentCalculator.calculateFragments(radius, fn, fs, fa);
+    if (!fragmentResult.success) {
+      throw this.createError(
+        'TESSELLATION_ERROR',
+        `Failed to calculate cylinder fragments: ${fragmentResult.error?.message ?? 'Unknown error'}`
+      );
+    }
+    const finalFragments = fragmentResult.data;
 
     logger.debug(
       `[EXTRACT_CYLINDER_SEGMENTS] Cylinder segments calculated: ${finalFragments} ` +
@@ -731,8 +753,16 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     // Resolve parameters using OpenSCAD inheritance rules
     const { fn, fa, fs } = this.resolveTessellationParameters(localFn, localFa, localFs);
 
-    // Use the centralized fragment calculation function
-    const finalFragments = calculateFragments(radius, fn, fa, fs);
+    // Use the centralized fragment calculator service
+    const fragmentCalculator = new FragmentCalculatorService();
+    const fragmentResult = fragmentCalculator.calculateFragments(radius, fn, fs, fa);
+    if (!fragmentResult.success) {
+      throw this.createError(
+        'TESSELLATION_ERROR',
+        `Failed to calculate circle fragments: ${fragmentResult.error?.message ?? 'Unknown error'}`
+      );
+    }
+    const finalFragments = fragmentResult.data;
 
     logger.debug(
       `[EXTRACT_CIRCLE_SEGMENTS] Circle segments calculated: ${finalFragments} ` +

@@ -309,8 +309,9 @@ describe('ASTAnalyzer', () => {
 
     it('should find nodes by predicate', () => {
       const unionNode = createMockUnionNode();
-      const nodesWithRadius = analyzer.findNodesByPredicate(unionNode, (node) =>
-        'radius' in node && typeof node.radius === 'number'
+      const nodesWithRadius = analyzer.findNodesByPredicate(
+        unionNode,
+        (node) => 'radius' in node && typeof node.radius === 'number'
       );
 
       expect(nodesWithRadius).toHaveLength(1); // sphere with radius

@@ -197,10 +197,23 @@ export class ASTNodeProcessor {
     const parameters: Record<string, unknown> = {};
 
     // 1) If node has canonical parameters array, use it first
-    if ('parameters' in node && Array.isArray((node as any).parameters)) {
-      for (const param of (node as any).parameters as Array<{ name?: string; value?: unknown }>) {
-        if (param && typeof param === 'object' && 'name' in param && 'value' in param && param.name) {
-          parameters[param.name as string] = (param as any).value;
+    if (
+      'parameters' in node &&
+      Array.isArray((node as unknown as Record<string, unknown>).parameters as unknown[])
+    ) {
+      for (const param of (node as unknown as Record<string, unknown>)
+        .parameters as unknown[] as Array<{
+        name?: string;
+        value?: unknown;
+      }>) {
+        if (
+          param &&
+          typeof param === 'object' &&
+          'name' in param &&
+          'value' in param &&
+          param.name
+        ) {
+          parameters[param.name as string] = (param as { value?: unknown }).value;
         }
       }
     }
@@ -217,9 +230,9 @@ export class ASTNodeProcessor {
       'name',
     ]);
 
-    for (const key of Object.keys(node as Record<string, unknown>)) {
+    for (const key of Object.keys(node as unknown as Record<string, unknown>)) {
       if (excludeKeys.has(key)) continue;
-      const value = (node as any)[key];
+      const value = (node as unknown as Record<string, unknown>)[key];
       if (value !== undefined && !(key in parameters)) {
         parameters[key] = value;
       }

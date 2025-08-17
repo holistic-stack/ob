@@ -494,7 +494,7 @@ import {
 } from '@/features/babylon-renderer/types';
 import type { ASTNode } from '@/features/openscad-parser';
 import type { AppStore } from '@/features/store';
-import { DEFAULT_CAMERA } from '@/features/store';
+import { DEFAULT_CAMERA } from '@/features/store/constants/store.constants.js';
 import type { CameraConfig, Result } from '@/shared';
 import { createLogger, tryCatchAsync } from '@/shared';
 import type {

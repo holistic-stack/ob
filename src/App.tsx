@@ -38,7 +38,6 @@ import { ErrorBoundary } from '@/shared/components';
 import { AxisOverlayControls } from './features/babylon-renderer/components/axis-overlay-controls';
 import { StoreConnectedEditor } from './features/code-editor/components/store-connected-editor';
 
-
 const looger = createLogger('App');
 
 /**

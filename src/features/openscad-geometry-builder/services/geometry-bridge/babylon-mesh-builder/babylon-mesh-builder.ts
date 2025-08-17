@@ -88,7 +88,8 @@ export class BabylonMeshBuilderService {
       }
 
       // Require VertexData; if unavailable, fail fast with a descriptive error per project constraints
-      const hasVertexData = typeof (BABYLON as any).VertexData === 'function';
+      const hasVertexData =
+        typeof (BABYLON as unknown as { VertexData?: unknown }).VertexData === 'function';
       if (!hasVertexData) {
         return error({
           type: 'BABYLON_ERROR',
@@ -143,7 +144,8 @@ export class BabylonMeshBuilderService {
         .map((vertex) => new BABYLON.Vector3(vertex.x, vertex.y, 0));
 
       // Create the mesh using BabylonJS CreatePolygon for proper triangulation; require API presence
-      const hasMeshBuilderPolygon = (BABYLON.MeshBuilder as any)?.CreatePolygon;
+      const hasMeshBuilderPolygon = (BABYLON.MeshBuilder as unknown as { CreatePolygon?: unknown })
+        ?.CreatePolygon;
       if (!hasMeshBuilderPolygon) {
         return error({
           type: 'BABYLON_ERROR',

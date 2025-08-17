@@ -34,7 +34,10 @@ vi.mock('@babylonjs/core', () => {
     };
     createNormals = vi.fn();
     refreshBoundingInfo = vi.fn();
-    getBoundingInfo = vi.fn(() => ({ minimum: { x: 0, y: 0, z: 0 }, maximum: { x: 1, y: 1, z: 1 } }));
+    getBoundingInfo = vi.fn(() => ({
+      minimum: { x: 0, y: 0, z: 0 },
+      maximum: { x: 1, y: 1, z: 1 },
+    }));
     dispose = vi.fn();
   }
 
@@ -53,9 +56,20 @@ vi.mock('@babylonjs/core', () => {
     CreatePolygon: vi.fn((name: string) => new MockMesh(name)),
   };
 
-  class Engine { dispose = vi.fn(); }
-  class Scene { dispose = vi.fn(); meshes: any[] = []; constructor(_e: any) {} }
-  class Vector3 { constructor(public x: number, public y: number, public z: number) {} }
+  class Engine {
+    dispose = vi.fn();
+  }
+  class Scene {
+    dispose = vi.fn();
+    meshes: any[] = [];
+  }
+  class Vector3 {
+    constructor(
+      public x: number,
+      public y: number,
+      public z: number
+    ) {}
+  }
 
   return {
     Engine,

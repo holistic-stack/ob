@@ -74,6 +74,7 @@ const InspectorControls: React.FC<{
     <div className="flex items-center space-x-2 p-2 bg-gray-100 rounded">
       <button
         type="button"
+        aria-label={isPending ? 'Loading Inspector' : isVisible ? 'Hide Inspector' : 'Show Inspector'}
         onClick={onToggle}
         disabled={isPending}
         className={`px-3 py-1 text-sm rounded transition-colors ${
@@ -85,10 +86,11 @@ const InspectorControls: React.FC<{
         {isPending ? 'Loading...' : isVisible ? 'Hide Inspector' : 'Show Inspector'}
       </button>
 
-      {isVisible && (
+      {(isVisible || isPending) && (
         <div className="flex space-x-1">
           <button
             type="button"
+            aria-label="Scene"
             onClick={() => onSwitchTab('SCENE' as InspectorTab)}
             className="px-2 py-1 text-xs bg-white rounded hover:bg-gray-50"
           >
@@ -96,6 +98,7 @@ const InspectorControls: React.FC<{
           </button>
           <button
             type="button"
+            aria-label="Stats"
             onClick={() => onSwitchTab('STATISTICS' as InspectorTab)}
             className="px-2 py-1 text-xs bg-white rounded hover:bg-gray-50"
           >
@@ -118,7 +121,7 @@ const InspectorControls: React.FC<{
  */
 export const BabylonInspector: React.FC<BabylonInspectorProps> = ({
   scene,
-  isVisible = false,
+  isVisible,
   enableEmbedded = true,
   enablePopup = false,
   initialTab,
@@ -149,30 +152,28 @@ export const BabylonInspector: React.FC<BabylonInspectorProps> = ({
       return;
     }
 
-    startTransition(() => {
-      if (inspectorState.isVisible) {
-        const result = hideInspector();
-        if (!result.success) {
-          const err = new Error(result.error.message);
-          setError(err);
-          onInspectorError?.(err);
-        }
-      } else {
-        showInspector(scene, {
-          enableEmbedMode: enableEmbedded,
-          enablePopup,
-          initialTab: initialTab as string,
-          ...(onInspectorReady && { onInspectorReady }),
-          onInspectorError: (err) => {
-            setError(err);
-            onInspectorError?.(err);
-          },
-        }).catch((err) => {
-          setError(err);
-          onInspectorError?.(err);
-        });
+    if (inspectorState.isVisible) {
+      const result = hideInspector();
+      if (!result.success) {
+        const err = new Error(result.error.message);
+        setError(err);
+        onInspectorError?.(err);
       }
-    });
+    } else {
+      showInspector(scene, {
+        enableEmbedMode: enableEmbedded,
+        enablePopup,
+        initialTab: initialTab as string,
+        ...(onInspectorReady && { onInspectorReady }),
+        onInspectorError: (err) => {
+          setError(err);
+          onInspectorError?.(err);
+        },
+      }).catch((err) => {
+        setError(err);
+        onInspectorError?.(err);
+      });
+    }
   }, [
     scene,
     inspectorState.isVisible,
@@ -214,10 +215,42 @@ export const BabylonInspector: React.FC<BabylonInspectorProps> = ({
    * Sync visibility with prop changes
    */
   useEffect(() => {
-    if (isVisible !== inspectorState.isVisible && scene) {
-      handleToggle();
+    if (!scene) return;
+
+    // Only sync when the component is controlled via the isVisible prop
+    const isControlled = typeof isVisible === 'boolean';
+    if (!isControlled) return;
+
+    // Sync visibility to prop changes without toggling back-and-forth
+    if (isVisible && !inspectorState.isVisible) {
+      startTransition(() => {
+        showInspector(scene, {
+          enableEmbedMode: enableEmbedded,
+          enablePopup,
+          initialTab: initialTab as string,
+          ...(onInspectorReady && { onInspectorReady }),
+          onInspectorError: (err) => {
+            setError(err);
+            onInspectorError?.(err);
+          },
+        }).catch((err) => {
+          setError(err);
+          onInspectorError?.(err);
+        });
+      });
     }
-  }, [isVisible, inspectorState.isVisible, scene, handleToggle]);
+  }, [
+    isVisible,
+    inspectorState.isVisible,
+    scene,
+    startTransition,
+    showInspector,
+    enableEmbedded,
+    enablePopup,
+    initialTab,
+    onInspectorReady,
+    onInspectorError,
+  ]);
 
   /**
    * Log state changes for debugging
@@ -236,7 +269,7 @@ export const BabylonInspector: React.FC<BabylonInspectorProps> = ({
     <div className={`babylon-inspector ${className}`} data-testid="babylon-inspector">
       <Suspense fallback={<InspectorLoadingFallback />}>
         <InspectorControls
-          isVisible={deferredInspectorState.isVisible}
+          isVisible={inspectorState.isVisible}
           isPending={isPending}
           onToggle={handleToggle}
           onSwitchTab={handleSwitchTab}

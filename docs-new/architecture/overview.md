@@ -4,9 +4,14 @@ This project converts OpenSCAD code to interactive 3D scenes using BabylonJS thr
 
 High-level flow
 - OpenSCAD code → OpenSCAD Parser → AST
-- AST → Geometry Builder → Geometry Data
+- AST → Geometry Builder → Geometry Data (or Explicit Error)
 - Geometry → Babylon Mesh Builder → BabylonJS Meshes
 - Meshes → Babylon Scene Services → Rendered Scene (with controls, overlays, gizmos)
+
+Policies
+- No Babylon fallbacks or placeholder meshes
+- On failure in Geometry Builder, throw explicit errors with clear messages
+- For implementation guidance, see docs/openscad-desktop-sourcecode/src/
 
 Key principles
 - SRP: Each service/component has a single responsibility with co-located tests

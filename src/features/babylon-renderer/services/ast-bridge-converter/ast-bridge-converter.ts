@@ -1584,9 +1584,11 @@ export class ASTBridgeConverter {
       );
     }
 
-    // For other types, use placeholder for now
-    const { PlaceholderBabylonNode } = await import('./placeholder-babylon-node');
-    return new PlaceholderBabylonNode(nodeId, this.scene, openscadNode, openscadNode.location);
+    // Unknown/unsupported node types are not allowed: fail fast per NO Fallbacks policy
+    throw this.createError(
+      'UNKNOWN_NODE_TYPE',
+      `Unsupported OpenSCAD node type: ${openscadNode.type}`
+    );
   }
 
   /**

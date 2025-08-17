@@ -19,7 +19,6 @@ export {
   DEFAULT_BRIDGE_CONFIG,
   ExtrusionBabylonNode,
   ModifierBabylonNode,
-  PlaceholderBabylonNode,
   PrimitiveBabylonNode,
   TransformationBabylonNode,
 } from './ast-bridge-converter/index.js';

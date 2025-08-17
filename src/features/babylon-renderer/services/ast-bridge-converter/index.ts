@@ -21,6 +21,6 @@ export { CSGBabylonNode } from './csg-babylon-node';
 export { ExtrusionBabylonNode } from './extrusion-babylon-node';
 export { ModifierBabylonNode } from './modifier-babylon-node';
 // Node implementations
-export { PlaceholderBabylonNode } from './placeholder-babylon-node';
+
 export { PrimitiveBabylonNode } from './primitive-babylon-node';
 export { TransformationBabylonNode } from './transformation-babylon-node';

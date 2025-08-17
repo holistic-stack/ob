@@ -242,7 +242,7 @@ endsolid test`;
         // Create STLMesh from polyhedron data for bounds calculation
         const stlMesh = {
           vertices: Array.from(polyhedronData.vertices),
-          faces: polyhedronData.faces.map(face => Array.from(face) as [number, number, number]),
+          faces: polyhedronData.faces.map((face) => Array.from(face) as [number, number, number]),
           normals: Array.from(polyhedronData.normals),
           metadata: {
             triangleCount: polyhedronData.faces.length,

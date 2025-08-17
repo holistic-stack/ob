@@ -47,3 +47,4 @@ Best practices
 
 Notes
 - Tests are co-located; integration tests validate real Babylon with NullEngine patterns.
+- No Babylon fallbacks: meshes originate from OpenSCAD Geometry Builder only; unknown/unsupported nodes throw explicit errors.

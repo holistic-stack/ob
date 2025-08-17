@@ -212,19 +212,19 @@ export class OpenSCADRenderingPipelineService {
             if (
               v &&
               typeof v === 'object' &&
-              'type' in (v as any) &&
-              (v as any).type === 'expression' &&
-              'expressionType' in (v as any) &&
-              (v as any).expressionType === 'literal' &&
-              'value' in (v as any) &&
-              typeof (v as any).value === 'number'
+              'type' in (v as Record<string, unknown>) &&
+              (v as Record<string, unknown>).type === 'expression' &&
+              'expressionType' in (v as Record<string, unknown>) &&
+              (v as Record<string, unknown>).expressionType === 'literal' &&
+              'value' in (v as Record<string, unknown>) &&
+              typeof (v as { value?: unknown }).value === 'number'
             ) {
-              return (v as any).value as number;
+              return (v as { value: number }).value;
             }
             return undefined;
           };
 
-          const numericValue = resolveNumeric((assignNode as any).value);
+          const numericValue = resolveNumeric((assignNode as { value?: unknown }).value);
 
           if (assignNode.variable === '$fn' && typeof numericValue === 'number') {
             globals.$fn = numericValue;

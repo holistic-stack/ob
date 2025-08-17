@@ -12,6 +12,10 @@ Flow
 4) Bridge to Babylon scene (babylon-renderer/services/ast-bridge-converter)
 5) Manage scene (engine, scene, materials, cache, memory) and UI (gizmos, overlays)
 
+Policy
+- No fallback meshes: If Geometry Builder fails, the pipeline must fail with an explicit error (Result<T,E>)
+- Reference implementation: docs/openscad-desktop-sourcecode/src/ for OpenSCAD behavior and algorithms
+
 Usage example (high-level)
 ```ts
 // Pseudocode illustrating the pipeline usage with Result<T,E>

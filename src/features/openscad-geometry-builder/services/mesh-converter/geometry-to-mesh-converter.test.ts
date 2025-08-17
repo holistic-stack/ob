@@ -30,14 +30,12 @@ vi.mock('@babylonjs/core', () => ({
     getBoundingInfo: vi.fn().mockReturnValue({ minimum: {}, maximum: {} }),
   })),
   // Minimal VertexData stub with applyToMesh API used by service
-  VertexData: vi.fn().mockImplementation(function () {
-    return {
-      positions: undefined as any,
-      indices: undefined as any,
-      normals: undefined as any,
-      applyToMesh: vi.fn(),
-    };
-  }),
+  VertexData: vi.fn().mockImplementation(() => ({
+    positions: undefined as any,
+    indices: undefined as any,
+    normals: undefined as any,
+    applyToMesh: vi.fn(),
+  })),
   // MeshBuilder with CreatePolygon used for 2D shapes
   MeshBuilder: {
     CreatePolygon: vi.fn().mockImplementation((name: string, _options: any, _scene: any) => ({

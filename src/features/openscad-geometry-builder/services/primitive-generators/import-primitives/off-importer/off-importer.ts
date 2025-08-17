@@ -212,7 +212,12 @@ export class OFFImporterService {
 
         // Check if this looks like a face line (starts with vertex count)
         const firstCoord = coords[0];
-        if (coords.length >= 4 && firstCoord !== undefined && Number.isInteger(firstCoord) && firstCoord >= 3) {
+        if (
+          coords.length >= 4 &&
+          firstCoord !== undefined &&
+          Number.isInteger(firstCoord) &&
+          firstCoord >= 3
+        ) {
           return error({
             type: 'COMPUTATION_ERROR',
             message: `insufficient vertex data: expected ${vertexCount} vertices, got ${i}`,

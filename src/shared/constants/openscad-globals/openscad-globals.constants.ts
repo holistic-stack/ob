@@ -163,25 +163,11 @@ export const OPENSCAD_DEBUG = Object.freeze({
 } as const);
 
 /**
- * @constant OPENSCAD_FALLBACK
- * @description Fallback values for error recovery and placeholder geometry.
+ * Fallback values removed intentionally. Per architecture policy, geometry operations
+ * must succeed via OpenSCAD Geometry Builder or fail explicitly with clear errors.
+ * Keeping this block empty prevents accidental reintroduction of fallbacks.
  */
-export const OPENSCAD_FALLBACK = Object.freeze({
-  /**
-   * Minimum tessellation for fallback geometry (simple octagon)
-   */
-  MIN_TESSELLATION: 8 as const,
-
-  /**
-   * Default radius for fallback geometry
-   */
-  DEFAULT_RADIUS: 5 as const,
-
-  /**
-   * Flat shading threshold - apply flat shading for low-poly meshes
-   */
-  FLAT_SHADING_THRESHOLD: 16 as const,
-} as const);
+// NOTE: OPENSCAD_FALLBACK was removed.
 
 /**
  * @type OpenSCADGlobalsConstants

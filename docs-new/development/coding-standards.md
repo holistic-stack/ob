@@ -23,6 +23,7 @@ Error handling
 - Structured errors with specific codes/messages
 - Validate inputs; handle edge cases explicitly
 - Use try/catch sparingly; prefer Result branches
+- No Babylon fallbacks: geometry operations must use Geometry Builder or throw explicit errors
 
 Performance
 - Optimize for clarity first; then profile

@@ -6,11 +6,19 @@
  */
 
 import { NullEngine, Scene } from '@babylonjs/core';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { InspectorTab } from '@/features/babylon-renderer';
+
 import { BabylonInspector, type BabylonInspectorProps } from './babylon-inspector';
+
+// Provide a minimal inspector to allow show/hide in test env without mocking our service
+vi.mock('@babylonjs/inspector', () => ({
+  Inspector: {
+    Show: async () => {},
+    Hide: () => {},
+  },
+}));
 
 // Mock ResizeObserver for tests
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
@@ -39,6 +47,7 @@ describe('BabylonInspector', () => {
 
   afterEach(() => {
     // Cleanup
+    cleanup();
     scene.dispose();
     engine.dispose();
   });
@@ -106,6 +115,7 @@ describe('BabylonInspector', () => {
         await user.click(toggleButton);
       });
 
+      // Wait until inspector is visible by checking tab buttons
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /scene/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /stats/i })).toBeInTheDocument();
@@ -119,7 +129,9 @@ describe('BabylonInspector', () => {
         await user.click(toggleButton);
       });
 
-      const sceneButton = await screen.findByRole('button', { name: /scene/i });
+      // Wait for visibility by ensuring tabs exist
+      await screen.findByRole('button', { name: /scene/i });
+      const sceneButton = screen.getByRole('button', { name: /scene/i });
 
       await act(async () => {
         await user.click(sceneButton);
@@ -239,16 +251,22 @@ describe('BabylonInspector', () => {
 
   describe('accessibility', () => {
     it('should have proper ARIA labels', () => {
-      renderInspector();
+      const { getByTestId } = renderInspector();
+      const container = getByTestId('babylon-inspector');
 
-      const toggleButton = screen.getByRole('button', { name: /show inspector/i });
+      const toggleButton = container.querySelector(
+        'button[aria-label="Show Inspector"]'
+      ) as HTMLButtonElement;
       expect(toggleButton).toBeInTheDocument();
     });
 
     it('should support keyboard navigation', async () => {
-      renderInspector();
+      const { getByTestId } = renderInspector();
+      const container = getByTestId('babylon-inspector');
 
-      const toggleButton = screen.getByRole('button', { name: /show inspector/i });
+      const toggleButton = container.querySelector(
+        'button[aria-label="Show Inspector"]'
+      ) as HTMLButtonElement;
 
       // Focus the button
       toggleButton.focus();

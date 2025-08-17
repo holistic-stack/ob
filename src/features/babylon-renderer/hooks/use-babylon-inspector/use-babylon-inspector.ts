@@ -170,9 +170,8 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
       if (result.success) {
         // Update state with successful show using startTransition for non-blocking updates
         const newState = inspectorService.getState();
-        startTransition(() => {
-          setInspectorState(newState);
-        });
+        // Apply immediately to ensure UI reflects visibility without delay (tests rely on this)
+        setInspectorState(newState);
         currentSceneRef.current = targetScene;
 
         // Call success callback
@@ -222,9 +221,8 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
     if (result.success) {
       // Update state using startTransition for non-blocking updates
       const newState = inspectorServiceRef.current.getState();
-      startTransition(() => {
-        setInspectorState(newState);
-      });
+      // Apply immediately for prompt UI feedback
+      setInspectorState(newState);
       logger.debug('[DEBUG][useBabylonInspector] Inspector hidden successfully');
     } else {
       logger.error(`[ERROR][useBabylonInspector] Inspector hide failed: ${result.error.message}`);
@@ -258,9 +256,8 @@ export const useBabylonInspector = (): UseBabylonInspectorReturn => {
       if (result.success) {
         // Update state using startTransition for non-blocking updates
         const newState = inspectorServiceRef.current.getState();
-        startTransition(() => {
-          setInspectorState(newState);
-        });
+        // Apply immediately for prompt UI feedback
+        setInspectorState(newState);
         logger.debug(`[DEBUG][useBabylonInspector] Switched to tab: ${tabName}`);
       } else {
         logger.error(`[ERROR][useBabylonInspector] Tab switch failed: ${result.error.message}`);

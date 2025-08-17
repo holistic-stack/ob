@@ -815,7 +815,11 @@ export class ModuleResolver implements ModuleResolverInterface {
             JSON.stringify(vectorExpr, null, 2)
           );
 
-          if ('elements' in vectorExpr && vectorExpr.elements && Array.isArray(vectorExpr.elements)) {
+          if (
+            'elements' in vectorExpr &&
+            vectorExpr.elements &&
+            Array.isArray(vectorExpr.elements)
+          ) {
             const resolvedElements: number[] = [];
 
             for (let i = 0; i < vectorExpr.elements.length; i++) {
@@ -864,7 +868,12 @@ export class ModuleResolver implements ModuleResolverInterface {
         } else if (typeof node[prop] === 'object' && node[prop] !== null) {
           // Handle different types of object references
           const propObj = node[prop] as unknown as Record<string, unknown>;
-          if ('type' in propObj && 'name' in propObj && propObj.type === 'identifier' && bindings.has(propObj.name as string)) {
+          if (
+            'type' in propObj &&
+            'name' in propObj &&
+            propObj.type === 'identifier' &&
+            bindings.has(propObj.name as string)
+          ) {
             // Identifier node reference
             const boundValue = bindings.get(propObj.name as string);
             console.log(

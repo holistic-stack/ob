@@ -21,7 +21,7 @@ class TestResizeObserver {
   disconnect(): void {}
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-;(globalThis as any).ResizeObserver = (globalThis as any).ResizeObserver || TestResizeObserver;
+(globalThis as any).ResizeObserver = (globalThis as any).ResizeObserver || TestResizeObserver;
 
 describe('BabylonInspectorService', () => {
   let inspectorService: BabylonInspectorService;

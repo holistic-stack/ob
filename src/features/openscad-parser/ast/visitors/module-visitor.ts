@@ -788,9 +788,9 @@ export class ModuleVisitor extends BaseASTVisitor {
       if (Array.isArray(mParam.value)) {
         // Check if it's a 2D array (matrix)
         const potentialMatrix = mParam.value as unknown[];
-        if (potentialMatrix.every(row => Array.isArray(row))) {
+        if (potentialMatrix.every((row) => Array.isArray(row))) {
           const matrix = potentialMatrix as unknown[][];
-          if (matrix.every(row => row.every(val => typeof val === 'number'))) {
+          if (matrix.every((row) => row.every((val) => typeof val === 'number'))) {
             m = matrix as number[][];
           }
         }
@@ -840,7 +840,7 @@ export class ModuleVisitor extends BaseASTVisitor {
       } else if (Array.isArray(cParam.value)) {
         // Ensure it's a number array
         const colorArray = cParam.value as unknown[];
-        if (colorArray.every(val => typeof val === 'number')) {
+        if (colorArray.every((val) => typeof val === 'number')) {
           c = colorArray as number[];
         }
       }

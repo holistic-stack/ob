@@ -11,4 +11,5 @@ Debounce config
 Do
 - Import constants; avoid magic numbers
 - Use fragment-calculator for tessellation
+- Do not use fallback constants; OPENSCAD_FALLBACK has been removed by design
 

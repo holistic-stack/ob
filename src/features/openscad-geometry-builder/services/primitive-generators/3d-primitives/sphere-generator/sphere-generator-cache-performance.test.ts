@@ -105,14 +105,14 @@ describe('SphereGeneratorService Cache Performance Tests', () => {
             console.log(
               `Generation ${index + 2} is ${(firstTime / time).toFixed(1)}x faster than first`
             );
-        } else {
-          // For very fast operations, just ensure they complete successfully
-          expect(time).toBeGreaterThan(0);
-          console.log(
-            `Generation ${index + 2} completed in ${time.toFixed(3)}ms (too fast to measure improvement)`
-          );
-        }
-      });
+          } else {
+            // For very fast operations, just ensure they complete successfully
+            expect(time).toBeGreaterThan(0);
+            console.log(
+              `Generation ${index + 2} completed in ${time.toFixed(3)}ms (too fast to measure improvement)`
+            );
+          }
+        });
       }
     });
   });

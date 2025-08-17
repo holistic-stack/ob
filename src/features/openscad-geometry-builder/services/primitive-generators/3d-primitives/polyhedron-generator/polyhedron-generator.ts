@@ -142,12 +142,9 @@ export class PolyhedronGeneratorService {
   generatePolyhedronFromParameters(params: PolyhedronParameters): PolyhedronResult {
     try {
       // Convert Vector3 objects to number arrays
-      const vertexArrays = params.points.map(point => [point.x, point.y, point.z] as const);
+      const vertexArrays = params.points.map((point) => [point.x, point.y, point.z] as const);
 
-      const result = this.generatePolyhedron(
-        vertexArrays,
-        params.faces
-      );
+      const result = this.generatePolyhedron(vertexArrays, params.faces);
 
       if (result.success && params.convexity !== undefined) {
         // Update convexity parameter in metadata
@@ -204,7 +201,10 @@ export class PolyhedronGeneratorService {
       if (!vertexResult.success) {
         return error({
           type: 'INVALID_PARAMETERS',
-          message: typeof vertexResult.error === 'string' ? vertexResult.error : vertexResult.error.message,
+          message:
+            typeof vertexResult.error === 'string'
+              ? vertexResult.error
+              : vertexResult.error.message,
           details: { vertexIndex: i },
         });
       }
@@ -233,7 +233,8 @@ export class PolyhedronGeneratorService {
       if (!faceResult.success) {
         return error({
           type: 'INVALID_PARAMETERS',
-          message: typeof faceResult.error === 'string' ? faceResult.error : faceResult.error.message,
+          message:
+            typeof faceResult.error === 'string' ? faceResult.error : faceResult.error.message,
           details: { faceIndex: i, vertexCount: vertices.length },
         });
       }
@@ -324,33 +325,35 @@ export class PolyhedronGeneratorService {
     }
 
     // Average and normalize vertex normals
-    return Object.freeze(normalAccumulators.map((accumulator) => {
-      if (accumulator.count === 0) {
-        // Default normal if no faces reference this vertex
+    return Object.freeze(
+      normalAccumulators.map((accumulator) => {
+        if (accumulator.count === 0) {
+          // Default normal if no faces reference this vertex
+          return Object.freeze({ x: 0, y: 0, z: 1 });
+        }
+
+        // Average the accumulated normals
+        const avgNormal = {
+          x: accumulator.x / accumulator.count,
+          y: accumulator.y / accumulator.count,
+          z: accumulator.z / accumulator.count,
+        };
+
+        // Normalize
+        const length = Math.sqrt(
+          avgNormal.x * avgNormal.x + avgNormal.y * avgNormal.y + avgNormal.z * avgNormal.z
+        );
+        if (length > 0) {
+          return Object.freeze({
+            x: avgNormal.x / length,
+            y: avgNormal.y / length,
+            z: avgNormal.z / length,
+          });
+        }
+
         return Object.freeze({ x: 0, y: 0, z: 1 });
-      }
-
-      // Average the accumulated normals
-      const avgNormal = {
-        x: accumulator.x / accumulator.count,
-        y: accumulator.y / accumulator.count,
-        z: accumulator.z / accumulator.count,
-      };
-
-      // Normalize
-      const length = Math.sqrt(
-        avgNormal.x * avgNormal.x + avgNormal.y * avgNormal.y + avgNormal.z * avgNormal.z
-      );
-      if (length > 0) {
-        return Object.freeze({
-          x: avgNormal.x / length,
-          y: avgNormal.y / length,
-          z: avgNormal.z / length,
-        });
-      }
-
-      return Object.freeze({ x: 0, y: 0, z: 1 });
-    }));
+      })
+    );
   }
 
   /**

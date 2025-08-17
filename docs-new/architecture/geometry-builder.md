@@ -25,6 +25,7 @@ Operations
 
 Pipeline
 - services/pipeline: unified rendering pipeline with integration tests
+- No fallbacks: operations must succeed via Geometry Builder or throw explicit errors
 
 Test utilities
 - result and geometry assertions, performance utilities, data generators
