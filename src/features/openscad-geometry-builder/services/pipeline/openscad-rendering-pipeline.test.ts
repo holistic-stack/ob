@@ -16,21 +16,56 @@ import { isError, isSuccess } from '@/shared';
 import { OpenSCADRenderingPipelineService } from './openscad-rendering-pipeline';
 
 // Mock BabylonJS for testing
-vi.mock('@babylonjs/core', () => ({
-  Engine: vi.fn().mockImplementation(() => ({
-    dispose: vi.fn(),
-  })),
-  Scene: vi.fn().mockImplementation(() => ({
-    dispose: vi.fn(),
-    meshes: [],
-  })),
-  Mesh: vi.fn().mockImplementation(() => ({
-    name: 'test-mesh',
-    getTotalVertices: vi.fn().mockReturnValue(8),
-    getTotalIndices: vi.fn().mockReturnValue(12),
-    dispose: vi.fn(),
-  })),
-}));
+vi.mock('@babylonjs/core', () => {
+  class MockMesh {
+    static DOUBLESIDE = 2;
+    name: string;
+    material: any;
+    private _totalVertices = 0;
+    private _totalIndices = 0;
+    constructor(name: string) {
+      this.name = name;
+    }
+    getTotalVertices = vi.fn(() => this._totalVertices);
+    getTotalIndices = vi.fn(() => this._totalIndices);
+    setStats = (vCount: number, iCount: number) => {
+      this._totalVertices = vCount;
+      this._totalIndices = iCount;
+    };
+    createNormals = vi.fn();
+    refreshBoundingInfo = vi.fn();
+    getBoundingInfo = vi.fn(() => ({ minimum: { x: 0, y: 0, z: 0 }, maximum: { x: 1, y: 1, z: 1 } }));
+    dispose = vi.fn();
+  }
+
+  class MockVertexData {
+    positions?: Float32Array;
+    indices?: Uint32Array;
+    normals?: Float32Array;
+    applyToMesh = (mesh: any) => {
+      const vCount = (this.positions?.length || 0) / 3;
+      const iCount = this.indices?.length || 0;
+      if (typeof mesh.setStats === 'function') mesh.setStats(vCount, iCount);
+    };
+  }
+
+  const MeshBuilder = {
+    CreatePolygon: vi.fn((name: string) => new MockMesh(name)),
+  };
+
+  class Engine { dispose = vi.fn(); }
+  class Scene { dispose = vi.fn(); meshes: any[] = []; constructor(_e: any) {} }
+  class Vector3 { constructor(public x: number, public y: number, public z: number) {} }
+
+  return {
+    Engine,
+    Scene,
+    Mesh: MockMesh,
+    VertexData: MockVertexData,
+    MeshBuilder,
+    Vector3,
+  };
+});
 
 describe('OpenSCADRenderingPipelineService', () => {
   let pipeline: OpenSCADRenderingPipelineService;

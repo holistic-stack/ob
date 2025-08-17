@@ -20,15 +20,14 @@ Welcome to the OpenSCAD Babylon project! This guide provides everything you need
 
 ```mermaid
 graph TD
-    A[Monaco Editor - OpenSCAD Code] --> B[Zustand Store];
-    B --> C[Debounced Parser - 300ms];
-    C --> D[AST Generation];
-    D --> B;
-    B --> E[Manifold AST Converter];
-    E --> F[Three.js Meshes];
-    F --> G[React Three Fiber Scene];
-    G --> H[Interactive 3D Visualization];
-    B --> H;
+    A[Monaco Editor - OpenSCAD Code] --> B[Zustand Store]
+    B --> C[Debounced Parser - 300ms]
+    C --> D[OpenSCAD AST]
+    D --> E[AST→Geometry (Geometry Builder)]
+    E --> F[Geometry→Meshes (Babylon Mesh Builder)]
+    F --> G[Babylon Scene Services]
+    G --> H[Renderer UI (components/hooks)]
+    H --> I[Interactive 3D Visualization]
 ```
 
 ## 2. Technology Stack
@@ -39,11 +38,11 @@ graph TD
 - **Vite 6.0.0** - Ultra-fast development with HMR (<100ms hot reload)
 
 **3D Rendering & Visualization**
-- **React Three Fiber 9.1.2** - React renderer for Three.js
-- **Three.js 0.177.0** - 3D graphics library with WebGL2
-- **@react-three/drei 10.3.0** - Three.js helpers and components
-- **manifold-3d 3.1.1** - Advanced CSG operations with WASM integration
-- **gl-matrix 3.4.3** - High-performance matrix operations
+- **BabylonJS Core 8.x** - 3D graphics library with WebGL2/WebGPU
+- **@babylonjs/gui 8.x** - GUI overlay components
+- **@babylonjs/inspector 8.x** - Debug inspector (dev only)
+- **NullEngine** - Headless Babylon engine for tests
+- Utilities in src/features/babylon-renderer (memory management, render cache, gizmos)
 
 **Code Editor & Parsing**
 - **Monaco Editor 0.52.2** - VS Code editor engine with OpenSCAD syntax
@@ -151,7 +150,7 @@ A typical task, like adding a new feature, looks like this:
 
 ### Data Flow Pipeline
 ```
-Monaco Editor → updateCode() → debounced AST parsing → setParsingAST() → Three.js rendering
+Monaco Editor → updateCode() → debounced AST parsing → setParsingAST() → AST→Geometry → Geometry→Meshes → Babylon rendering
 ```
 
 ### Core Components
@@ -159,7 +158,7 @@ Monaco Editor → updateCode() → debounced AST parsing → setParsingAST() →
 
 - **OpenSCAD Parser (`src/features/openscad-parser`):** Comprehensive parsing infrastructure with 100+ files including AST generation, error handling, recovery strategies, parameter extraction, and utilities. Uses `@holistic-stack/openscad-parser` with `web-tree-sitter` grammar.
 
-- **3D Renderer (`src/features/3d-renderer`):** React Three Fiber-based component that takes AST from the store and renders 3D scenes. The `StoreConnectedRenderer` ensures all data flows through the store.
+- **Babylon Renderer (`src/features/babylon-renderer`):** Service- and component-based BabylonJS renderer. `store-connected-renderer` subscribes to the store, manages engine/scene lifecycle, camera controls, gizmos, overlays, and rendering.
 
 ### Rendering Pipeline
 1. `StoreConnectedRenderer` gets the latest AST from the store
@@ -227,7 +226,7 @@ logger.end('[END][ComponentName] Cleanup complete');
 - **Store Integration:** Full Zustand store with real state management
 - **Pipeline Testing:** End-to-end OpenSCAD → AST → 3D rendering
 
-#### React Three Fiber Testing
+#### BabylonJS Testing
 Special handling for 3D components:
 ```typescript
 // Component mocking for integration tests

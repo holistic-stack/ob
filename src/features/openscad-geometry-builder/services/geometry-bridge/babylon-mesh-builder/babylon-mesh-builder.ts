@@ -21,6 +21,12 @@
  */
 
 import * as BABYLON from '@babylonjs/core';
+// Ensure required BabylonJS builders/classes are registered in tree-shaken builds
+import '@babylonjs/core/Meshes/meshBuilder';
+import '@babylonjs/core/Meshes/Builders/polygonBuilder';
+import '@babylonjs/core/Meshes/mesh.vertexData';
+import '@babylonjs/core/Materials/standardMaterial';
+import earcut from 'earcut';
 import type { Result } from '@/shared';
 import { error, success } from '@/shared';
 import type { Geometry2DData } from '../../../types/2d-geometry-data';
@@ -81,7 +87,18 @@ export class BabylonMeshBuilderService {
         return babylonData as MeshResult;
       }
 
-      // Create the mesh using BabylonJS CreatePolyhedron
+      // Require VertexData; if unavailable, fail fast with a descriptive error per project constraints
+      const hasVertexData = typeof (BABYLON as any).VertexData === 'function';
+      if (!hasVertexData) {
+        return error({
+          type: 'BABYLON_ERROR',
+          message:
+            'BabylonJS VertexData API is not available in the current environment. Tests must provide proper BabylonJS mocks or run with a real engine.',
+          details: { requiredAPI: 'VertexData' },
+        });
+      }
+
+      // Create the mesh using BabylonJS VertexData path
       const mesh = this.createBabylonMesh(babylonData.data, scene, meshName);
       if (!mesh.success) {
         return mesh;
@@ -125,18 +142,29 @@ export class BabylonMeshBuilderService {
         .filter((vertex): vertex is Vector2 => vertex !== undefined)
         .map((vertex) => new BABYLON.Vector3(vertex.x, vertex.y, 0));
 
-      // Create the mesh using BabylonJS CreatePolygon for proper triangulation
+      // Create the mesh using BabylonJS CreatePolygon for proper triangulation; require API presence
+      const hasMeshBuilderPolygon = (BABYLON.MeshBuilder as any)?.CreatePolygon;
+      if (!hasMeshBuilderPolygon) {
+        return error({
+          type: 'BABYLON_ERROR',
+          message:
+            'BabylonJS MeshBuilder.CreatePolygon is not available in the current environment. Tests must provide proper BabylonJS mocks or run with a real engine.',
+          details: { requiredAPI: 'MeshBuilder.CreatePolygon' },
+        });
+      }
+
       const mesh = BABYLON.MeshBuilder.CreatePolygon(
         meshName,
         {
           shape: points,
           sideOrientation: BABYLON.Mesh.DOUBLESIDE, // Double-sided for visibility
         },
-        scene
+        scene,
+        earcut
       );
 
       // Ensure the mesh is properly initialized
-      mesh.refreshBoundingInfo();
+      if (mesh.refreshBoundingInfo) mesh.refreshBoundingInfo();
 
       return success(mesh);
     } catch (err) {

@@ -48,11 +48,7 @@ import type {
 } from '@/features/openscad-parser';
 import type { OpenSCADGlobalsState } from '@/features/store/slices/openscad-globals-slice';
 import { createLogger, tryCatch } from '@/shared';
-import {
-  calculateFragments,
-  OPENSCAD_FALLBACK,
-  OPENSCAD_GLOBALS,
-} from '@/shared/constants/openscad-globals/openscad-globals.constants.ts';
+import { OPENSCAD_GLOBALS } from '@/shared/constants/openscad-globals/openscad-globals.constants.ts';
 
 const logger = createLogger('PrimitiveBabylonNode');
 
@@ -228,29 +224,8 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       );
       return meshResult.data;
     } catch (error) {
-      // Fallback to old method if new geometry builder fails
-      logger.warn(`[CUBE_FALLBACK] Using BabylonJS built-in cube due to error: ${error}`);
-
-      const mesh = MeshBuilder.CreateBox(
-        this.name,
-        {
-          width: size.x,
-          height: size.y,
-          depth: size.z,
-        },
-        scene
-      );
-
-      // Apply OpenSCAD center behavior
-      if (!center) {
-        // OpenSCAD default: cube is positioned with one corner at origin
-        mesh.position.x = size.x / 2;
-        mesh.position.y = size.y / 2;
-        mesh.position.z = size.z / 2;
-      }
-      // If center=true, mesh is already centered at origin (BabylonJS default)
-
-      return mesh;
+      // Per error handling policy: do not fallback; surface the error for visibility
+      throw new Error(`Cube mesh generation failed without fallback: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -322,25 +297,8 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       );
       return meshResult.data;
     } catch (error) {
-      // Fallback to old method if new geometry builder fails
-      logger.warn(`[SPHERE_FALLBACK] Using BabylonJS built-in sphere due to error: ${error}`);
-
-      const segments = this.extractSphereSegments();
-      const sphere = MeshBuilder.CreateSphere(
-        this.name,
-        {
-          diameter: radius * 2,
-          segments: segments,
-        },
-        scene
-      );
-
-      // Apply flat shading to make angular edges visible for low-poly spheres
-      if (segments <= OPENSCAD_FALLBACK.FLAT_SHADING_THRESHOLD) {
-        sphere.convertToFlatShadedMesh();
-      }
-
-      return sphere;
+      // Per error handling policy: do not fallback; surface the error for visibility
+      throw new Error(`Sphere mesh generation failed without fallback: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -408,29 +366,8 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       );
       return meshResult.data;
     } catch (error) {
-      // Fallback to old method if new geometry builder fails
-      logger.warn(`[CYLINDER_FALLBACK] Using BabylonJS built-in cylinder due to error: ${error}`);
-
-      const segments = this.extractCylinderSegments();
-      const mesh = MeshBuilder.CreateCylinder(
-        this.name,
-        {
-          height: height,
-          diameterTop: radius * 2,
-          diameterBottom: radius * 2,
-          tessellation: segments,
-        },
-        scene
-      );
-
-      // Apply OpenSCAD center behavior
-      if (!center) {
-        // OpenSCAD default: cylinder base at z=0
-        mesh.position.z = height / 2;
-      }
-      // If center=true, mesh is already centered at origin (BabylonJS default)
-
-      return mesh;
+      // Per error handling policy: do not fallback; surface the error for visibility
+      throw new Error(`Cylinder mesh generation failed without fallback: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -443,20 +380,9 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
    * @param scene - BabylonJS scene for mesh creation
    * @returns AbstractMesh representing a basic polyhedron (tetrahedron)
    */
-  private createPolyhedronMesh(scene: Scene): AbstractMesh {
-    // Create a simple tetrahedron as placeholder for polyhedron functionality
-    logger.warn(
-      '[WARN] Polyhedron mesh generation not fully implemented, using tetrahedron placeholder'
-    );
-
-    return MeshBuilder.CreatePolyhedron(
-      this.name,
-      {
-        type: 0, // Tetrahedron
-        size: 1,
-      },
-      scene
-    );
+  private createPolyhedronMesh(_scene: Scene): AbstractMesh {
+    // Per policy, do not create placeholder meshes. Surface explicit error.
+    throw new Error('Polyhedron mesh generation via PrimitiveBabylonNode is not implemented. Use OpenSCAD Geometry Builder polyhedron service.');
   }
 
   /**
@@ -478,21 +404,21 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     const radius = this.extractCircleRadius();
     const segments = this.extractCircleSegments();
 
-    // Create disc mesh using BabylonJS native CreateDisc
-    const mesh = MeshBuilder.CreateDisc(
-      this.name,
-      {
-        radius: radius,
-        tessellation: segments,
-        sideOrientation: 2, // Double-sided for visibility
-      },
-      scene
-    );
+    // Use OpenSCAD Geometry Builder for circle -> polygon mesh
+    const shapeGenerator = new (require('@/features/openscad-geometry-builder/services/primitive-generators/2d-primitives/circle-generator').CircleGeneratorService)();
+    const meshBuilder = new (require('@/features/openscad-geometry-builder/services/geometry-bridge/babylon-mesh-builder').BabylonMeshBuilderService)();
 
-    // Position at Z=0 (2D shape in 3D space)
-    mesh.position.z = 0;
+    const circleResult = shapeGenerator.generateCircle({ radius, fn: segments });
+    if (!circleResult.success) {
+      throw new Error(`Circle generation failed: ${circleResult.error.message}`);
+    }
 
-    return mesh;
+    const meshResult = meshBuilder.createPolygonMesh(circleResult.data, scene, this.name);
+    if (!meshResult.success) {
+      throw new Error(`Circle mesh creation failed: ${meshResult.error.message}`);
+    }
+
+    return meshResult.data;
   }
 
   /**
@@ -514,27 +440,21 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
     const size = this.extractSquareSize();
     const center = this.extractSquareCenter();
 
-    // Create plane mesh using BabylonJS native CreatePlane
-    const mesh = MeshBuilder.CreatePlane(
-      this.name,
-      {
-        width: size.x,
-        height: size.y,
-        sideOrientation: 2, // Double-sided for visibility
-      },
-      scene
-    );
+    // Use OpenSCAD Geometry Builder for square -> polygon mesh
+    const shapeGenerator = new (require('@/features/openscad-geometry-builder/services/primitive-generators/2d-primitives/square-generator').SquareGeneratorService)();
+    const meshBuilder = new (require('@/features/openscad-geometry-builder/services/geometry-bridge/babylon-mesh-builder').BabylonMeshBuilderService)();
 
-    // Position based on center parameter
-    if (center) {
-      // Centered at origin (default for CreatePlane)
-      mesh.position.set(0, 0, 0);
-    } else {
-      // OpenSCAD default: positioned in first quadrant
-      mesh.position.set(size.x / 2, size.y / 2, 0);
+    const squareResult = shapeGenerator.generateSquare({ size: { x: size.x, y: size.y }, center });
+    if (!squareResult.success) {
+      throw new Error(`Square generation failed: ${squareResult.error.message}`);
     }
 
-    return mesh;
+    const meshResult = meshBuilder.createPolygonMesh(squareResult.data, scene, this.name);
+    if (!meshResult.success) {
+      throw new Error(`Square mesh creation failed: ${meshResult.error.message}`);
+    }
+
+    return meshResult.data;
   }
 
   /**
@@ -559,79 +479,27 @@ export class PrimitiveBabylonNode extends BabylonJSNode {
       throw new Error(`Polygon must have at least 3 points, got ${points.length}`);
     }
 
-    // Convert points to Vector3 array for BabylonJS polygon creation
-    const shape: Vector3[] = points.map((point) => {
-      const x = typeof point[0] === 'number' ? point[0] : 0;
-      const y = typeof point[1] === 'number' ? point[1] : 0;
-      return new BabylonVector3(x, y, 0);
-    });
+    // Use OpenSCAD Geometry Builder for polygon -> polygon mesh
+    const { PolygonGeneratorService } = require('@/features/openscad-geometry-builder/services/primitive-generators/2d-primitives/polygon-generator');
+    const { BabylonMeshBuilderService } = require('@/features/openscad-geometry-builder/services/geometry-bridge/babylon-mesh-builder');
 
-    // Check polygon winding order and ensure it's counter-clockwise for proper triangulation
-    const isCounterClockwise = this.isPolygonCounterClockwise(shape);
-    if (!isCounterClockwise) {
-      shape.reverse();
+    // Convert points (number[][]) to Vector2[] expected by generator
+    const vertices = points.map((p: number[]) => ({ x: p[0] || 0, y: p[1] || 0 }));
+
+    const polygonParams = { points: vertices, convexity: 1 };
+    const generator = new PolygonGeneratorService();
+    const polygonResult = generator.generatePolygon(polygonParams);
+    if (!polygonResult.success) {
+      throw new Error(`Polygon generation failed: ${polygonResult.error.message}`);
     }
 
-    // Try to create polygon mesh using BabylonJS built-in triangulation first
-    try {
-      const mesh = MeshBuilder.CreatePolygon(
-        this.name,
-        {
-          shape: shape,
-          sideOrientation: 2, // Double-sided for visibility
-        },
-        scene
-        // No earcut parameter - use BabylonJS built-in triangulation
-      );
-
-      // Check if mesh has valid geometry
-      if (mesh.getTotalVertices() === 0 || mesh.getTotalIndices() === 0) {
-        mesh.dispose();
-        throw new Error('Built-in triangulation produced empty mesh');
-      }
-
-      // Position at Z=0 (2D shape in 3D space)
-      mesh.position.z = 0;
-      return mesh;
-    } catch (_error) {
-      // Built-in triangulation failed, try manual earcut
-
-      // If built-in triangulation fails, try manual earcut triangulation
-      try {
-        // Convert Vector3 points to flat array for earcut
-        const flatCoords: number[] = [];
-        for (const point of shape) {
-          flatCoords.push(point.x, point.y);
-        }
-
-        // Use earcut directly to triangulate
-        const triangles = earcut(flatCoords);
-
-        if (triangles.length === 0) {
-          throw new Error('Earcut produced no triangles');
-        }
-
-        // Create custom mesh from triangulated data
-        const mesh = this.createCustomPolygonMesh(shape, triangles, scene);
-        mesh.position.z = 0;
-        return mesh;
-      } catch (_earcutError) {
-        // Manual earcut failed, use fallback
-
-        // Final fallback: create a simple disc as placeholder
-        const discMesh = MeshBuilder.CreateDisc(
-          this.name,
-          {
-            radius: OPENSCAD_FALLBACK.DEFAULT_RADIUS,
-            tessellation: OPENSCAD_FALLBACK.MIN_TESSELLATION,
-            sideOrientation: 2,
-          },
-          scene
-        );
-        discMesh.position.z = 0;
-        return discMesh;
-      }
+    const meshBuilder = new BabylonMeshBuilderService();
+    const meshResult = meshBuilder.createPolygonMesh(polygonResult.data, scene, this.name);
+    if (!meshResult.success) {
+      throw new Error(`Polygon mesh creation failed: ${meshResult.error.message}`);
     }
+
+    return meshResult.data;
   }
 
   /**

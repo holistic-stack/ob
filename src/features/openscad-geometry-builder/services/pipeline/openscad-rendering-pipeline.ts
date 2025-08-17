@@ -128,6 +128,10 @@ export class OpenSCADRenderingPipelineService {
       const geometryEndTime = performance.now();
 
       if (!geometryResult.success) {
+        logger.error(
+          `[PIPELINE] AST->Geometry conversion failed: ${geometryResult.error.message}`,
+          geometryResult.error
+        );
         return error({
           type: 'CONVERSION_ERROR',
           message: `AST to geometry conversion failed: ${geometryResult.error.message}`,
